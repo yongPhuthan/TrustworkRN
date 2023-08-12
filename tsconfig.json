@@ -1,3 +1,19 @@
 {
+  
+  "compilerOptions": {
+    "baseUrl": ".",
+    "typeRoots": ["./typings","./src/types", "./node_modules/@types","node_modules/firebase"],
+    "types": ["jest", "node"],
+
+    // "typeRoots": ["node_modules/@types", "node_modules/firebase"],
+    "esModuleInterop": true,
+    "lib": ["esnext", "dom"],
+    "paths": {
+      "*": ["*", "src/types/*"]
+    }
+  
+},
+
+
   "extends": "@tsconfig/react-native/tsconfig.json"
 }

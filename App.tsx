@@ -1,6 +1,6 @@
 import {View, Text} from 'react-native';
 import React, {useState, useEffect} from 'react';
-import Navigation from './navigations/Navigation';
+import Navigation from './navigations/navigation';
 import {QueryClient, QueryClientProvider, useQuery} from '@tanstack/react-query';
 import { Provider } from 'react-native-paper';
 
