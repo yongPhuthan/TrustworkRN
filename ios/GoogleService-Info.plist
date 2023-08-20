@@ -3,21 +3,21 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>45749402805-8m7a7gpaee5322d4s8sgnfaun7rmeoa0.apps.googleusercontent.com</string>
+	<string>74243864435-459ndmbeg0fn74qe8oqdtg742344gc44.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.45749402805-8m7a7gpaee5322d4s8sgnfaun7rmeoa0</string>
+	<string>com.googleusercontent.apps.74243864435-459ndmbeg0fn74qe8oqdtg742344gc44</string>
 	<key>API_KEY</key>
-	<string>AIzaSyBBDx8KnHLYxFQTCsDRC5QO0xSCnQuWvhg</string>
+	<string>AIzaSyBsPFl0KaSonRLUg8ZPnj5CoIXCm2O3V6s</string>
 	<key>GCM_SENDER_ID</key>
-	<string>45749402805</string>
+	<string>74243864435</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.trustwork</string>
 	<key>PROJECT_ID</key>
-	<string>trustwork-app</string>
+	<string>workerfirebase-f1005</string>
 	<key>STORAGE_BUCKET</key>
-	<string>trustwork-app.appspot.com</string>
+	<string>workerfirebase-f1005.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:45749402805:ios:4d773c3cd0efd0353692fc</string>
+	<string>1:74243864435:ios:bf5c183deb975b446cf706</string>
 </dict>
 </plist>
