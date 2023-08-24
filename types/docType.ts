@@ -24,6 +24,26 @@ export type Contract = {
   sellerId: string;
 };
 
+export type FormData = {
+  title: string;
+  description: string;
+  unitPrice: string;
+  qty: string;
+  unit: string;
+  id: string;
+  discountPercent: string;
+  total: string;
+};
+export type ServiceList = {
+  id: string;
+  title: string;
+  description: string;
+  unitPrice: number;
+  qty: number;
+  discountPercent: number;
+  total: number;
+};
+
 export type Quotation = {
   id: string;
   services: Service[];
@@ -58,12 +78,19 @@ export type Quotation = {
   contractId: string | null;
   walletTransaction: WalletTransaction | null;
   walletTransactionId: string | null;
-  periodPercent: any[]; // You can replace 'any' with a more specific type based on your requirements
-  periodTHB: any[]; // You can replace 'any' with a more specific type based on your requirements
+  periodPercent: any[]; 
+  periodTHB: any[]; 
   created: Date;
   updated: Date;
 };
-
+export type CustomerForm = {
+  name: string;
+  address: string;
+  mobilePhone: string;
+  companyId: string;
+  phone: string,
+  taxId:string
+};
 export type Service = {
   id: string;
   title: string;
@@ -142,7 +169,7 @@ export type User = {
   email: string | null;
   name: string;
   image: string;
-}| null;
+} | null;
 
 export type Wallet = {
   id: string;
@@ -180,8 +207,38 @@ export type PeriodPercentType = {
   installment: number;
   percentage: number;
 };
+export type EditProductList = {
+  EditProductForm: { item: {
+    title: string
+    id:string
+    description:string
+    qty:number;
+    unit:string;
+    total: number;
+    unitPrice:number
+    discountPercent: number;
+    audits: {
+      id:string;
+      title:string
+    }[]
+  } };
+  SelectAudit: {title: string, description: string};
 
-  
+};
+
+export type DefaultContractType = {
+  warantyTimeWork: string;
+  workCheckEnd: string;
+  workCheckDay: string;
+  installingDay: string;
+  adjustPerDay: string;
+  workAfterGetDeposit: string;
+  productWarantyYear: string;
+  skillWarantyYear: string;
+  prepareDay: string;
+  finishedDay: string;
+  [key: string]: string;
+};
 export interface Audit {
   id: string;
   title: string;

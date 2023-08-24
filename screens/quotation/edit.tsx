@@ -20,13 +20,13 @@ import CardClient from '../../components/CardClient';
 
 import DatePickerButton from '../../components/styles/DatePicker';
 import {Store} from '../../redux/store';
-import * as stateAction from '../../redux/Actions';
+import * as stateAction from '../../redux/actions';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useQuery, useMutation} from '@tanstack/react-query';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import axios, {AxiosResponse, AxiosError} from 'axios';
 import {useRoute} from '@react-navigation/native';
-import {HOST_URL} from '@env';
+import {HOST_URL,PROJECT_NAME} from '@env';
 import FooterBtnEdit from '../../components/styles/FooterBtnEdit';
 import {ParamListBase} from '../../types/navigationType';
 import {
@@ -53,9 +53,9 @@ const updateQuotation = async (data: any) => {
   }: any = useContext(Store);
   let url;
   if (isEmulator) {
-    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/updateQuotation`;
+    url = `http://${HOST_URL}:5001/${PROJECT_NAME}/asia-southeast1/updateQuotation`;
   } else {
-    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/updateQuotation`;
+    url = `https://asia-southeast1-${PROJECT_NAME}.cloudfunctions.net/updateQuotation`;
   }
   const response = await fetch(url, {
     method: 'POST',

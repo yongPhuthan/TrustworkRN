@@ -1,5 +1,5 @@
 import {useState, useCallback} from 'react';
-import {HOST_URL} from '@env';
+import {HOST_URL,PROJECT_NAME,PROJECT_FIREBASE} from '@env';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 
 export const useFetchCompanyUser = () => {
@@ -24,10 +24,10 @@ export const useFetchCompanyUser = () => {
 
         let url;
         if (isEmulator) {
-          url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryCompanySeller2`;
+          url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/queryCompanySeller2`;
         } else {
           console.log('isEmulator Fetch', isEmulator);
-          url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryCompanySeller2`;
+          url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/queryCompanySeller2`;
         }
         const response = await fetch(url, {
           method: 'POST',

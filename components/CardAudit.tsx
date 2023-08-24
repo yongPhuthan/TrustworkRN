@@ -1,6 +1,6 @@
 import React, {useState, useContext, useEffect} from 'react';
 import {View, Text, Image, StyleSheet} from 'react-native';
-import CheckBox from 'react-native-check-box';
+import {CheckBox} from '@rneui/themed';
 import {Store} from '../redux/store';
 type CardProps = {
   title: string;
@@ -35,9 +35,9 @@ const CardAudit = ({
     <View style={[styles.container, checked && styles.selected]}>
       <View style={styles.checkboxContainer}>
       <CheckBox
-          isChecked={checked}
-          onClick={handleCheckbox}
-          checkBoxColor='gray' // iOS default blue color
+          checked={checked}
+          onPress={handleCheckbox}
+          // checkBoxColor='gray' // iOS default blue color
         />
       </View>
 

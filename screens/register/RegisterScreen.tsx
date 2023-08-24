@@ -5,21 +5,27 @@ import {
   View,
   SafeAreaView,
   ScrollView,
+  Alert,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Button,
   ActivityIndicator,
   Dimensions,
   TextInput,
 } from 'react-native';
 import {CheckBox} from '@rneui/themed';
+import CryptoJS from 'crypto-js';
 import React, {useState, useEffect} from 'react';
 import {
   MultipleSelectList,
   SelectList,
 } from 'react-native-dropdown-select-list';
 import firestore from '@react-native-firebase/firestore';
-
+import firebase, {
+  testFirebaseConnection,
+  testFunctionsConnection,
+} from '../../firebase';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faCloudUpload, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
 import {
@@ -29,36 +35,43 @@ import {
   ImagePickerResponse,
 } from 'react-native-image-picker';
 import {useMutation} from '@tanstack/react-query';
+import {S3Client} from '@aws-sdk/client-s3';
+
 import storage from '@react-native-firebase/storage';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {v4 as uuidv4} from 'uuid';
+
+import {
+  HOST_URL,
+  CLOUDFLARE_WORKER_DEV,
+  PROJECT_FIREBASE,
+  CLOUDFLARE_WORKER,
+  CLOUDFLARE_R2_BUCKET_BASE_URL,
+  CLOUDFLARE_DIRECT_UPLOAD_URL,
+} from '@env';
+import {ParamListBase} from '../../types/navigationType';
+import RNFS from 'react-native-fs';
+
 import {StackNavigationProp} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Props {
-  navigation: StackNavigationProp<RootStackParamList, 'LoginScreen'>;
+  navigation: StackNavigationProp<ParamListBase, 'RegisterScreen'>;
 }
 
-type RootStackParamList = {
-  SettingCompany: undefined;
-  LoginScreen: undefined;
-  Screen1: undefined;
-  RootTab: undefined;
-};
-const createCompanySeller = async (data: any) => {
-  const user = auth().currentUser;
-  if (!user) {
-    throw new Error('User is not logged in');
+const screenWidth = Dimensions.get('window').width;
+const createCompanySeller = async ({data, uid}) => {
+  if (!uid) {
+    throw new Error('User UID is not provided.');
   }
   try {
-    console.log('user', user);
     const response = await fetch(
-      'https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createCompanySeller',
+      `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/createCompanySeller`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user?.uid}`,
+          Authorization: `Bearer ${uid}`,
         },
         body: JSON.stringify({data}),
       },
@@ -124,31 +137,16 @@ const RegisterScreen = ({navigation}: Props) => {
     }
   };
 
-  const uploadImageToFirebase = async (imagePath: string) => {
-    setIsImageUpload(true);
-    if (!imagePath) {
-      console.log('No image path provided');
-      return;
-    }
-
-    const filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
-    const storageRef = storage().ref(`images/${filename}`);
-    await storageRef.putFile(imagePath);
-
-    const downloadUrl = await storageRef.getDownloadURL();
-    setIsImageUpload(false);
-
-    return downloadUrl;
-  };
   const {mutate, isLoading, isError} = useMutation(createCompanySeller, {
     onSuccess: () => {
-      navigation.navigate('RootTab');
+      navigation.navigate('HomeScreen');
     },
     onError: (error: any) => {
       console.error('There was a problem calling the function:', error);
       console.log(error.response);
     },
   });
+
   const signUpEmail = async () => {
     setUserLoading(true);
     await AsyncStorage.setItem('userEmail', email);
@@ -170,7 +168,8 @@ const RegisterScreen = ({navigation}: Props) => {
       return;
     }
 
-    const docRef = firestore()
+    const docRef = firebase
+      .firestore()
       .collection('registrationCodes')
       .doc(registrationCode);
     const doc = await docRef.get();
@@ -213,12 +212,30 @@ const RegisterScreen = ({navigation}: Props) => {
 
     await docRef.update({used: true});
 
-    auth()
+    firebase
+      .auth()
       .createUserWithEmailAndPassword(email, password)
-      .then(() => {
-        setUserLoading(false);
-        console.log('GO HANDLE');
-        handleFunction();
+      .then(userCredential => {
+        const user = userCredential.user;
+        if (!user && !userCredential) {
+          setUserLoading(false);
+
+          throw new Error(
+            'User creation was successful, but no user data was returned.',
+          );
+
+        }else{
+          const flagRef = firebase.firestore().collection('completionFlags').doc(user.uid);
+          flagRef.onSnapshot((snapshot) => {
+              if (snapshot.exists && snapshot.data()?.completed) {
+                  handleFunction(user.uid);
+                  setUserLoading(false);
+                  flagRef.onSnapshot(() => {});
+              }
+          });
+
+        }
+
       })
       .catch(error => {
         let errorMessage = '';
@@ -235,7 +252,7 @@ const RegisterScreen = ({navigation}: Props) => {
     setUserLoading(false);
   };
 
-  const handleFunction = async () => {
+  const handleFunction = async uid => {
     const data = {
       id: uuidv4(),
       bizName,
@@ -248,49 +265,123 @@ const RegisterScreen = ({navigation}: Props) => {
       mobileTel,
       bizType,
       logo: logo || 'logo',
-
       companyNumber,
     };
     console.log(data);
-    mutate(data);
+    mutate({data, uid});
   };
 
+
+
+  async function uriToBlob(uri) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        // Return the blob
+        resolve(xhr.response);
+      };
+      xhr.onerror = function () {
+        // Reject with error
+        reject(new Error('URI to Blob failed'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+  }
   const handleLogoUpload = () => {
+    console.log('POADIND')
+    setIsImageUpload(true);
     const options: ImageLibraryOptions = {
       mediaType: 'photo' as MediaType,
-      maxWidth: 300,
-      maxHeight: 300,
-      quality: 0.7,
+    };
+    const uploadImageToCloudflare = async (imagePath: string) => {
+      if (!imagePath) {
+        console.log('No image path provided');
+        return;
+      }
+
+      const filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+      const fileType = imagePath.substring(imagePath.lastIndexOf('.') + 1);
+      const blob = (await uriToBlob(imagePath)) as Blob;
+      const CLOUDFLARE_ENDPOINT = __DEV__
+        ? CLOUDFLARE_WORKER_DEV
+        : CLOUDFLARE_WORKER;
+
+      let contentType = '';
+      switch (fileType.toLowerCase()) {
+        case 'jpg':
+        case 'jpeg':
+          contentType = 'image/jpeg';
+          break;
+        case 'png':
+          contentType = 'image/png';
+          break;
+        default:
+          console.error('Unsupported file type:', fileType);
+          return;
+      }
+
+      try {
+        const response = await fetch(`${CLOUDFLARE_ENDPOINT}${filename}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': contentType,
+          },
+          body: blob,
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          console.error('Server responded with:', text);
+          throw new Error('Server error');
+        }
+        let data;
+        try {
+          const imageUrl = response.url;
+          console.log('Image uploaded successfully. URL:', imageUrl);
+          return imageUrl;
+        } catch (error) {
+          console.error('Failed to parse JSON:', error);
+          throw new Error('Failed to parse response');
+        }
+      } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+      }
     };
 
     launchImageLibrary(options, async (response: ImagePickerResponse) => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
+        setIsImageUpload(false);
+
       } else if (response.errorMessage) {
         console.log('ImagePicker Error: ', response.errorMessage);
+        setIsImageUpload(false);
+
       } else if (response.assets && response.assets.length > 0) {
         const source = {uri: response.assets[0].uri ?? null};
         console.log('Image source:', source);
 
+
         if (source.uri) {
           try {
-            const firebaseUrl: string | undefined = await uploadImageToFirebase(
-              source.uri,
-            );
-            if (firebaseUrl) {
-              setLogo(firebaseUrl as string);
-            } else {
-              setLogo(null);
-            }
-            setLogo(firebaseUrl || null);
+            const cloudflareUrl: string | undefined =
+              await uploadImageToCloudflare(source.uri);
+            setLogo(cloudflareUrl || null);
+            setIsImageUpload(false);
           } catch (error) {
-            console.error('Error uploading image to Firebase:', error);
+            console.error('Error uploading image to Cloudflare:', error);
+            setIsImageUpload(false);
           }
         }
       }
     });
   };
-
+  console.log('logo', logo);
+  useEffect(() => {
+    testFunctionsConnection();
+  }, []);
   const renderPage = () => {
     switch (page) {
       case 1:
@@ -402,20 +493,6 @@ const RegisterScreen = ({navigation}: Props) => {
                 justifyContent: 'flex-end',
                 marginTop: 10,
               }}>
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  {
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderColor: '#005751',
-                    borderWidth: 1,
-                    backgroundColor: 'white',
-                  },
-                ]}>
-                <Text style={{color: '#005751'}}>Button 1</Text>
-              </TouchableOpacity>
-
               <TouchableOpacity
                 disabled={isNextDisabledPage1}
                 onPress={handleNextPage}
@@ -590,7 +667,7 @@ const RegisterScreen = ({navigation}: Props) => {
 
               <TouchableOpacity
                 onPress={signUpEmail}
-                disabled={isNextDisabledPage3}
+                // disabled={isNextDisabledPage3}
                 style={[
                   styles.button,
                   {
@@ -660,5 +737,15 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     marginTop: 10,
+  },
+  loginButton: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    width: screenWidth - 50,
+    height: 48,
+    borderRadius: 10,
   },
 });

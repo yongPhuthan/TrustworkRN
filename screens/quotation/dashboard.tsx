@@ -4,13 +4,14 @@ import {
   Text,
   FlatList,
   Dimensions,
+  ActivityIndicator,
   TouchableOpacity,
   Platform,
   TouchableNativeFeedback,
 } from 'react-native';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
 import CardDashBoard from '../../components/CardDashBoard';
-import {HOST_URL} from '@env';
+import {HOST_URL,PROJECT_NAME,PROJECT_FIREBASE} from '@env';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
 import {FAB} from 'react-native-paper';
@@ -36,10 +37,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
   const [companyData, setCompanyData] = useState(null);
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
-  const fabStyle = {width: 50};
-  const handleFABPress = () => {
-    // Do something when FAB is pressed
-  };
+
 
   const handleModal = () => {
     setShowModal(true);
@@ -61,9 +59,9 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const fetchDashboardData = async () => {
     let url;
     if (isEmulator) {
-      url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryDashBoard`;
+      url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/queryDashBoard`;
     } else {
-      url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryDashBoard`;
+      url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/queryDashBoard`;
     }
     const user = await getTokenAndEmail();
     if (user) {
@@ -111,11 +109,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Lottie
-          style={{width: '10%'}}
-          source={require('../../assets/animation/lf20_rwq6ciql.json')}
-          autoPlay
-          loop
+        <ActivityIndicator
         />
       </View>
     );
@@ -251,12 +245,12 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     dispatch(stateAction.client_tel(''));
     dispatch(stateAction.client_tax(''));
 
-    navigation.navigate('QuotationScreen');
+    navigation.navigate('CreateQuotation');
   };
 
   return (
     <>
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center',backgroundColor: '#f5f5f5'}}>
         <FlatList
           data={quotationData}
           renderItem={renderItem}
@@ -306,7 +300,7 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 10,
-    backgroundColor: '#0050f0',
+    backgroundColor: '#591dc4ff',
     borderRadius: 28,
     height: 56,
     width: 56,

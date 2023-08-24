@@ -5,7 +5,14 @@ declare module '@env' {
     export const HOST_URL: string;
     export const DEV_API_URL: string;
     export const PROD_API_URL: string;
-
+    export const PROJECT_NAME: string;
+    export const PROJECT_FIREBASE:string
+    export const CLOUDFLARE_API_TOKEN:string;
+    export const CLOUDFLARE_DIRECT_UPLOAD_URL:string;
+    export const CLOUDFLARE_UPLOAD_URL:string
+    export const CLOUDFLARE_R2_BUCKET_BASE_URL:string
+    export const CLOUDFLARE_WORKER : string
+    export const CLOUDFLARE_WORKER_DEV:string
     // Add more environment variables if needed
   }
   

@@ -10,7 +10,7 @@ import {
 import {NavigationScreen} from '../types/navigationType'
 import React, { useState, useEffect,useContext } from 'react';
 import { Badge } from '@rneui/themed';
-import {HOST_URL} from '@env';
+import {HOST_URL,PROJECT_NAME} from '@env';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {useQuery} from '@tanstack/react-query';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -30,6 +30,7 @@ import useTokenAndEmail from '../hooks/user/useTokenAndEmail';
 import {Store} from '../redux/store';
 import Dashboard from './quotation/dashboard';
 import ContractDashboard from './contract/dashboard';
+import SettingsScreen from './setting';
 
 type Props = {}
 
@@ -45,9 +46,9 @@ const HomeScreen=({navigation}: NavigationScreen) =>{
     const fetchDocApproved = async () => {
       let url;
       if (isEmulator) {
-        url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryDocApproved`;
+        url = `http://${HOST_URL}:5001/${PROJECT_NAME}/asia-southeast1/queryDocApproved`;
       } else {
-        url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryDocApproved`;
+        url = `https://asia-southeast1-${PROJECT_NAME}.cloudfunctions.net/queryDocApproved`;
       }
   
       const user = await useTokenAndEmail();
@@ -191,14 +192,14 @@ const HomeScreen=({navigation}: NavigationScreen) =>{
               headerStyle: {
                 backgroundColor: '#fff',
               },
-              headerTitle: 'โปรไฟล์',
+              headerTitle: 'ตั้งค่าธุรกิจ',
   
               headerTintColor: '#000',
               tabBarIcon: ({color, size}) => (
                 <FontAwesomeIcon icon={faCog} color={color} size={size} />
               ),
             }}
-            component={ContractDashboard}
+            component={SettingsScreen}
           />
         </Tab.Navigator>
       </>

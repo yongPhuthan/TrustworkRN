@@ -16,6 +16,7 @@ import Summary from '../../components/Summary';
 import Divider from '../../components/styles/Divider';
 import {NavigationContainer} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
+import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
 
 import CardProject from '../../components/CardProject';
 import CardClient from '../../components/CardClient';
@@ -28,7 +29,7 @@ import {useQuery} from '@tanstack/react-query';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 
 import axios, {AxiosResponse, AxiosError} from 'axios';
-import {HOST_URL} from '@env';
+
 import messaging from '@react-native-firebase/messaging';
 import Lottie from 'lottie-react-native';
 import{ Audit, IdContractList,CompanyUser} from '../../types/docType'
@@ -125,14 +126,14 @@ const Quotation = ({navigation}: Props) => {
 
   const handleAddClientForm = () => {
     // TODO: Add client to quotation
-    navigation.navigate('AddClient');
+    navigation.navigate('AddCustomer');
   };
 
   const handleAddProductForm = () => {
     // TODO: Add client to quotation
     dispatch(stateAction.reset_audit());
 
-    navigation.navigate('AddProductForm');
+    navigation.navigate('AddProduct');
   };
   const handleEditService = (index: number) => {
     navigation.navigate('EditProductForm', {item: serviceList[index]});
@@ -209,11 +210,7 @@ const Quotation = ({navigation}: Props) => {
   const handleInvoiceNumberChange = (text: string) => {
     setDocnumber(text);
   };
-  const signOutPage = () => {
-    auth()
-      .signOut()
-      .then(() => console.log('User signed out!'));
-  };
+
   const handleStartDateSelected = (date: Date) => {
     const formattedDate = thaiDateFormatter(date);
     setDateOffer(formattedDate);
@@ -227,12 +224,10 @@ const Quotation = ({navigation}: Props) => {
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged(newUser => {
       if (newUser && newUser.email) {
-        // User is authenticated, show their email
         console.log('User is authenticated:', newUser.email);
         setUser(newUser);
         setEmail(newUser.email);
       } else {
-        // User is not authenticated, navigate to login page
         console.log('User is not authenticated, navigating to login page...');
         navigation.navigate('LoginScreen');
       }
@@ -243,24 +238,24 @@ const Quotation = ({navigation}: Props) => {
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-      if (enabled) {
-        console.log('Authorization status:', authStatus);
-        await messaging().registerDeviceForRemoteMessages(); // Register device for remote messages
-        getFCMToken();
-      }
+      // if (enabled) {
+      //   console.log('Authorization status:', authStatus);
+      //   await messaging().registerDeviceForRemoteMessages(); // Register device for remote messages
+      //   getFCMToken();
+      // }
     }
 
-    async function getFCMToken() {
-      const fcmToken = await messaging().getToken();
+    // async function getFCMToken() {
+    //   const fcmToken = await messaging().getToken();
 
-      if (fcmToken) {
-        console.log('Your Firebase Token  document:', fcmToken);
-        setFtmToken(fcmToken);
-      } else {
-        console.log('Failed to get Firebase Token');
-      }
-    }
-    requestUserPermission();
+    //   if (fcmToken) {
+    //     console.log('Your Firebase Token  document:', fcmToken);
+    //     setFtmToken(fcmToken);
+    //   } else {
+    //     console.log('Failed to get Firebase Token');
+    //   }
+    // }
+    // requestUserPermission();
 
     const today = new Date();
     const year = today.getFullYear();
@@ -282,7 +277,7 @@ const Quotation = ({navigation}: Props) => {
       <View style={styles.loadingContainer}>
         <Lottie
           style={{width: '25%'}}
-          source={require('../assets/animation/lf20_rwq6ciql.json')}
+          source={require('../../assets/animation/lf20_rwq6ciql.json')}
           autoPlay
           loop
         />
@@ -291,8 +286,8 @@ const Quotation = ({navigation}: Props) => {
   }
   const idContractList = selectedContract.map((obj: IdContractList) => obj.id);
 
-  // console.log('company user' + JSON.stringify(companyUser));
-  // console.log('serviceList' + JSON.stringify(serviceList));
+  console.log('company user' + JSON.stringify(companyUser));
+  console.log('serviceList' + JSON.stringify(serviceList));
   // console.log('fcmToken', fcnToken);
   return (
     <View style={{flex: 1}}>
@@ -340,44 +335,6 @@ const Quotation = ({navigation}: Props) => {
           ))}
 
           <AddServices handleAddProductFrom={handleAddProductForm} />
-          <Divider />
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              marginTop: 10,
-            }}>
-            <Text style={styles.labelWaranty}>รับประกันงานติดตั้งกี่ปี</Text>
-            <View style={styles.inputContainerForm}>
-              <TextInput
-                style={{width: 30}}
-                value={String(skillWarantyYear)} 
-                onChangeText={text => setSkillWarantyYear(Number(text))}
-                placeholderTextColor="#A6A6A6"
-                keyboardType="numeric"
-              />
-              <Text style={styles.inputSuffix}>ปี</Text>
-            </View>
-          </View>
-
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              marginTop: 10,
-            }}>
-            <Text style={styles.labelWaranty}>รับประกันวัสดุอุปกรณ์กี่ปี</Text>
-            <View style={styles.inputContainerForm}>
-              <TextInput
-                style={{width: 30}}
-                value={String(productWarantyYear)}
-                onChangeText={text => setProductWarantyYear(Number(text))}
-                placeholderTextColor="#A6A6A6"
-                keyboardType="numeric"
-              />
-              <Text style={styles.inputSuffix}>ปี</Text>
-            </View>
-          </View>
           <Divider />
 
           <Summary

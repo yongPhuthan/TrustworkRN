@@ -22,16 +22,18 @@ export type ProductItem = {
 export type ParamListBase = {
   Quotation: undefined;
   RegisterScreen: undefined;
-  AddClient: undefined;
+  AddCustomer: undefined;
   AuditCategory: Audit;
-  AddProductForm: undefined;
+  AddProduct: undefined;
   TopUpScreen: undefined;
   LayoutScreen: undefined;
   CreateContractScreen: {id: string};
   HomeScreen: undefined;
+  CreateQuotation:undefined;
   Dashboard: undefined;
   ContractCard: undefined;
   SelectAudit: Audit;
+  DefaultContract: undefined;
   SelectContract: {id: string};
   EditProductForm: {item: ProductItem};
   EditClientForm: undefined;

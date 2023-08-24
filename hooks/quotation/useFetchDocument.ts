@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import {HOST_URL} from "@env"
+import {HOST_URL,PROJECT_NAME} from "@env"
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 
 export const useFetchDocument = () => {
@@ -23,9 +23,9 @@ export const useFetchDocument = () => {
 
       let url;
       if (isEmulator) {
-        url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryDocument`;
+        url = `http://${HOST_URL}:5001/${PROJECT_NAME}/asia-southeast1/queryDocument`;
       } else {
-        url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryDocument`;
+        url = `https://asia-southeast1-${PROJECT_NAME}.cloudfunctions.net/queryDocument`;
       }
       const response = await fetch(
         url,

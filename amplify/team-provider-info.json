@@ -1,0 +1,14 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-trustwork-dev-162702-authRole",
+      "UnauthRoleArn": "arn:aws:iam::485108677501:role/amplify-trustwork-dev-162702-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::485108677501:role/amplify-trustwork-dev-162702-authRole",
+      "Region": "ap-southeast-1",
+      "DeploymentBucketName": "amplify-trustwork-dev-162702-deployment",
+      "UnauthRoleName": "amplify-trustwork-dev-162702-unauthRole",
+      "StackName": "amplify-trustwork-dev-162702",
+      "StackId": "arn:aws:cloudformation:ap-southeast-1:485108677501:stack/amplify-trustwork-dev-162702/b935b870-3f3b-11ee-899b-0a61cfcd84ee"
+    }
+  }
+}

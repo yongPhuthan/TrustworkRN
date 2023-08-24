@@ -14,7 +14,7 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		A9248CA66939323A4F27EDA4 /* Pods_Trustwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 85F7AE20C74E6D466879B896 /* Pods_Trustwork.framework */; };
-		F2C695442A860B6000C4E3A0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F2C695432A860B6000C4E3A0 /* GoogleService-Info.plist */; };
+		F208AE242A8F5CF200C19159 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F208AE232A8F5CF200C19159 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,7 +44,7 @@
 		85F7AE20C74E6D466879B896 /* Pods_Trustwork.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Trustwork.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-Trustwork-TrustworkTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trustwork-TrustworkTests.release.xcconfig"; path = "Target Support Files/Pods-Trustwork-TrustworkTests/Pods-Trustwork-TrustworkTests.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F2C695432A860B6000C4E3A0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		F208AE232A8F5CF200C19159 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		F8FEE5913B7A18B4813D47D7 /* Pods_Trustwork_TrustworkTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Trustwork_TrustworkTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -118,7 +118,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				F2C695432A860B6000C4E3A0 /* GoogleService-Info.plist */,
+				F208AE232A8F5CF200C19159 /* GoogleService-Info.plist */,
 				13B07FAE1A68108700A75B9A /* Trustwork */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				00E356EF1AD99517003FC87E /* TrustworkTests */,
@@ -247,7 +247,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
-				F2C695442A860B6000C4E3A0 /* GoogleService-Info.plist in Resources */,
+				F208AE242A8F5CF200C19159 /* GoogleService-Info.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
