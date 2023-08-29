@@ -125,15 +125,14 @@ const Quotation = ({navigation}: Props) => {
   };
 
   const handleAddClientForm = () => {
-    // TODO: Add client to quotation
     navigation.navigate('AddCustomer');
   };
 
   const handleAddProductForm = () => {
-    // TODO: Add client to quotation
-    dispatch(stateAction.reset_audit());
-
-    navigation.navigate('AddProduct');
+    if(companyUser?.user){
+      dispatch(stateAction.reset_audit());
+      navigation.navigate('ExistingProduct',{id:companyUser.user?.id});
+    }
   };
   const handleEditService = (index: number) => {
     navigation.navigate('EditProductForm', {item: serviceList[index]});

@@ -1,5 +1,6 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {StackNavigationProp} from '@react-navigation/stack';
+import { CompanyUser, Service,Quotation } from './docType';
 
 export type Audit = {
   title: string;
@@ -35,16 +36,19 @@ export type ParamListBase = {
   SelectAudit: Audit;
   DefaultContract: undefined;
   SelectContract: {id: string};
-  EditProductForm: {item: ProductItem};
+  EditProductForm: {item: Service};
+  AddExistProduct: {item: Service};
   EditClientForm: undefined;
   WebViewScreen: {id: string};
   DocViewScreen: {id: any};
+  EditSetting:{company:CompanyUser}
   SignUpScreen: undefined;
   LoginScreen: undefined;
   CompanyUserFormScreen: undefined;
   ContactInfoScreen: undefined;
   SettingCompany: undefined;
-  EditQuotation: {id: string};
+  ExistingProduct: {id: string};
+  EditQuotation: {quotation: Quotation; company: CompanyUser};
   EditQuotationScreen: {id: string};
   EditContractOption: {id: string};
   QuotationScreen: undefined;

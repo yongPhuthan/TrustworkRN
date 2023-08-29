@@ -28,6 +28,7 @@ const windowWidth = Dimensions.get('window').width;
 const CardProject = (props: Props) => {
   const {serviceList} = props;
 
+
   return (
     <View>
       <TouchableOpacity
@@ -35,7 +36,7 @@ const CardProject = (props: Props) => {
         onPress={() => props.handleEditService()}>
         <View style={styles.summary}>
           <Text style={styles.summaryText}>
-            {props.index}. {serviceList.title}
+            {props.index+1}. {serviceList.title}
           </Text>
         </View>
         <View style={styles.description}>

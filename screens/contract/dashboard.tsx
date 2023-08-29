@@ -18,7 +18,6 @@ import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
 import Modal from 'react-native-modal';
 import CardApprovedDashBoard from '../../components/CardApprovedDashBoard';
-
 import {useQuery} from '@tanstack/react-query';
 import Lottie from 'lottie-react-native';
 import {Contract, Quotation, Customer, CompanyUser} from '../../types/docType';
@@ -95,13 +94,14 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     }
   };
   const fetchDashboardData = async () => {
+    console.log('FETCHER')
+
     let url;
     if (isEmulator) {
       url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/queryContractDashBoard`;
     } else {
       url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/queryContractDashBoard`;
     }
-
     const user = await getTokenAndEmail();
     if (user) {
       console.log('user', user);

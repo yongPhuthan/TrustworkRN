@@ -1,5 +1,5 @@
 current directory: /Users/phuthan1202/Trustwork/vendor/bundle/ruby/2.7.0/gems/ffi-1.15.5/ext/ffi_c
-/Users/phuthan1202/.rvm/rubies/ruby-2.7.6/bin/ruby -I /Users/phuthan1202/.rvm/rubies/ruby-2.7.6/lib/ruby/2.7.0 -r ./siteconf20230811-1476-z6ief0.rb extconf.rb
+/Users/phuthan1202/.rvm/rubies/ruby-2.7.6/bin/ruby -I /Users/phuthan1202/.rvm/rubies/ruby-2.7.6/lib/ruby/2.7.0 -r ./siteconf20230828-68846-1f68mo3.rb extconf.rb
 checking for ffi_prep_closure_loc() in -lffi... yes
 checking for ffi_prep_cif_var()... yes
 checking for ffi_raw_call()... yes
@@ -40,4 +40,4 @@ linking shared-object ffi_c.bundle
 
 current directory: /Users/phuthan1202/Trustwork/vendor/bundle/ruby/2.7.0/gems/ffi-1.15.5/ext/ffi_c
 make "DESTDIR=" install
-/opt/homebrew/opt/coreutils/bin/ginstall -c -m 0755 ffi_c.bundle ./.gem.20230811-1476-1hudp1n
+/opt/homebrew/opt/coreutils/bin/ginstall -c -m 0755 ffi_c.bundle ./.gem.20230828-68846-1cqnvxp

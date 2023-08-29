@@ -6,131 +6,126 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
+  Image,
   ActivityIndicator,
-  Image
+  TouchableOpacity,
 } from 'react-native';
+import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
+
 import Divider from '../../components/styles/Divider';
 import {useForm, Controller} from 'react-hook-form';
 import {Store} from '../../redux/store';
-import * as stateAction from '../../redux/actions';
-import {faCloudUpload, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
 
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faCloudUpload, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
+import * as stateAction from '../../redux/actions';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {v4 as uuidv4} from 'uuid';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {
-  FormData,
-  ServiceList,
-  EditProductList,
-  Service,
-} from '../../types/docType';
-import {ParamListBase} from '../../types/navigationType';
 import SmallDivider from '../../components/styles/SmallDivider';
+import {FormData, ServiceList, CompanyUser} from '../../types/docType';
+import {ParamListBase} from '../../types/navigationType';
+import {
+  launchImageLibrary,
+  MediaType,
+  ImageLibraryOptions,
+  ImagePickerResponse,
+} from 'react-native-image-picker';
 import {useImageUpload} from '../../hooks/utils/useImageUpload';
 
 type Props = {
-  navigation: StackNavigationProp<ParamListBase, 'EditProductForm'>;
-  route: RouteProp<ParamListBase, 'EditProductForm'>;
-  // onGoBack: (data: string) => void;
+  navigation: StackNavigationProp<ParamListBase, 'AddExistProduct'>;
+
+  route: RouteProp<ParamListBase, 'AddExistProduct'>;
 };
 
-const EditProductForm = ({navigation, route}: Props) => {
-  const {control, handleSubmit, formState} = useForm<FormData>();
-  const {isDirty} = formState;
-  const {item} = route.params;
-  const [qty, setQuantity] = useState(item.qty);
+interface ImageForm {
+  image: FileList;
+}
+
+const AddExistProduct = ({navigation, route}: Props) => {
   const [count, setCount] = useState(0);
-  const [unitPrice, setPrice] = useState(item.unitPrice);
-  const [total, setTotalCost] = useState(item.total);
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const {item} = route.params;
+  const [qty, setQuantity] = useState(1);
+  const [serviceImageUri, setServiceImage] = useState<string | null>(null);
+  const [unitPrice, setPrice] = useState(0);
+  const [total, setTotalCost] = useState(0);
   const [serviceListState, setServiceList] = useState<ServiceList[]>([]);
   const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
 
+  const serviceID = uuidv4();
   const {
     state: {serviceList, selectedAudit},
     dispatch,
   }: any = useContext(Store);
 
   const handleFormSubmit = (data: FormData) => {
-    if (!isDirty) {
-      // If the form data hasn't been modified, you might want to show a message
-      // or simply return without processing the form further.
-      navigation.goBack();
-
-      return;
-    } else {
-      const newServiceItem = {
-        id: item.id,
-        title: data.title ? data.title : item.title,
-        description: data.description ? data.description : item.description,
-        unitPrice: data.unitPrice ? Number(data.unitPrice.replace(/,/g, '')) : Number(item.unitPrice),
-        qty: data.qty ? Number(data.qty) : Number(item.qty),
-        total: Number(qty * unitPrice),
+    const selectedAudits = selectedAudit.map((obj: any) => {
+      return {
+        ...obj,
+        serviceID,
       };
-      console.log('newServiceItem unit', newServiceItem.unitPrice);
-      const index = serviceList.findIndex(
-        (serviceItem: any) => serviceItem.id === item.id,
-      );
+    });
 
-      if (index !== -1) {
-        const updatedServiceList = [...serviceList];
-        updatedServiceList[index] = {
-          ...updatedServiceList[index],
-          ...newServiceItem,
-        };
-        console.log('updatedServiceList', updatedServiceList);
+    const newServiceItem = {
+      id: serviceID,
+      title: data.title,
+      description: data.description,
+      unitPrice: data.unitPrice,
+      serviceImage: imageUrl,
+      qty: qty,
+      discountPercent,
+      total: (qty * unitPrice).toString(),
+      audits: selectedAudits,
+    };
 
-        dispatch(stateAction.update_service_list(updatedServiceList));
-        navigation.goBack();
-      }
-    }
+    dispatch(stateAction.service_list(newServiceItem as any));
+    dispatch(stateAction.reset_audit());
+    navigation.pop(2);
+
+    // navigation.goBack();
   };
 
-  const handleDelete = () => {
-    // Find the index of the item in the serviceList array
-    const index = serviceList.findIndex(
-      (serviceItem: any) => serviceItem.id === item.id,
-    );
-
-    if (index !== -1) {
-      // Remove the item from the serviceList array
-      const updatedServiceList = [...serviceList];
-      updatedServiceList.splice(index, 1);
-
-      // Dispatch the action to update the serviceList state
-      dispatch(stateAction.update_service_list(updatedServiceList));
-
-      // Navigate back to the previous screen
-      navigation.goBack();
-    }
-  };
-  function isValidNumber(value) {
-    return (
-      !isNaN(value) && value !== '' && value !== null && value !== undefined
-    );
-  }
-
+  const {
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    reset,
+    formState: {errors, isDirty, dirtyFields, isValid},
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      title: item.title,
+      description: item.description,
+      serviceImage: item.serviceImage,
+      
+    },
+  });
   const handleSelectAudit = (data: FormData) => {
     navigation.navigate('SelectAudit', {
       title: data.title,
       description: data.description,
+      serviceID: serviceID,
     });
   };
-
   useEffect(() => {
-    // Calculate the total cost based on the quantity and price values
-    setTotalCost(qty * unitPrice);
-    if(imageUrl){
-      item.serviceImage = imageUrl;
+    if (qty > 0) {
+      const total = qty * unitPrice;
+      // const discountedTotal = total - (total * discountPercent / 100);
+      setTotalCost(total);
+    } else {
+      setTotalCost(0);
     }
-  }, [qty, unitPrice]);
+  }, [qty, unitPrice, discountPercent]);
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.subContainer}>
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
           <TouchableOpacity
             style={{
               justifyContent: 'center',
@@ -148,24 +143,34 @@ const EditProductForm = ({navigation, route}: Props) => {
             onPress={handleLogoUpload}>
             {isImageUpload ? (
               <ActivityIndicator size="small" color="gray" />
-            ) : item.serviceImage ? (
+            ) : imageUrl ? (
               <Image
-              source={{uri: item.serviceImage}}
-              style={{width: 300, aspectRatio: 2, resizeMode: 'contain'}}
-            />
-            ):(<View>
-              <FontAwesomeIcon
-                icon={faCloudUpload}
-                style={{marginVertical: 5, marginHorizontal: 50}}
-                size={32}
-                color="gray"
+                source={{uri: imageUrl}}
+                style={{width: 300, aspectRatio: 2, resizeMode: 'contain'}}
               />
-              <Text style={{textAlign: 'center', color: 'gray'}}>
-                ภาพตัวอย่างสินค้า
-              </Text>
-            </View>)}
+            ) : watch('serviceImage') ? (
+              <Image
+                source={{uri: watch('serviceImage')}}
+                style={{width: 300, aspectRatio: 2, resizeMode: 'contain'}}
+              />
+            ) : (
+              <>
+                <View>
+                  <FontAwesomeIcon
+                    icon={faCloudUpload}
+                    style={{marginVertical: 5, marginHorizontal: 50}}
+                    size={32}
+                    color="gray"
+                  />
+                  <Text style={{textAlign: 'center', color: 'gray'}}>
+                    ภาพตัวอย่างสินค้า
+                  </Text>
+                </View>
+              </>
+            )}
           </TouchableOpacity>
         </View>
+
         <Controller
           control={control}
           name="title"
@@ -196,14 +201,13 @@ const EditProductForm = ({navigation, route}: Props) => {
             />
           )}
         />
+
         <View style={styles.summary}>
           <Text style={styles.priceHead}>ราคา:</Text>
           <Controller
             control={control}
             name="unitPrice"
-            defaultValue={Number(item.unitPrice)
-              .toFixed(2)
-              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+            defaultValue=""
             render={({field: {onChange, value}}) => (
               <TextInput
                 style={[styles.input, {textAlign: 'right'}]}
@@ -218,26 +222,6 @@ const EditProductForm = ({navigation, route}: Props) => {
             )}
           />
         </View>
-        {/* <View style={styles.summary}>
-          <Text style={styles.price}>ราคา:</Text>
-          <Controller
-            control={control}
-            name="unitPrice"
-            defaultValue={String(item.unitPrice)}
-            render={({field: {onChange, value}}) => (
-              <TextInput
-                style={styles.price}
-                placeholder="0"
-                keyboardType="number-pad"
-                onChangeText={value => {
-                  onChange(value);
-                  setPrice(parseInt(value, 1));
-                }}
-                value={value}
-              />
-            )}
-          />
-        </View> */}
         <View style={styles.summary}>
           <Text style={styles.price}>จำนวน:</Text>
 
@@ -256,15 +240,14 @@ const EditProductForm = ({navigation, route}: Props) => {
             <Controller
               control={control}
               name="qty"
-              defaultValue={String(item.qty)}
               render={({field: {onChange, value}}) => (
                 <TextInput
                   style={styles.counter}
-                  placeholder="0"
+                  placeholder="10"
                   keyboardType="number-pad"
                   onChangeText={value => {
                     onChange(value);
-                    setQuantity(parseInt(value, 1));
+                    setQuantity(parseInt(value, 10));
                   }}
                   value={qty.toString()}
                 />
@@ -282,39 +265,43 @@ const EditProductForm = ({navigation, route}: Props) => {
 
           {/* END COUNTER BUTTON */}
         </View>
-        {/* <View style={styles.summary}>
+        <View style={styles.summary}>
           <Text style={styles.price}>หน่วย:</Text>
           <Controller
             control={control}
             name="unit"
-            defaultValue={item.unit }
+            defaultValue="ชุด"
             render={({field: {onChange, value}}) => (
               <TextInput
                 style={styles.price}
-                placeholder="ชุด"
-                keyboardType="number-pad"
+                keyboardType="default"
                 onChangeText={onChange}
                 value={value}
               />
             )}
           />
         </View>
-        <View style={styles.summary}>
+        {/* ปิดส่วนลดแยกรายการ */}
+        {/* <View style={styles.summary}>
           <Text style={styles.price}>ส่วนลด(%):</Text>
           <Controller
-            control={control}
-            name="discountPercent"
-            defaultValue={String(item.discountPercent)}
-            render={({field: {onChange, value}}) => (
-              <TextInput
-                style={styles.price}
-                placeholder="0"
-                keyboardType="number-pad"
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-          />
+  control={control}
+  name="discountPercent"
+  defaultValue=""
+  render={({field: {onChange, value}}) => (
+    <TextInput
+      style={styles.price}
+      placeholder="0"
+      keyboardType="number-pad"
+      onChangeText={value => {
+        onChange(value);
+        setDiscountPercent(parseFloat(value));
+      }}
+      value={value}
+    />
+  )}
+/>
+
         </View> */}
         <Divider />
         <View style={styles.summary}>
@@ -330,7 +317,7 @@ const EditProductForm = ({navigation, route}: Props) => {
                 placeholder="0"
                 keyboardType="number-pad"
                 value={
-                  isValidNumber(qty) && isValidNumber(unitPrice)
+                  qty > 0
                     ? Number(qty * unitPrice)
                         .toFixed(2)
                         .replace(/\d(?=(\d{3})+\.)/g, '$&,')
@@ -403,32 +390,22 @@ const EditProductForm = ({navigation, route}: Props) => {
               },
             }),
           }}></View>
+
         <SmallDivider />
-        <View
-          style={{
-            ...Platform.select({
-              ios: {
-                paddingVertical: 10,
-              },
-              android: {
-                paddingVertical: 0,
-              },
-            }),
-          }}></View>
         <TouchableOpacity
-          style={styles.btn}
-          onPress={handleSubmit(handleFormSubmit)}>
+          style={[
+            styles.btn,
+            selectedAudit.length === 0 ? styles.btnDisabled : null,
+          ]}
+          onPress={handleSubmit(handleFormSubmit)}
+          disabled={selectedAudit.length === 0}>
           <Text style={styles.label}>บันทึก</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonContainer} onPress={handleDelete}>
-          <Icon name="close" size={24} color="red" />
-          <Text style={styles.buttonLabel}>ลบรายการ</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
   );
 };
-export default EditProductForm;
+export default AddExistProduct;
 
 const styles = StyleSheet.create({
   container: {},
@@ -438,12 +415,36 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     height: 'auto',
   },
+
   form: {
     border: '1px solid #0073BA',
     borderRadius: 10,
   },
   date: {
     textAlign: 'right',
+  },
+
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    marginTop: 40,
+    backgroundColor: '#0073BA',
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginVertical: 10,
+    fontSize: 16,
+    width: 150,
+    textAlign: 'right', // Add textAlign property
   },
 
   inputName: {
@@ -466,6 +467,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     height: 100,
   },
+  label: {
+    fontSize: 16,
+    color: 'white',
+  },
   inputContainer: {
     flexDirection: 'row',
 
@@ -483,11 +488,6 @@ const styles = StyleSheet.create({
 
     fontWeight: 'bold',
     color: 'black',
-  },
-  priceHead: {
-    fontSize: 18,
-    color: 'black',
-    marginTop: 10,
   },
   containerPrice: {
     alignSelf: 'center',
@@ -514,6 +514,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'black',
   },
+  priceHead: {
+    fontSize: 18,
+    color: 'black',
+    marginTop: 10,
+  },
   counter: {
     fontSize: 18,
     paddingHorizontal: 20,
@@ -527,13 +532,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
   },
-  rowContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-  },
-
   selectButton: {
+    // backgroundColor: '#0073BA',
     backgroundColor: 'white',
     borderColor: 'gray',
     borderWidth: 1,
@@ -544,22 +544,16 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   selectButtonText: {
+    // color: '#fff',
     color: 'black',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginVertical: 10,
-    fontSize: 16,
-    width: 150,
-    textAlign: 'right', // Add textAlign property
+  btnDisabled: {
+    backgroundColor: '#ccc',
   },
+
   count: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -587,9 +581,9 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
+    marginTop: 10,
     flexDirection: 'row',
     width: '100%',
-    marginBottom: 10,
     justifyContent: 'space-between',
   },
   cardTitle: {
@@ -611,51 +605,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  btn: {
-    backgroundColor: '#007BFF', // A shade of blue.
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    borderRadius: 5,
-    // shadowColor: '#000',
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 2,
-    // },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
-    elevation: 5,
-    marginBottom: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: 'red',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // shadowColor: '#000',
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 2,
-    // },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
-    elevation: 5,
-  },
-  buttonLabel: {
-    color: 'red',
-    marginLeft: 10,
-    fontSize: 16,
-    fontWeight: '500',
   },
 });

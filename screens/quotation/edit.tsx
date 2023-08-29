@@ -17,6 +17,7 @@ import Divider from '../../components/styles/Divider';
 import {StackNavigationProp} from '@react-navigation/stack';
 import CardProject from '../../components/CardProject';
 import CardClient from '../../components/CardClient';
+import{ParamListBase} from '../../types/navigationType'
 
 import DatePickerButton from '../../components/styles/DatePicker';
 import {Store} from '../../redux/store';
@@ -28,7 +29,6 @@ import axios, {AxiosResponse, AxiosError} from 'axios';
 import {useRoute} from '@react-navigation/native';
 import {HOST_URL,PROJECT_NAME} from '@env';
 import FooterBtnEdit from '../../components/styles/FooterBtnEdit';
-import {ParamListBase} from '../../types/navigationType';
 import {
   Audit,
   Quotation,
@@ -36,10 +36,14 @@ import {
   CompanyUser,
   Service,
 } from '../../types/docType';
+import type { RouteProp } from '@react-navigation/native';
+
 import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
 import {useFetchDocument} from '../../hooks/quotation/useFetchDocument'; 
 interface Props {
-  navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
+  navigation: StackNavigationProp<ParamListBase, 'EditQuotation'>;
+  route: RouteProp<ParamListBase, 'EditQuotation'>;
+
 }
 interface MyError {
   response: object;
@@ -79,37 +83,35 @@ const EditQuotation = ({navigation}: Props) => {
       client_address,
       client_tel,
       client_tax,
-      isEmulator,
+      selectedAudit,
     },
     dispatch,
   }: any = useContext(Store);
   // const { data, isLoading } = useQuery('data', fetchData);
   const [email, setEmail] = useState('');
   const route = useRoute();
+  const [quotation, setQuotation] = useState<Quotation>((route.params as any)?.quotation);
+  const [companyUser, setCompanyUser] = useState<CompanyUser>((route.params as any)?.company)
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
 
-  const [status, setStatus] = useState('');
-  const [total, setTotal] = useState(0);
-  const [companyUser, setCompanyUser] = useState<CompanyUser>();
-  const [quotation, setQuotation] = useState<Quotation>();
+  const [total, setTotal] = useState(quotation.allTotal);
   const thaiDateFormatter = useThaiDateFormatter();
-  const [discountValue, setDiscountValue] = useState(0);
-  const [summaryAfterDiscount, setSumAfterDiscount] = useState(0);
-  const [vat7Amount, setVat7Amount] = useState(0);
-  const [vat3Amount, setVat3Amount] = useState(0);
-  const [customerName, setCustomerName] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('');
-  const [docNumber, setDocnumber] = useState('');
+  const [discountValue, setDiscountValue] = useState(quotation.discountValue || 0);
+  const [summaryAfterDiscount, setSumAfterDiscount] = useState(quotation.summaryAfterDiscount || 0);
+  const [vat7Amount, setVat7Amount] = useState(quotation.vat7 || 0);
+  const [vat3Amount, setVat3Amount] = useState(quotation.taxValue === 3  || 0);
+  const [customerName, setCustomerName] = useState(quotation.customer?.name);
+  const [customerAddress, setCustomerAddress] = useState(quotation.customer?.address);
+  const [docNumber, setDocnumber] = useState(quotation.docNumber);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [dateOffer, setDateOffer] = useState<String>('');
-  const [dateEnd, setDateEnd] = useState<String>('');
+  const [dateOffer, setDateOffer] = useState<String>(quotation.dateOffer);
+  const [dateEnd, setDateEnd] = useState<String>(quotation.dateEnd);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [token, setToken] = useState<FirebaseAuthTypes.User | null>(null);
-  const quotationId = uuidv4();
-  const {id}: any = route.params;
+  const quotationId = quotation.id;
   const { fetchDocument} = useFetchDocument();
-  const [discount, setDiscount] = useState('0');
-  const [vat7, setVat7] = useState(false);
+  const [discount, setDiscount] = useState(quotation.discountValue  || 0);
+  const [vat7, setVat7] = useState(Boolean(quotation.vat7))
   const {mutate} = useMutation(updateQuotation, {
     onSuccess: data => {
       navigation.navigate('WebViewScreen', {id: quotationId});
@@ -120,36 +122,36 @@ const EditQuotation = ({navigation}: Props) => {
     },
   });
 
-  const {data, isLoading, isError} = useQuery(
-    ['Quotation', id],
-    () => fetchDocument({id, isEmulator}).then(res => res),
-    {
-      onSuccess: data => {
-        if (!Array.isArray(data)) {
-          console.error('Expected data to be an array but got:', data);
-          return;
-        }
-        dispatch(stateAction.reset_service_list());
-        const newArray = [];
-        for (let i = 0; i < data[0].services.length; i++) {
-          newArray.push(data[0].services[i]);
-          dispatch(stateAction.service_list(data[0].services[i]));
-        }
-        setQuotation(data[1]);
-        setCompanyUser(data[2]);
-        dispatch(stateAction.client_name(data[3].name));
-        dispatch(stateAction.client_address(data[3].address));
-        dispatch(stateAction.client_tel(data[3].mobilePhone));
-        dispatch(stateAction.client_tax(data[3].companyId));
-        dispatch(stateAction.selectedContract(data[4]));
-        setTotal(data[1].allTotal);
-        setDateOffer(data[1].dateOffer);
-        setDateEnd(data[1].dateEnd);
-        setDocnumber(data[1].docNumber);
-        setDiscount(data[1].discountValue);
-      },
-    },
-  );
+  // const {data, isLoading, isError} = useQuery(
+  //   ['Quotation', id],
+  //   () => fetchDocument({id, isEmulator}).then(res => res),
+  //   {
+  //     onSuccess: data => {
+  //       if (!Array.isArray(data)) {
+  //         console.error('Expected data to be an array but got:', data);
+  //         return;
+  //       }
+  //       dispatch(stateAction.reset_service_list());
+  //       const newArray = [];
+  //       for (let i = 0; i < data[0].services.length; i++) {
+  //         newArray.push(data[0].services[i]);
+  //         dispatch(stateAction.service_list(data[0].services[i]));
+  //       }
+  //       setQuotation(data[1]);
+  //       setCompanyUser(data[2]);
+  //       dispatch(stateAction.client_name(data[3].name));
+  //       dispatch(stateAction.client_address(data[3].address));
+  //       dispatch(stateAction.client_tel(data[3].mobilePhone));
+  //       dispatch(stateAction.client_tax(data[3].companyId));
+  //       dispatch(stateAction.selectedContract(data[4]));
+  //       setTotal(data[1].allTotal);
+  //       setDateOffer(data[1].dateOffer);
+  //       setDateEnd(data[1].dateEnd);
+  //       setDocnumber(data[1].docNumber);
+  //       setDiscount(data[1].discountValue);
+  //     },
+  //   },
+  // );
   const handleValuesChange = (
     total: number,
     discountValue: number,
@@ -177,12 +179,12 @@ const EditQuotation = ({navigation}: Props) => {
 
   const handleAddClientForm = () => {
     // TODO: Add client to quotation
-    navigation.navigate('AddClient');
+    navigation.navigate('AddCustomer');
   };
 
   const handleAddProductForm = () => {
     // TODO: Add client to quotation
-    navigation.navigate('AddProductForm');
+    navigation.navigate('AddProduct');
   };
   const handleEditService = (index: number) => {
     navigation.navigate('EditProductForm', {item: serviceList[index]});
@@ -247,14 +249,8 @@ const EditQuotation = ({navigation}: Props) => {
   const handleInvoiceNumberChange = (text: string) => {
     setDocnumber(text);
   };
-  const signOutPage = () => {
-    auth()
-      .signOut()
-      .then(() => console.log('User signed out!'));
-  };
-  const handleSelectContract = () => {
-    navigation.navigate('EditContract');
-  };
+
+
   const handleStartDateSelected = (date: Date) => {
     const formattedDate = thaiDateFormatter(date);
     setDateOffer(formattedDate);
@@ -268,30 +264,27 @@ const EditQuotation = ({navigation}: Props) => {
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged(newUser => {
       if (newUser && newUser.email) {
-        // User is authenticated, show their email
         console.log('User is authenticated:', newUser.email);
 
         setUser(newUser);
         setEmail(newUser.email);
       } else {
-        // User is not authenticated, navigate to login page
         console.log('User is not authenticated, navigating to login page...');
         navigation.navigate('SignUpScreen');
       }
+
     });
     return unsubscribe;
   }, [serviceList, navigation]);
 
-  if (isLoading) {
-    return <Text>LOADING ........</Text>;
-  }
+
+
   const idContractList = selectedContract.map((obj: IdContractList) => obj.id);
 
   const handleEditClient = () => {
     navigation.navigate('EditClientForm');
     console.log('edit');
   };
-
   return (
     <View style={{flex: 1}}>
       <ScrollView style={styles.container}>
@@ -348,6 +341,7 @@ const EditQuotation = ({navigation}: Props) => {
           />
         </View>
       </ScrollView>
+
       <View>
         <FooterBtnEdit onPress={handleButtonPress} WebView={handlewWebView} />
       </View>

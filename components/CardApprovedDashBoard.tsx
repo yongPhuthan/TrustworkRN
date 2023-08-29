@@ -5,9 +5,9 @@ import {
   Dimensions,
   Platform,
   TouchableNativeFeedback,
+  TouchableOpacity
 } from 'react-native';
 import Modal from 'react-native-modal';
-import {TouchableOpacity} from 'react-native-gesture-handler';
 import {
   NavigationContainer,
   NavigationContext,

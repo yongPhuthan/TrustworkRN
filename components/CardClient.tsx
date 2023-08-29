@@ -8,11 +8,11 @@ import {
 } from 'react-native';
 import React, {useState, useContext, useEffect, useRef} from 'react';
 import {Store} from '../redux/store';
-import * as stateAction from '../redux/Actions';
+import * as stateAction from '../redux/actions';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp, ParamListBase} from '@react-navigation/native';
-import { client_address } from '../redux/Actions';
+import { client_address } from '../redux/actions';
 
 type Props = {
   handleEditClient: Function

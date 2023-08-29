@@ -31,7 +31,7 @@ import {
   ImageLibraryOptions,
   ImagePickerResponse,
 } from 'react-native-image-picker';
-import { useImageUpload } from '../../hooks/utils/useImageUpload';
+import {useImageUpload} from '../../hooks/utils/useImageUpload';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'AddProduct'>;
@@ -73,7 +73,7 @@ const AddProductForm = ({navigation, route}: Props) => {
   const [unitPrice, setPrice] = useState(0);
   const [total, setTotalCost] = useState(0);
   const [serviceListState, setServiceList] = useState<ServiceList[]>([]);
-  const { isImageUpload, imageUrl, handleLogoUpload } = useImageUpload();
+  const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
 
   const serviceID = uuidv4();
   const {
@@ -94,20 +94,19 @@ const AddProductForm = ({navigation, route}: Props) => {
       title: data.title,
       description: data.description,
       unitPrice: data.unitPrice,
-      serviceImage:imageUrl,
+      serviceImage: imageUrl,
       qty: qty,
       discountPercent,
       total: (qty * unitPrice).toString(),
       audits: selectedAudits,
     };
-    
+
     dispatch(stateAction.service_list(newServiceItem as any));
     dispatch(stateAction.reset_audit());
+    navigation.pop(2);
 
-    navigation.goBack();
+    // navigation.goBack();
   };
-
-
 
   // const handleSelectAudit = (data: FormData) => {
   //   navigation.navigate('AuditCategory', {
@@ -118,7 +117,6 @@ const AddProductForm = ({navigation, route}: Props) => {
   //   });
   // };
   const handleSelectAudit = (data: FormData) => {
-
     navigation.navigate('SelectAudit', {
       title: data.title,
       description: data.description,
@@ -134,52 +132,49 @@ const AddProductForm = ({navigation, route}: Props) => {
       setTotalCost(0);
     }
   }, [qty, unitPrice, discountPercent]);
-  console.log('imageUrl',imageUrl)
-  console.log('PROJECT_FIREBASE',PROJECT_FIREBASE)
-
+  console.log('imageUrl', imageUrl);
+  console.log('PROJECT_FIREBASE', PROJECT_FIREBASE);
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.subContainer}>
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-
-      <TouchableOpacity
-    style={{
-        justifyContent: 'center',   
-        alignItems: 'center',       
-        marginBottom: 20,
-        borderColor: 'gray',
-        borderWidth: imageUrl == null ? 1 : 0,
-        borderRadius: 10,
-        borderStyle: 'dotted',
-        // marginHorizontal: 100,
-        padding: 10,
-        height: imageUrl == null ? 100 : 150,
-        width: imageUrl == null ? 200 : 'auto'
-    }}
-    onPress={handleLogoUpload}>
-    {isImageUpload ? (
-        <ActivityIndicator size="small" color="gray" />
-    ) : imageUrl ? (
-        <Image
-            source={{ uri: imageUrl }}
-            style={{ width: 300, aspectRatio: 2, resizeMode: 'contain' }}
-        />
-    ) : (
-        <View>
-            <FontAwesomeIcon
-                icon={faCloudUpload}
-                style={{ marginVertical: 5, marginHorizontal: 50 }}
-                size={32}
-                color="gray"
-            />
-            <Text style={{ textAlign: 'center', color: 'gray' }}>
-                ภาพตัวอย่างสินค้า
-            </Text>
-        </View>
-    )}
-</TouchableOpacity>
-
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <TouchableOpacity
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 20,
+              borderColor: 'gray',
+              borderWidth: imageUrl == null ? 1 : 0,
+              borderRadius: 10,
+              borderStyle: 'dotted',
+              // marginHorizontal: 100,
+              padding: 10,
+              height: imageUrl == null ? 100 : 150,
+              width: imageUrl == null ? 200 : 'auto',
+            }}
+            onPress={handleLogoUpload}>
+            {isImageUpload ? (
+              <ActivityIndicator size="small" color="gray" />
+            ) : imageUrl ? (
+              <Image
+                source={{uri: imageUrl}}
+                style={{width: 300, aspectRatio: 2, resizeMode: 'contain'}}
+              />
+            ) : (
+              <View>
+                <FontAwesomeIcon
+                  icon={faCloudUpload}
+                  style={{marginVertical: 5, marginHorizontal: 50}}
+                  size={32}
+                  color="gray"
+                />
+                <Text style={{textAlign: 'center', color: 'gray'}}>
+                  ภาพตัวอย่างสินค้า
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
 
         <Controller
@@ -339,16 +334,19 @@ const AddProductForm = ({navigation, route}: Props) => {
             )}
           />
         </View>
-        <View style={{    ...Platform.select({
-      ios: {
-        paddingVertical: 10,
-      },
-      android: {
-        paddingVertical: 0,
-      },
-    }),}}></View>
+        <View
+          style={{
+            ...Platform.select({
+              ios: {
+                paddingVertical: 10,
+              },
+              android: {
+                paddingVertical: 0,
+              },
+            }),
+          }}></View>
         <SmallDivider />
-    
+
         <View>
           {selectedAudit?.length > 0 ? (
             <View style={styles.cardContainer}>
@@ -374,7 +372,7 @@ const AddProductForm = ({navigation, route}: Props) => {
               ))}
             </View>
           ) : (
-            <View >
+            <View>
               {selectedAudit.length === 0 && (
                 <TouchableOpacity
                   style={styles.selectButton}
@@ -387,14 +385,17 @@ const AddProductForm = ({navigation, route}: Props) => {
             </View>
           )}
         </View>
-        <View style={{    ...Platform.select({
-      ios: {
-        paddingVertical: 10,
-      },
-      android: {
-        paddingVertical: 0,
-      },
-    }),}}></View>
+        <View
+          style={{
+            ...Platform.select({
+              ios: {
+                paddingVertical: 10,
+              },
+              android: {
+                paddingVertical: 0,
+              },
+            }),
+          }}></View>
 
         <SmallDivider />
         <TouchableOpacity
@@ -578,7 +579,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
-
   },
 
   card: {
@@ -587,7 +587,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    marginTop:10,
+    marginTop: 10,
     flexDirection: 'row',
     width: '100%',
     justifyContent: 'space-between',

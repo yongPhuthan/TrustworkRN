@@ -20,7 +20,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useForm, Controller} from 'react-hook-form';
 import {HOST_URL} from '@env';
-import * as stateAction from '../../redux/Actions';
+import * as stateAction from '../../redux/actions';
 import ContractOption from 'screens/contract/contractOptions';
 import ContractFooter from '../../components/styles/ContractFooter';
 import SmallDivider from '../../components/styles/SmallDivider';

@@ -24,13 +24,15 @@ type Props = {
   date: string;
   end:string;
   status: any;
+  onCardPress?: () => void; 
+
 };
 
 const windowWidth = Dimensions.get('window').width;
 
 const CardDashBoard = (props: Props) => {
   return (
-    <TouchableOpacity style={styles.subContainer}>
+    <TouchableOpacity onPress={props.onCardPress} style={styles.subContainer}>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>{props.customerName}</Text>
         <Text style={styles.summaryPrice}>

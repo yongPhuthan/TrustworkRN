@@ -99,6 +99,7 @@ export type Service = {
   qty: number;
   unit: string;
   total: number;
+  serviceImage:string;
   quotations: Quotation | null;
   quotationId: string | null;
   company: CompanyUser | null;

@@ -7,11 +7,11 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Platform,
-  TouchableNativeFeedback,
+  Pressable,
 } from 'react-native';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
 import CardDashBoard from '../../components/CardDashBoard';
-import {HOST_URL,PROJECT_NAME,PROJECT_FIREBASE} from '@env';
+import {HOST_URL, PROJECT_NAME, PROJECT_FIREBASE} from '@env';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
 import {FAB} from 'react-native-paper';
@@ -38,13 +38,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [companyData, setCompanyData] = useState(null);
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
 
-
-  const handleModal = () => {
-    setShowModal(true);
-  };
-  const handleModalClose = () => {
-    setShowModal(false); // Step 4
-  };
   const getTokenAndEmail = async () => {
     const currentUser = auth().currentUser;
     if (currentUser) {
@@ -57,12 +50,10 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     }
   };
   const fetchDashboardData = async () => {
-    let url;
-    if (isEmulator) {
-      url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/queryDashBoard`;
-    } else {
-      url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/queryDashBoard`;
-    }
+    const url = __DEV__
+    ? `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/queryDashBoard`
+   : `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/queryDashBoard`
+    
     const user = await getTokenAndEmail();
     if (user) {
       console.log('user', user);
@@ -109,30 +100,59 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator
-        />
+        <ActivityIndicator />
       </View>
     );
   }
   if (error) {
     console.log('error', error);
   }
+  const handleModal = () => {
+    console.log('SHOW');
+    setShowModal(true);
+  };
+  const handleModalClose = () => {
+    setShowModal(false);
+  };
 
-  const renderItem = ({item}: {item: Quotation}) => (
+  const editQuotation = async (services, customer, quotation) => {
+    const allAuditData = services.reduce((acc, service) => {
+      const auditDataForService = service.audits.map(audit => audit.AuditData);
+      return acc.concat(auditDataForService);
+    }, []);
+    console.log('SERVICE0', services[0]);
+    await dispatch(stateAction.reset_service_list());
+    await dispatch(stateAction.reset_contract());
+    await dispatch(stateAction.reset_audit());
+    await dispatch(stateAction.client_name(''));
+    await dispatch(stateAction.client_address(''));
+    await dispatch(stateAction.client_tel(''));
+    await dispatch(stateAction.client_tax(''));
+
+    await dispatch(stateAction.client_name(customer.name));
+    await dispatch(stateAction.client_address(customer.address));
+    await dispatch(stateAction.client_tel(customer.tel));
+    await dispatch(stateAction.client_tax(customer.tax));
+    await dispatch(stateAction.service_list(services[0]));
+    await dispatch(stateAction.existing_audit_array(allAuditData));
+    navigation.navigate('EditQuotation', {quotation, company: data[0]});
+  };
+
+  const renderItem = ({item}) => (
     <>
-      <TouchableOpacity onPress={() => handleModal()}>
-        <View>
-          <CardDashBoard
-            status={item.status}
-            date={item.dateOffer}
-            end={item.dateEnd}
-            price={item.allTotal}
-            customerName={item.customer?.name as string}
-            description={'quotation.'}
-            unit={'quotation.'}
-          />
-        </View>
-      </TouchableOpacity>
+      <View>
+        <CardDashBoard
+          status={item.status}
+          date={item.dateOffer}
+          end={item.dateEnd}
+          price={item.allTotal}
+          customerName={item.customer?.name as string}
+          description={'quotation.'}
+          unit={'quotation.'}
+          onCardPress={handleModal}
+        />
+      </View>
+
       {Platform.OS === 'android' ? (
         <Modal
           backdropOpacity={0.1}
@@ -140,28 +160,13 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           style={styles.modalContainer}
           isVisible={showModal}
           onBackdropPress={handleModalClose}>
-          <TouchableNativeFeedback
-            onPress={() => {
-              setShowModal(false); // Step 4
-              // console.log('modal');
-              navigation.navigate('EditQuotationScreen', {id: item.id});
-            }}>
-            <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
-          </TouchableNativeFeedback>
-          <View
-            style={{
-              width: '100%',
-              alignSelf: 'center',
-              borderBottomWidth: 1,
-              borderBottomColor: '#cccccc',
-            }}></View>
-          <TouchableNativeFeedback
+          <Pressable
             onPress={() => {
               setShowModal(false);
-              navigation.navigate('WebViewScreen', {id: item.id});
+              editQuotation(item.services, item.customer, item);
             }}>
-            <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
-          </TouchableNativeFeedback>
+            <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
+          </Pressable>
           <View
             style={{
               width: '100%',
@@ -169,12 +174,26 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               borderBottomWidth: 1,
               borderBottomColor: '#cccccc',
             }}></View>
-          <TouchableNativeFeedback
+          <Pressable
+            onPress={() => {
+              setShowModal(false);
+              navigation.navigate('DocViewScreen', {id: item.id});
+            }}>
+            <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
+          </Pressable>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+          <Pressable
             onPress={() => {
               // setShowModal(false); // Step 4
             }}>
             <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
-          </TouchableNativeFeedback>
+          </Pressable>
           <View
             style={{
               width: '100%',
@@ -191,9 +210,8 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           onBackdropPress={handleModalClose}>
           <TouchableOpacity
             onPress={() => {
-              setShowModal(false); // Step 4
-              // console.log('modal');
-              navigation.navigate('EditQuotationScreen', {id: item.id});
+              setShowModal(false);
+              editQuotation(item.services, item.customer, item);
             }}>
             <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
           </TouchableOpacity>
@@ -250,35 +268,43 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
   return (
     <>
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center',backgroundColor: '#f5f5f5'}}>
-        <FlatList
-          data={quotationData}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          ListEmptyComponent={
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                height: height * 0.5,
+      {companyData && quotationData && (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#f5f5f5',
+          }}>
+          <FlatList
+            data={quotationData}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            ListEmptyComponent={
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  height: height * 0.5,
 
-                alignItems: 'center',
-              }}>
-              <Text style={{marginTop: 10}}>
-                กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
-              </Text>
-            </View>
-          }
-          contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
-        />
-        <FAB
-          style={styles.fab}
-          icon="plus"
-          color="white"
-          onPress={() => createNewQuotation()}
-          theme={{colors: {accent: 'white'}}}
-        />
-      </View>
+                  alignItems: 'center',
+                }}>
+                <Text style={{marginTop: 10}}>
+                  กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
+                </Text>
+              </View>
+            }
+            contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
+          />
+          <FAB
+            style={styles.fab}
+            icon="plus"
+            color="white"
+            onPress={() => createNewQuotation()}
+            theme={{colors: {accent: 'white'}}}
+          />
+        </View>
+      )}
     </>
   );
 };

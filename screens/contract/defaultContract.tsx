@@ -113,7 +113,7 @@ const createContractAndQuotation = async (data: any) => {
   }
 };
 
-const createQuotation = async ({data}: {data: any}) => {
+const createQuotation = async ( data: any) => {
   const user = auth().currentUser;
   let url;
 
@@ -137,28 +137,12 @@ const createQuotation = async ({data}: {data: any}) => {
   }
 };
 
-const updateDefaultContractAndCreateQuotation = async ({data}: {data: any}) => {
+const updateDefaultContractAndCreateQuotation = async ( data: any) => {
   const user = firebase.auth().currentUser;
-
+console.log('UPDATEDD')
   if (user) {
     console.log(user.uid);
-    try {
-      const contractsRef = db.collection('defaultContracts');
-      const snapshot = await contractsRef.where('user', '==', user.uid).get();
 
-      if (snapshot.empty) {
-        console.log('No matching contract found.');
-        return;
-      }
-
-      // Update the first matching contract (since each user has only one)
-      const contractId = snapshot.docs[0].id;
-      await contractsRef.doc(contractId).update(data);
-
-      console.log('Contract updated successfully');
-    } catch (error) {
-      console.error('Error updating contract: ', error);
-    }
   } else {
     console.log('No user is signed in');
   }
@@ -175,36 +159,14 @@ const updateDefaultContractAndCreateQuotation = async ({data}: {data: any}) => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${user?.uid}`,
     },
-    body: JSON.stringify({data: data.data}),
+    body: JSON.stringify({data}),
   });
 
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }
 };
-const getContractForUser = async () => {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    console.error('No user authenticated');
-    return;
-  } else {
-    try {
-      const contractsRef = db.collection('defaultContracts');
-      const snapshot = await contractsRef.where('user', '==', user.uid).get();
 
-      if (snapshot.empty) {
-        console.log('No matching contract found.');
-        return null;
-      }
-
-      // Return the first matching contract (since each user has only one)
-      return snapshot.docs[0].data();
-    } catch (error) {
-      console.error('Error querying contract: ', error);
-      return null;
-    }
-  }
-};
 
 const DefaultContract = ({navigation}: Props) => {
   const route = useRoute();
@@ -219,7 +181,7 @@ const DefaultContract = ({navigation}: Props) => {
   const quotation = dataProps.data;
   const queryClient = useQueryClient();
   console.log('data props', dataProps);
-  const email = auth().currentUser?.email;  // Assuming you're using Firebase authentication
+  const email = auth().currentUser?.email; 
 
 if (!email) {
     throw new Error('Email is missing');
@@ -304,7 +266,6 @@ if (!email) {
   const {mutate: updateContractMutation} = useMutation(
     updateDefaultContractAndCreateQuotation,
     {
-      // Assuming you have an updateContract function
       onSuccess: data => {
         queryClient.invalidateQueries(['dashboardData']);
         const newId = quotation.id.slice(0, 8);

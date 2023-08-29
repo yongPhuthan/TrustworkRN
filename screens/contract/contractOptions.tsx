@@ -7,21 +7,26 @@ import {
   Text,
   View,
   ActivityIndicator,
+  KeyboardAvoidingView,
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
 import DatePickerButton from '../../components/styles/DatePicker';
 import messaging from '@react-native-firebase/messaging';
-import {useMutation} from 'react-query';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {Contract} from '../../types/docType';
+
 import axios, {AxiosResponse, AxiosError} from 'axios';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {HOST_URL} from '@env';
+import {HOST_URL, PROJECT_FIREBASE} from '@env';
 import {v4 as uuidv4} from 'uuid';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp, ParamListBase} from '@react-navigation/native';
+import {RouteProp} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
+import {ParamListBase} from '../../types/navigationType';
+
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Store} from '../../redux/Store';
+import {Store} from '../../redux/store';
 import {useForm, Controller} from 'react-hook-form';
 
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -35,8 +40,8 @@ import ContractFooter from '../../components/styles/ContractFooter';
 import CreateContractScreen from './createContractScreen';
 import Installment from '../../components/installment';
 type Props = {
-  navigation: StackNavigationProp<ParamListBase, 'ContractOption'>;
-  route: RouteProp<ParamListBase, 'ContractOption'>;
+  navigation: StackNavigationProp<ParamListBase, 'ContractOptions'>;
+  route: RouteProp<ParamListBase, 'ContractOptions'>;
 };
 
 const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
@@ -49,10 +54,41 @@ interface MyError {
   response: object;
   // add other properties if necessary
 }
-// const ContractOption = ({navigation}: Props) => {
+const fetchContractByID = async ( id: string) => {
+  const user = auth().currentUser;
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  
+  const idToken = await user.getIdToken();
+  let url;
+  if (__DEV__) {
+    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appQueryContract`;
+  } else {
+    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appQueryContract`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
+    },
+    body: JSON.stringify({ id}),
+    credentials: 'include',
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  return data;
+};
 const ContractOption = ({navigation}: Props) => {
   const route = useRoute();
-  const data: any = route?.params;
+  const {id,sellerId,allTotal,customerName} = route?.params
 
   const [projectName, setProjectName] = useState('');
   const [signDate, setDateSign] = useState('');
@@ -71,6 +107,8 @@ const ContractOption = ({navigation}: Props) => {
   const [prepareDay, setPrepareDay] = useState(0);
   const [finishedDay, setFinishedDay] = useState(0);
   const [adjustPerDay, setAdjustPerDay] = useState(0);
+  const [contract, setContract] = useState<Contract>();
+
   const [showSecondPage, setShowSecondPage] = useState(false);
   // const {updatedData, contract}: any = route.params;
   const [address, setAddress] = useState('');
@@ -88,16 +126,16 @@ const ContractOption = ({navigation}: Props) => {
       projectName: '',
       signDate: '',
       servayDate: '',
-      warantyTimeWork: '',
-      workingDays: '',
-      workCheckEnd: '',
-      workCheckDay: '',
-      installingDay: '',
-      adjustPerDay: '',
-      workAfterGetDeposit: '',
-      prepareDay: '',
-      finishedDay: '',
-      signAddress: '',
+      warantyTimeWork: 0,
+      workingDays: 0,
+      workCheckEnd: 0,
+      workCheckDay: 0,
+      installingDay: 0,
+      adjustPerDay: 0,
+      workAfterGetDeposit: 0,
+      prepareDay: 0,
+      finishedDay: 0,
+      signAddress: 0,
     },
   });
 
@@ -116,7 +154,32 @@ const ContractOption = ({navigation}: Props) => {
       [`details_${index}`]: details,
     }));
   };
+  const {data, isLoading, isError} = useQuery(
+    ['ContractID', id], 
+    () => fetchContractByID(id), 
+    {
+      onSuccess: data => {
+        console.log('data Query',data);
 
+        // if (data) {
+        //   setContract(data as any);
+        //   console.log(data);
+        //   reset({
+        //     warantyTimeWork: data.warantyTimeWork,
+        //     workCheckEnd: data.workCheckEnd,
+        //     workCheckDay: data.workCheckDay,
+        //     installingDay: data.installingDay,
+        //     adjustPerDay: data.adjustPerDay,
+        //     workAfterGetDeposit: data.workAfterGetDeposit,
+        //     prepareDay: data.prepareDay,
+        //     finishedDay: data.finishedDay,
+        //     productWarantyYear:data.productWarantyYear,
+        //     skillWarantyYear:data.skillWarantyYear,
+        //   });
+        // }
+      },
+    }
+);
   const {
     state: {selectedContract, isEmulator},
     dispatch,
@@ -154,6 +217,7 @@ const ContractOption = ({navigation}: Props) => {
   const handleHideSecondPage = () => {
     setShowSecondPage(false);
   };
+  
   useEffect(() => {
     async function requestUserPermission() {
       const authStatus = await messaging().requestPermission();
@@ -221,14 +285,75 @@ const ContractOption = ({navigation}: Props) => {
       navigation.goBack();
     }
   };
+  function safeToString(value) {
+    return value !== undefined && value !== null ? value.toString() : "";
+  }
 
+  const renderTextInput = (
+    name: any,
+    label: string,
+    defaultValue: string = '',
+  ) => (
+    <>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginTop: 10,
+        }}>
+        <Text style={styles.label}>{label}</Text>
+
+        <View style={styles.inputContainerForm}>
+          <Controller
+            control={control}
+            render={({field: {onChange, onBlur, value}}) => (
+              <TextInput
+                keyboardType="number-pad"
+                defaultValue={defaultValue}
+                onBlur={onBlur}
+                onChangeText={val => {
+                  const numericValue = Number(val);
+                  if (!isNaN(numericValue)) {
+                    onChange(numericValue);
+                  }
+                }}
+           
+                // value={value !== undefined && value !== null ? value.toString() : defaultValue}
+                style={{width: 30}}
+                placeholderTextColor="#A6A6A6"
+              />
+            )}
+            name={name}
+            rules={{required: true}}
+          />
+
+          <Text style={styles.inputSuffix}>วัน</Text>
+        </View>
+      </View>
+      {errors[name] && (
+        <Text
+          style={{
+            alignSelf: 'flex-end',
+          }}>
+          {textRequired}
+        </Text>
+      )}
+    </>
+  );
+
+console.log('id', id);
   return (
     <>
-      <SafeAreaView style={{flex: 1}}>
+      {/* <SafeAreaView style={{flex: 1}}>
         {step === 1 && (
           <ScrollView style={styles.containerForm}>
             <View style={styles.formInput}>
-              <View style={styles.inputContainer}>
+            <KeyboardAvoidingView
+            style={{flex: 1}}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+            <ScrollView style={styles.containerForm}>
+            <View style={styles.inputContainer}>
                 <Text style={styles.label}>ชื่อโครงการ</Text>
                 <Controller
                   control={control}
@@ -247,6 +372,58 @@ const ContractOption = ({navigation}: Props) => {
                 />
                 {errors.projectName && <Text>{textRequired}</Text>}
               </View>
+              <View style={styles.formInput}>
+                {renderTextInput(
+                  'productWarantyYear',
+                  'รับประกันวัสดุอุปกรณ์กี่ปี',
+                 safeToString( contract.productWarantyYear),
+                )}
+                              {renderTextInput(
+                  'skillWarantyYear',
+                  'รับประกันงานติดตั้งกี่ปี',
+                 safeToString( contract.skillWarantyYear),
+                )}
+                {renderTextInput(
+                  'installingDay',
+                  'Installing Day',
+                  safeToString(contract.installingDay),
+                  )}
+                {renderTextInput(
+                  'workAfterGetDeposit',
+                  'Work After Get Deposit',
+                  safeToString(contract.workAfterGetDeposit),
+                )}
+                {renderTextInput(
+                  'prepareDay',
+                  'Prepare Days',
+                 safeToString( contract.prepareDay),
+                )}
+                {renderTextInput(
+                  'finishedDay',
+                  'Finished Days',
+                  safeToString(contract.finishedDay),
+                )}
+                {renderTextInput(
+                  'workCheckDay',
+                  'Work Check Day',
+                  safeToString(contract.workCheckDay),
+                )}
+                {renderTextInput(
+                  'workCheckEnd',
+                  'Work Check End',
+                  safeToString(contract.workCheckEnd),
+                )}
+                {renderTextInput(
+                  'adjustPerDay',
+                  'Adjust Per Days',
+                 safeToString( contract.adjustPerDay),
+                )}
+
+                <SmallDivider />
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+
 
               <SmallDivider />
 
@@ -629,7 +806,7 @@ const ContractOption = ({navigation}: Props) => {
 
           />
         )}
-      </SafeAreaView>
+      </SafeAreaView> */}
     </>
   );
 };

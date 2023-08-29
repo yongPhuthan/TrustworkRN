@@ -149,6 +149,12 @@ export const selected_audit = (payload: object) => ({
   payload,
 });
 
+export const existing_audit_array = (payload: object) => ({
+  type: contrains.EXISTING_ARRAY_AUDIT,
+  payload,
+});
+
+
 export const reset_audit = () => ({
   type: contrains.RESET_AUDIT,
 });
@@ -360,6 +366,12 @@ export const selectedAudit = (payload: object) => {
     dispatch(selected_audit(payload));
   };
 };
+
+export const existingAuditArray = (payload: any) => {
+  return (dispatch: any) => {
+    dispatch(existing_audit_array(payload));
+  };
+}
 export const removeSelectedAudit = (payload: object) => {
   return (dispatch: any) => {
     dispatch(remove_selected_audit(payload));
@@ -371,6 +383,8 @@ export const resetAudit = () => {
     dispatch(reset_audit);
   };
 };
+
+
 export const selectedContract = (payload: object) => {
   return (dispatch: any) => {
     dispatch(selected_contract(payload));
