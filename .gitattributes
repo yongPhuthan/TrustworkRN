@@ -1,0 +1,2 @@
+ios/Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework/ios-arm64/hermes.framework/hermes filter=lfs diff=lfs merge=lfs -text
+ios/Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework/ios-arm64_x86_64-maccatalyst/hermes.framework/Versions/0/hermes filter=lfs diff=lfs merge=lfs -text
