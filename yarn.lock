@@ -4141,6 +4141,11 @@
   resolved "https://registry.npmjs.org/@react-native-picker/picker/-/picker-1.16.8.tgz"
   integrity sha512-pacdQDX6V6EmjF+HoiIh6u++qx4mTK0WnhgUHRc01B+Qt5eoeUwseBqmqfTSXTx/aHDEd6PiIw7UGvKgFoqgFQ==
 
+"@react-native-picker/picker@^2.5.0":
+  version "2.5.0"
+  resolved "https://registry.npmjs.org/@react-native-picker/picker/-/picker-2.5.0.tgz"
+  integrity sha512-AEZPKwXavmP4VkUUD6bskCrNF+zgd1RvsXJ208YewZSikGZCo0RLlnQxPDrdKoFpbigSYxbvRU5d8h3TzzeQ8Q==
+
 "@react-native/assets-registry@^0.72.0":
   version "0.72.0"
   resolved "https://registry.npmjs.org/@react-native/assets-registry/-/assets-registry-0.72.0.tgz"
@@ -9338,10 +9343,10 @@ react-native-paper@^5.10.1:
     color "^3.1.2"
     use-latest-callback "^0.1.5"
 
-react-native-picker-select@^8.0.4:
-  version "8.0.4"
-  resolved "https://registry.npmjs.org/react-native-picker-select/-/react-native-picker-select-8.0.4.tgz"
-  integrity sha512-orBjPIwBkV5oipyVw263YNMI56f6Kj3p/ejabZoCYYNSG3AiLVVhC2RqsxMgDA7IayyURAW+AlV+mDJyVqLBkg==
+react-native-picker-select@^8.1.0:
+  version "8.1.0"
+  resolved "https://registry.npmjs.org/react-native-picker-select/-/react-native-picker-select-8.1.0.tgz"
+  integrity sha512-iLsLv2OEWpXnQMDYJS6du5Cl1HTHy887n60Yp5OOiMny0TDB9w5CfxTUYWtpsvJJrUa/Yrv+1NMQiJy7IA4ETw==
   dependencies:
     "@react-native-picker/picker" "^1.8.3"
     lodash.isequal "^4.5.0"
@@ -9380,6 +9385,11 @@ react-native-share@^9.2.3:
   version "9.2.3"
   resolved "https://registry.npmjs.org/react-native-share/-/react-native-share-9.2.3.tgz"
   integrity sha512-y6ju4HS6ydJoPVoacZ/Hp3i47AfI9W4e76Jv00r01dVbr6SCCcuqk37kIbn+kYivdTxOW77UGEbhtBHHtXnhzg==
+
+react-native-signature-canvas@^4.6.1:
+  version "4.6.1"
+  resolved "https://registry.npmjs.org/react-native-signature-canvas/-/react-native-signature-canvas-4.6.1.tgz"
+  integrity sha512-GFFb58P+Q0l1XkW/Yo6MKLTlTBWSG9GuVLFY8jmU0lQwpXnDnOGymrBcafTCIqMMdCl05e8z1Nim/IgDT6x/0w==
 
 react-native-size-matters@^0.4.0:
   version "0.4.0"

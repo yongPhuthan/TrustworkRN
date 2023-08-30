@@ -1,4 +1,4 @@
-import React, {useState, useEffect,useCallback} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -16,12 +16,12 @@ import {Button} from 'react-native-paper';
 import RNPickerSelect from 'react-native-picker-select';
 import {useForm, Controller, useFieldArray} from 'react-hook-form';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp, ParamListBase} from '@react-navigation/native';
+import {HOST_URL, PROJECT_FIREBASE} from '@env';
 import {useRoute} from '@react-navigation/native';
 import {faChevronDown} from '@fortawesome/free-solid-svg-icons';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Or another library of your choice
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery, useMutation} from 'react-query';
+import {useQuery, useMutation} from '@tanstack/react-query';
 import {useNavigation} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {v4 as uuidv4} from 'uuid';
@@ -33,7 +33,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import SmallDivider from './styles/SmallDivider';
 import ContractFooter from './styles/ContractFooter';
-import {HOST_URL} from '@env';
+
 
 interface InstallmentDetail {
   installment: number;
@@ -55,19 +55,18 @@ interface MyError {
 }
 type UpdateContractInput = {
   data: any;
-  isEmulator: boolean;
 };
 const updateContract = async (input: UpdateContractInput): Promise<any> => {
-  const {data, isEmulator} = input;
+  const {data} = input;
   const user = auth().currentUser;
   console.log('data PUT', JSON.stringify(data));
-
   let url;
-  if (isEmulator) {
-    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/createContract`;
+  if (__DEV__) {
+    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appUpdateFinalContract`;
   } else {
-    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createContract`;
+    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appUpdateFinalContract`;
   }
+
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
@@ -79,8 +78,8 @@ const updateContract = async (input: UpdateContractInput): Promise<any> => {
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }
-  const responseData = await response.json(); // Extract the data from the response
-  return responseData; // Return the data
+  const responseData = await response.json();
+  return responseData;
 };
 
 const Installment = (props: Props) => {
@@ -129,11 +128,11 @@ const Installment = (props: Props) => {
     name: 'installments',
   });
 
-  const {mutate,isLoading} = useMutation(updateContract, {
+  const {mutate, isLoading} = useMutation(updateContract, {
     onSuccess: data => {
       const newId = dataProps.quotationId.slice(0, 8);
       navigation.navigate('DocViewScreen', {
-        id:newId,
+        id: newId,
       });
     },
     onError: (error: MyError) => {
@@ -159,8 +158,7 @@ const Installment = (props: Props) => {
     }
   }, [percentages]);
 
-  const handleSave = useCallback( async() => {
-
+  const handleSave = useCallback(async () => {
     if (!isPercentagesValid) {
       Alert.alert('Error', errorMessage?.toString() || 'Error');
       return;
@@ -174,19 +172,22 @@ const Installment = (props: Props) => {
         details: installmentDetailsText[Number(key)],
       }),
     );
-      dataProps.id = uuidv4(),
-      dataProps.periodPercent = newInstallmentDetails;
+    dataProps.periodPercent = newInstallmentDetails;
+    dataProps.contract.projectName = dataProps.projectName;
+    dataProps.contract.signAddress = dataProps.signAddress;
+    dataProps.contract.signDate = dataProps.signDate;
+    dataProps.contract.servayDate = dataProps.servayDate;
+    dataProps.contract.id = dataProps.contractID;
 
-      console.log('DATAPROP',dataProps)
-      await mutate({data: dataProps, isEmulator: false});
 
-
-  }, [isPercentagesValid, errorMessage, percentages, installmentDetailsText, dataProps]);
-
-  const handleStep3Press = async () => {
-
-    await mutate({data: dataProps, isEmulator: true});
-  };
+    await mutate({data: dataProps});
+  }, [
+    isPercentagesValid,
+    errorMessage,
+    percentages,
+    installmentDetailsText,
+    dataProps,
+  ]);
 
   const DropdownIcon = () => (
     <Icon
@@ -203,13 +204,15 @@ const Installment = (props: Props) => {
     }));
   }, []);
 
-  const handleInstallmentDetailsTextChange = useCallback((value: string, index: number) => {
-
-    setInstallmentDetailsText(prevState => ({
-      ...prevState,
-      [index]: value,
-    }));
-  }, []);
+  const handleInstallmentDetailsTextChange = useCallback(
+    (value: string, index: number) => {
+      setInstallmentDetailsText(prevState => ({
+        ...prevState,
+        [index]: value,
+      }));
+    },
+    [],
+  );
 
   const pickerItems = [2, 3, 4, 5, 6, 7, 8, 9, 10].map(value => ({
     label: `แบ่งชำระ ${value} งวด`,
@@ -217,6 +220,7 @@ const Installment = (props: Props) => {
   }));
   console.log('watch:', props.data);
   console.log('percen lenght:', Object.values(percentages).length);
+  console.log('DATAPROP', dataProps);
 
   const renderItem = ({item, index}: {item: any; index: number}) => (
     <View style={styles.card}>
@@ -238,8 +242,6 @@ const Installment = (props: Props) => {
                   field.onChange(value);
                   handlePercentageChange(value, index);
                 }}
-
-            
                 keyboardType="numeric"
               />
             )}
@@ -267,7 +269,6 @@ const Installment = (props: Props) => {
                 multiline
                 style={styles.Multilines}
                 placeholder="Address"
-              
                 onChangeText={value => {
                   field.onChange(value);
                   handleInstallmentDetailsTextChange(value, index);
@@ -290,9 +291,7 @@ const Installment = (props: Props) => {
   );
 
   return (
-    <SafeAreaView
-      
-      style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.innerContainer}>
         {installments < 1 && (
           <Text style={styles.header}>โครงการนี้แบ่งจ่ายกี่งวด</Text>
@@ -321,7 +320,7 @@ const Installment = (props: Props) => {
         )}
       </View>
       <ContractFooter
-      isLoading={isLoading}
+        isLoading={isLoading}
         finalStep={true}
         // finalStep={step === 3}
         onBack={props.handleBackPress}

@@ -45,9 +45,14 @@ export type ParamListBase = {
   SignUpScreen: undefined;
   LoginScreen: undefined;
   CompanyUserFormScreen: undefined;
+  ExistingSignature:undefined;
   ContactInfoScreen: undefined;
   SettingCompany: undefined;
   ExistingProduct: {id: string};
+  Signature: {
+    text: string;
+    onOK: (signature: any) => void;
+  };
   EditQuotation: {quotation: Quotation; company: CompanyUser};
   EditQuotationScreen: {id: string};
   EditContractOption: {id: string};

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TextInput,
   Text,
+  Platform,
   View,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -54,12 +55,12 @@ interface MyError {
   response: object;
   // add other properties if necessary
 }
-const fetchContractByID = async ( id: string) => {
+const fetchContractByID = async (id: string) => {
   const user = auth().currentUser;
   if (!user) {
     throw new Error('User not authenticated');
   }
-  
+
   const idToken = await user.getIdToken();
   let url;
   if (__DEV__) {
@@ -74,7 +75,7 @@ const fetchContractByID = async ( id: string) => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${idToken}`,
     },
-    body: JSON.stringify({ id}),
+    body: JSON.stringify({id}),
     credentials: 'include',
   });
 
@@ -88,7 +89,7 @@ const fetchContractByID = async ( id: string) => {
 };
 const ContractOption = ({navigation}: Props) => {
   const route = useRoute();
-  const {id,sellerId,allTotal,customerName} = route?.params
+  const {id, sellerId, allTotal, customerName} = route?.params;
 
   const [projectName, setProjectName] = useState('');
   const [signDate, setDateSign] = useState('');
@@ -133,15 +134,16 @@ const ContractOption = ({navigation}: Props) => {
       installingDay: 0,
       adjustPerDay: 0,
       workAfterGetDeposit: 0,
+      productWarantyYear: 0,
       prepareDay: 0,
       finishedDay: 0,
       signAddress: 0,
+      skillWarantyYear: 0,
     },
   });
 
   const handleAddressChange = (newAddress: string) => {
-    setValue("signAddress", newAddress);
-  
+    setValue('signAddress', newAddress);
   };
   const updateInstallmentData = (
     percentage: number,
@@ -155,31 +157,31 @@ const ContractOption = ({navigation}: Props) => {
     }));
   };
   const {data, isLoading, isError} = useQuery(
-    ['ContractID', id], 
-    () => fetchContractByID(id), 
+    ['ContractID', id],
+    () => fetchContractByID(id),
     {
       onSuccess: data => {
-        console.log('data Query',data);
+        console.log('data Query', data);
 
-        // if (data) {
-        //   setContract(data as any);
-        //   console.log(data);
-        //   reset({
-        //     warantyTimeWork: data.warantyTimeWork,
-        //     workCheckEnd: data.workCheckEnd,
-        //     workCheckDay: data.workCheckDay,
-        //     installingDay: data.installingDay,
-        //     adjustPerDay: data.adjustPerDay,
-        //     workAfterGetDeposit: data.workAfterGetDeposit,
-        //     prepareDay: data.prepareDay,
-        //     finishedDay: data.finishedDay,
-        //     productWarantyYear:data.productWarantyYear,
-        //     skillWarantyYear:data.skillWarantyYear,
-        //   });
-        // }
+        if (data) {
+          setContract(data.contract as Contract);
+          console.log(data);
+          reset({
+            warantyTimeWork: data.contract.warantyTimeWork,
+            workCheckEnd: data.contract.workCheckEnd,
+            workCheckDay: data.contract.workCheckDay,
+            installingDay: data.contract.installingDay,
+            adjustPerDay: data.contract.adjustPerDay,
+            workAfterGetDeposit: data.contract.workAfterGetDeposit,
+            prepareDay: data.contract.prepareDay,
+            finishedDay: data.contract.finishedDay,
+            productWarantyYear: data.contract.productWarantyYear,
+            skillWarantyYear: data.contract.skillWarantyYear,
+          });
+        }
       },
-    }
-);
+    },
+  );
   const {
     state: {selectedContract, isEmulator},
     dispatch,
@@ -217,7 +219,7 @@ const ContractOption = ({navigation}: Props) => {
   const handleHideSecondPage = () => {
     setShowSecondPage(false);
   };
-  
+
   useEffect(() => {
     async function requestUserPermission() {
       const authStatus = await messaging().requestPermission();
@@ -250,7 +252,6 @@ const ContractOption = ({navigation}: Props) => {
     const day = String(today.getDate()).padStart(2, '0');
     setDateServay(`${day}-${month}-${year}`);
     setDateSign(`${day}-${month}-${year}`);
-
   }, []);
 
   const handleNextPress = () => {
@@ -280,13 +281,12 @@ const ContractOption = ({navigation}: Props) => {
         prepareDay: 0,
         finishedDay: 0,
         address: '',
-        
       });
       navigation.goBack();
     }
   };
   function safeToString(value) {
-    return value !== undefined && value !== null ? value.toString() : "";
+    return value !== undefined && value !== null ? value.toString() : '';
   }
 
   const renderTextInput = (
@@ -317,8 +317,11 @@ const ContractOption = ({navigation}: Props) => {
                     onChange(numericValue);
                   }
                 }}
-           
-                // value={value !== undefined && value !== null ? value.toString() : defaultValue}
+                value={
+                  value !== undefined && value !== null
+                    ? value.toString()
+                    : defaultValue
+                }
                 style={{width: 30}}
                 placeholderTextColor="#A6A6A6"
               />
@@ -340,473 +343,154 @@ const ContractOption = ({navigation}: Props) => {
       )}
     </>
   );
-
-console.log('id', id);
+  const dirtyData = Object.fromEntries(
+    Object.entries({
+      productWarantyYear: Number(watch('productWarantyYear')),
+      warantyTimeWork: Number(watch('warantyTimeWork')),
+      workingDays: Number(watch('workingDays')),
+      installingDay: Number(watch('installingDay')),
+      adjustPerDay: Number(watch('adjustPerDay')),
+      workAfterGetDeposit: Number(watch('workAfterGetDeposit')),
+      prepareDay: Number(watch('prepareDay')),
+      finishedDay: Number(watch('finishedDay')),
+      workCheckDay: Number(watch('workCheckDay')),
+      workCheckEnd: Number(watch('workCheckEnd')),
+    }).filter(([key]) => dirtyFields[key])
+  );
+  console.log('contractID', contract?.id);
   return (
     <>
-      {/* <SafeAreaView style={{flex: 1}}>
-        {step === 1 && (
-          <ScrollView style={styles.containerForm}>
+      {contract && (
+        <SafeAreaView style={{flex: 1}}>
+          {step === 1 && (
             <View style={styles.formInput}>
-            <KeyboardAvoidingView
-            style={{flex: 1}}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
-            <ScrollView style={styles.containerForm}>
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>ชื่อโครงการ</Text>
-                <Controller
-                  control={control}
-                  render={({field: {onChange, onBlur, value}}) => (
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      style={styles.inputForm}
-                      placeholder="โครงการติดตั้ง..."
-                      placeholderTextColor="#A6A6A6"
+              <KeyboardAvoidingView
+                style={{flex: 1}}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+                <ScrollView style={styles.containerForm}>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>ชื่อโครงการ</Text>
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value}
+                          style={styles.inputForm}
+                          placeholder="โครงการติดตั้ง..."
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="projectName"
+                      rules={{required: true}} // This line sets the field to required
                     />
-                  )}
-                  name="projectName"
-                  rules={{required: true}} // This line sets the field to required
-                />
-                {errors.projectName && <Text>{textRequired}</Text>}
-              </View>
-              <View style={styles.formInput}>
-                {renderTextInput(
-                  'productWarantyYear',
-                  'รับประกันวัสดุอุปกรณ์กี่ปี',
-                 safeToString( contract.productWarantyYear),
-                )}
-                              {renderTextInput(
-                  'skillWarantyYear',
-                  'รับประกันงานติดตั้งกี่ปี',
-                 safeToString( contract.skillWarantyYear),
-                )}
-                {renderTextInput(
-                  'installingDay',
-                  'Installing Day',
-                  safeToString(contract.installingDay),
-                  )}
-                {renderTextInput(
-                  'workAfterGetDeposit',
-                  'Work After Get Deposit',
-                  safeToString(contract.workAfterGetDeposit),
-                )}
-                {renderTextInput(
-                  'prepareDay',
-                  'Prepare Days',
-                 safeToString( contract.prepareDay),
-                )}
-                {renderTextInput(
-                  'finishedDay',
-                  'Finished Days',
-                  safeToString(contract.finishedDay),
-                )}
-                {renderTextInput(
-                  'workCheckDay',
-                  'Work Check Day',
-                  safeToString(contract.workCheckDay),
-                )}
-                {renderTextInput(
-                  'workCheckEnd',
-                  'Work Check End',
-                  safeToString(contract.workCheckEnd),
-                )}
-                {renderTextInput(
-                  'adjustPerDay',
-                  'Adjust Per Days',
-                 safeToString( contract.adjustPerDay),
-                )}
-
-                <SmallDivider />
-              </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-
-
-              <SmallDivider />
-
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                }}>
-                <Text style={styles.label}>รับประกันงานติดตั้งกี่ปี</Text>
-                <View style={styles.inputContainerForm}>
-                  <Controller
-                    control={control}
-                    render={({field: {onChange, onBlur, value}}) => (
-                      <TextInput
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        style={{width: 30}}
-                        placeholderTextColor="#A6A6A6"
-                      />
+                    {errors.projectName && <Text>{textRequired}</Text>}
+                  </View>
+                  <View style={styles.formInput}>
+                    {renderTextInput(
+                      'productWarantyYear',
+                      'รับประกันวัสดุอุปกรณ์กี่ปี',
+                      safeToString(contract.productWarantyYear),
                     )}
-                    name="warantyTimeWork"
-                    rules={{required: true}} // This line sets the field to required
-                  />
-
-                  <Text style={styles.inputSuffix}>ปี</Text>
-                </View>
-              </View>
-              {errors.warantyTimeWork && (
-                <Text
-                  style={{
-                    alignSelf: 'flex-end',
-                  }}>
-                  {textRequired}
-                </Text>
-              )}
-
-              <SmallDivider />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                }}>
-                <Text style={styles.label}>Working Days</Text>
-                <View style={styles.inputContainerForm}>
-                  <Controller
-                    control={control}
-                    render={({field: {onChange, onBlur, value}}) => (
-                      <TextInput
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        style={{width: 30}}
-                        placeholderTextColor="#A6A6A6"
-                      />
+                    {renderTextInput(
+                      'skillWarantyYear',
+                      'รับประกันงานติดตั้งกี่ปี',
+                      safeToString(contract.skillWarantyYear),
                     )}
-                    name="workingDays"
-                    rules={{required: true}} // This line sets the field to required
-                  />
-                  <Text style={styles.inputSuffix}>วัน</Text>
-                </View>
-              </View>
-              {errors.workingDays && (
-                <Text
-                  style={{
-                    alignSelf: 'flex-end',
-                  }}>
-                  {textRequired}
-                </Text>
-              )}
-              <SmallDivider />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                }}>
-                <Text style={styles.label}>Installing Day</Text>
-
-                <View style={styles.inputContainerForm}>
-                  <Controller
-                    control={control}
-                    render={({field: {onChange, onBlur, value}}) => (
-                      <TextInput
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        style={{width: 30}}
-                        placeholderTextColor="#A6A6A6"
-                      />
+                    {renderTextInput(
+                      'installingDay',
+                      'Installing Day',
+                      safeToString(contract.installingDay),
                     )}
-                    name="installingDay"
-                    rules={{required: true}} // This line sets the field to required
-                  />
-
-                  <Text style={styles.inputSuffix}>วัน</Text>
-                </View>
-              </View>
-              {errors.installingDay && (
-                <Text
-                  style={{
-                    alignSelf: 'flex-end',
-                  }}>
-                  {textRequired}
-                </Text>
-              )}
-              <SmallDivider />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                }}>
-                <Text style={styles.label}>Work After Get Deposit</Text>
-
-                <View style={styles.inputContainerForm}>
-                  <Controller
-                    control={control}
-                    render={({field: {onChange, onBlur, value}}) => (
-                      <TextInput
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        style={{width: 30}}
-                        placeholderTextColor="#A6A6A6"
-                      />
+                    {renderTextInput(
+                      'workAfterGetDeposit',
+                      'Work After Get Deposit',
+                      safeToString(contract.workAfterGetDeposit),
                     )}
-                    name="workAfterGetDeposit"
-                    rules={{required: true}} // This line sets the field to required
-                  />
-
-                  <Text style={styles.inputSuffix}>วัน</Text>
-                </View>
-              </View>
-              {errors.workAfterGetDeposit && (
-                <Text
-                  style={{
-                    alignSelf: 'flex-end',
-                  }}>
-                  {textRequired}
-                </Text>
-              )}
-              <SmallDivider />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                }}>
-                <Text style={styles.label}>Prepare Days</Text>
-
-                <View style={styles.inputContainerForm}>
-                  <Controller
-                    control={control}
-                    render={({field: {onChange, onBlur, value}}) => (
-                      <TextInput
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        style={{width: 30}}
-                        placeholderTextColor="#A6A6A6"
-                      />
+                    {renderTextInput(
+                      'prepareDay',
+                      'Prepare Days',
+                      safeToString(contract.prepareDay),
                     )}
-                    name="prepareDay"
-                    rules={{required: true}} // This line sets the field to required
-                  />
-
-                  <Text style={styles.inputSuffix}>วัน</Text>
-                </View>
-              </View>
-              {errors.prepareDay && (
-                <Text
-                  style={{
-                    alignSelf: 'flex-end',
-                  }}>
-                  {textRequired}
-                </Text>
-              )}
-              <SmallDivider />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                }}>
-                <Text style={styles.label}>Finished Days</Text>
-
-                <View style={styles.inputContainerForm}>
-                  <Controller
-                    control={control}
-                    render={({field: {onChange, onBlur, value}}) => (
-                      <TextInput
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        style={{width: 30}}
-                        placeholderTextColor="#A6A6A6"
-                      />
+                    {renderTextInput(
+                      'finishedDay',
+                      'Finished Days',
+                      safeToString(contract.finishedDay),
                     )}
-                    name="finishedDay"
-                    rules={{required: true}} // This line sets the field to required
-                  />
-
-                  <Text style={styles.inputSuffix}>วัน</Text>
-                </View>
-              </View>
-              {errors.finishedDay && (
-                <Text
-                  style={{
-                    alignSelf: 'flex-end',
-                  }}>
-                  {textRequired}
-                </Text>
-              )}
-              <SmallDivider />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                }}>
-                <Text style={styles.label}>Work Check Day</Text>
-
-                <View style={styles.inputContainerForm}>
-                  <Controller
-                    control={control}
-                    render={({field: {onChange, onBlur, value}}) => (
-                      <TextInput
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        style={{width: 30}}
-                        placeholderTextColor="#A6A6A6"
-                      />
+                    {renderTextInput(
+                      'workCheckDay',
+                      'Work Check Day',
+                      safeToString(contract.workCheckDay),
                     )}
-                    name="workCheckDay"
-                    rules={{required: true}} // This line sets the field to required
-                  />
-
-                  <Text style={styles.inputSuffix}>วัน</Text>
-                </View>
-              </View>
-              {errors.workCheckDay && (
-                <Text
-                  style={{
-                    alignSelf: 'flex-end',
-                  }}>
-                  {textRequired}
-                </Text>
-              )}
-              <SmallDivider />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                }}>
-                <Text style={styles.label}>Work Check End</Text>
-
-                <View style={styles.inputContainerForm}>
-                  <Controller
-                    control={control}
-                    render={({field: {onChange, onBlur, value}}) => (
-                      <TextInput
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        style={{width: 30}}
-                        placeholderTextColor="#A6A6A6"
-                      />
+                    {renderTextInput(
+                      'workCheckEnd',
+                      'Work Check End',
+                      safeToString(contract.workCheckEnd),
                     )}
-                    name="workCheckEnd"
-                    rules={{required: true}} // This line sets the field to required
-                  />
-
-                  <Text style={styles.inputSuffix}>วัน</Text>
-                </View>
-              </View>
-              {errors.workCheckEnd && (
-                <Text
-                  style={{
-                    alignSelf: 'flex-end',
-                  }}>
-                  {textRequired}
-                </Text>
-              )}
-              <SmallDivider />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                  marginBottom: 30,
-                }}>
-                <Text style={styles.label}>Adjust Per Days</Text>
-
-                <View style={styles.inputContainerForm}>
-                  <Controller
-                    control={control}
-                    render={({field: {onChange, onBlur, value}}) => (
-                      <TextInput
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        style={{width: 30}}
-                        placeholderTextColor="#A6A6A6"
-                      />
+                    {renderTextInput(
+                      'adjustPerDay',
+                      'Adjust Per Days',
+                      safeToString(contract.adjustPerDay),
                     )}
-                    name="adjustPerDay"
-                    rules={{required: true}} // This line sets the field to required
-                  />
 
-                  <Text style={styles.inputSuffix}>วัน</Text>
-                </View>
-              </View>
-              {errors.adjustPerDay && (
-                <Text
-                  style={{
-                    alignSelf: 'flex-end',
-                  }}>
-                  {textRequired}
-                </Text>
-              )}
+                    <SmallDivider />
+                  </View>
+                </ScrollView>
+              </KeyboardAvoidingView>
+
               <SmallDivider />
             </View>
-          </ScrollView>
-        )}
+          )}
+          {step === 2 && (
+            <>
+              <CreateContractScreen
+                handleAddressChange={handleAddressChange}
+                handleDateServay={handleDateServay}
+                handleDateSigne={handleDateSigne}
+                signDate={servayDate}
+                servayDate={servayDate}
+                projectName={watch('projectName')}
+                customerName={data.customer.name}
+                allTotal={data.allTotal}
+                address={watch('address')}
+              />
+            </>
+          )}
+          {step === 3 && (
+            <>
+              <Installment
+                handleBackPress={handleBackPress}
+                data={{
+                  projectName: watch('projectName'),
+                  signDate,
+                  servayDate,
+                  total: Number(data.allTotal),
+                  signAddress: watch('signAddress'),
+                  quotationId: data.id,
+                  sellerId: data.sellerId,
+                  contract:dirtyData,
+                  contractID: contract.id,
 
-        {step === 2 && (
-          <>
-            <CreateContractScreen
-              handleAddressChange={handleAddressChange}
-              handleDateServay={handleDateServay}
-              handleDateSigne={handleDateSigne}
-              signDate={servayDate}
-              servayDate={servayDate}
-              projectName={watch('projectName')}
-              customerName={data.customerName}
-              allTotal={data.allTotal}
-              address={watch('address')}
+                }}
+              />
+            </>
+          )}
+          {step !== 3 && (
+            <ContractFooter
+              finalStep={false}
+              // finalStep={step === 3}
+              onBack={handleBackPress}
+              onNext={handleNextPress}
+              isLoading={false}
+              disabled={
+                step === 1 ? !isDirty || !isValid : watch('signAddress') === ''
+              }
             />
-          </>
-        )}
-        {step === 3 && (
-          <>
-            <Installment
-              handleBackPress={handleBackPress}
-              data={{
-                projectName:watch('projectName') ,
-                warantyYear: Number(watch('warantyTimeWork')),
-                warantyTimeWork: Number(watch('warantyTimeWork')),
-                workingDays,
-                installingDay: Number(watch('installingDay')),
-                adjustPerDay: Number(watch('adjustPerDay')),
-                workAfterGetDeposit: Number(watch('workAfterGetDeposit')),
-                signDate,
-                servayDate,
-                prepareDay: Number(watch('prepareDay')),
-                finishedDay: Number(watch('finishedDay')),
-                workCheckDay: Number(watch('workCheckDay')),
-                workCheckEnd: Number(watch('workCheckEnd')),
-                total: Number(data.allTotal),
-                signAddress: watch('signAddress'),
-                quotationId: data.id,
-                sellerId: data.sellerId,
-              }}
-            />
-          </>
-        )}
-        {step !== 3 && (
-          <ContractFooter
-            finalStep={false}
-            // finalStep={step === 3}
-            onBack={handleBackPress}
-            onNext={handleNextPress}
-            isLoading={false}
-            disabled={step === 1 ? !isDirty || !isValid : watch('signAddress') === ''}
-
-          />
-        )}
-      </SafeAreaView> */}
+          )}
+        </SafeAreaView>
+      )}
     </>
   );
 };

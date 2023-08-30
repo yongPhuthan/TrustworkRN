@@ -18,6 +18,8 @@ export type Contract = {
   warantyYear: number;
   deposit: number;
   offerContract: SelectedContractData[];
+  productWarantyYear: number;
+  skillWarantyYear: number;
   offerCheck: string[];
   projectName: string;
   companyUser: CompanyUser | null;

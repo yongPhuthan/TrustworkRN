@@ -1,23 +1,25 @@
 {
-    "allTotal": "65890",
-    "customer": {
-        "name": "คุณไหม เจริญพันธื"
-    },
-    "dateEnd": "04-09-2023",
-    "dateOffer": "28-08-2023",
-    "docNumber": "20230828901",
-    "id": "4e395117-7c0e-47ca-83c1-df6b31d79ff7",
-    "services": [{
-        "companyId": "07cd86ff-cc20-42a2-bbe2-a45632399a62",
-        "description": "ขนาดกว้าง 334 cm",
-        "id": "d3ab12db-c5d4-485c-93ce-8d8b5dcbafe5",
-        "qty": 1,
-        "quotationId": "4e395117-7c0e-47ca-83c1-df6b31d79ff7",
-        "serviceImage": "http://127.0.0.1:8787/C8BAF7B8-0FAD-4B7D-8451-90A4269E60C6.png",
-        "title": "ประตูบานเซฟตี้นิรภัย",
-        "total": "65890",
-        "unit": "none",
-        "unitPrice": "65890"
-    }],
-    "status": "pending"
+    "contract": {
+        "adjustPerDay": "9",
+        "deposit": 0,
+        "finishedDay": 9,
+        "id": "d3e82ddd-e4c5-48dc-9731-2c64993e02ef",
+        "installingDay": 15,
+        "offerCheck": [],
+        "prepareDay": 5,
+        "productWarantyYear": 1,
+        "projectName": "",
+        "quotationPageQty": 0,
+        "sellerId": "11fa0bc0-44f0-4b0b-a6f6-ede9a5ce4cf2",
+        "servayDate": "none",
+        "servayDateStamp": 0,
+        "signAddress": "none",
+        "signDate": "none",
+        "signDateStamp": 0,
+        "skillWarantyYear": 2,
+        "warantyTimeWork": 1,
+        "workAfterGetDeposit": 65,
+        "workCheckDay": 113,
+        "workCheckEnd": 8
+    }
 }

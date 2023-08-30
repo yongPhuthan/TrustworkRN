@@ -300,7 +300,16 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             style={styles.fab}
             icon="plus"
             color="white"
-            onPress={() => createNewQuotation()}
+            onPress={()=>navigation.navigate('ExistingSignature')}
+          //   onPress={  ()=>  navigation.navigate('Signature', {
+          //     text: 'Some Text',
+          //     onOK: (signature) => {
+          //       console.log(signature);
+          //     }
+          //   })
+            
+          // }
+            // onPress={() => createNewQuotation()}[]
             theme={{colors: {accent: 'white'}}}
           />
         </View>

@@ -1302,6 +1302,8 @@ PODS:
     - React-Core
   - RNCAsyncStorage (1.19.2):
     - React-Core
+  - RNCPicker (2.5.0):
+    - React-Core
   - RNDateTimePicker (7.4.1):
     - React-Core
   - RNFBAnalytics (18.3.0):
@@ -1430,6 +1432,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNAWSCognito (from `../node_modules/amazon-cognito-identity-js`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - "RNFBAnalytics (from `../node_modules/@react-native-firebase/analytics`)"
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
@@ -1578,6 +1581,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/amazon-cognito-identity-js"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCPicker:
+    :path: "../node_modules/@react-native-picker/picker"
   RNDateTimePicker:
     :path: "../node_modules/@react-native-community/datetimepicker"
   RNFBAnalytics:
@@ -1692,6 +1697,7 @@ SPEC CHECKSUMS:
   ReactCommon: d0b270a8f7666c6278c740224cea1e726f687c8e
   RNAWSCognito: af7e412f4aaaa8575f06716f5d93f032570f8859
   RNCAsyncStorage: f57e929cd7757f2cb3dd8186d123c09e8281a1ad
+  RNCPicker: 32ca102146bc7d34a8b93a998d9938d9f9ec7898
   RNDateTimePicker: 9b4091348e53f540180abdc54984d839a556f593
   RNFBAnalytics: b6e9ef75ebfccc29dd4adcff032eb4f5f2affc53
   RNFBApp: 147c3274daa84d7410d457510548d5fb3b317e37
@@ -1711,6 +1717,6 @@ SPEC CHECKSUMS:
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 8796b55dba14d7004f980b54bcc9833ee45b28ce
 
-PODFILE CHECKSUM: 6931f182462952530e81a6cfcb0b5bd8486a9c25
+PODFILE CHECKSUM: b784805f55c474153f99fc414fcce9c2dce58ed9
 
 COCOAPODS: 1.12.1

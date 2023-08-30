@@ -26,6 +26,8 @@ import AddExistProduct from '../screens/products/addExistProduct';
 import EditSetting from '../screens/setting/editSetting';
 import EditQuotation from '../screens/quotation/edit';
 import ContractOption from '../screens/contract/contractOptions';
+import SignatureScreen from '../screens/utils/signature';
+import ExistingSignature from '../screens/utils/existingSignature';
 
 const Theme = {
   ...DefaultTheme,
@@ -62,6 +64,7 @@ const Navigation = () => {
     );
   }
   const initialRouteName: ScreenName = user ? 'HomeScreen' : 'RegisterScreen';
+  console.log('USER',user)
   return (
     <NavigationContainer theme={Theme}>
       <Stack.Navigator
@@ -90,6 +93,19 @@ const Navigation = () => {
           options={{
             headerShown: true,
             title: 'เพิ่มรายการ-สินค้า',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+            <Stack.Screen
+          name="Signature"
+          component={SignatureScreen}
+          options={{
+            headerShown: true,
+            title: 'เพิ่มลายเซ็นเอกสาร',
             headerBackTitleVisible: false,
             headerStyle: {
               backgroundColor: '#ffffff',
@@ -155,6 +171,20 @@ const Navigation = () => {
           options={{
             headerShown: true,
             title: 'เพิ่มลูกค้า',
+            headerBackTitleVisible: false,
+
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+          <Stack.Screen
+          name="ExistingSignature"
+          component={ExistingSignature}
+          options={{
+            headerShown: true,
+            title: 'เซ็นเอกสาร',
             headerBackTitleVisible: false,
 
             headerStyle: {

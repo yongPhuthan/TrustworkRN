@@ -1,9 +1,9 @@
 import DatePickerButton from '../../components/styles/DatePicker';
 import {useRoute} from '@react-navigation/native';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery, useMutation} from 'react-query';
+import {useQuery, useMutation} from '@tanstack/react-query';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
-import {Store} from '../../redux/Store';
+import {Store} from '../../redux/store';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {
@@ -21,7 +21,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useForm, Controller} from 'react-hook-form';
 import {HOST_URL} from '@env';
 import * as stateAction from '../../redux/actions';
-import ContractOption from 'screens/contract/contractOptions';
 import ContractFooter from '../../components/styles/ContractFooter';
 import SmallDivider from '../../components/styles/SmallDivider';
 import DatePickerContract from '../../components/styles/DatePickerContract';
@@ -164,6 +163,7 @@ reset({
   signAddress:props.signAddress
 })
 }, []);
+console.log('PROPS',props)
   return (
     <View style={styles.container}>
       <ScrollView>
