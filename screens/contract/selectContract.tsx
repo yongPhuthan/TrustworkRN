@@ -2,7 +2,7 @@ import React, {useState, useContext, useEffect, useRef} from 'react';
 import {StyleSheet, Text, View, TouchableOpacity,ScrollView, ActivityIndicator} from 'react-native';
 import CardAudit from '../../components/CardAudit';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp, ParamListBase} from '@react-navigation/native';
+import {RouteProp} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
 import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
@@ -11,6 +11,7 @@ import axios, {AxiosResponse, AxiosError} from 'axios';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {HOST_URL,PROJECT_FIREBASE} from '@env';
 import {v4 as uuidv4} from 'uuid';
+import {ParamListBase} from '../../types/navigationType';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'SelectContract'>;

@@ -28,6 +28,9 @@ import EditQuotation from '../screens/quotation/edit';
 import ContractOption from '../screens/contract/contractOptions';
 import SignatureScreen from '../screens/utils/signature';
 import ExistingSignature from '../screens/utils/existingSignature';
+import Installment from '../screens/utils/installment';
+import FirstAppScreen from '../screens/register/firstAppScreen';
+import LoginScreen from '../screens/register/loginScreen';
 
 const Theme = {
   ...DefaultTheme,
@@ -46,6 +49,11 @@ const Navigation = () => {
     {name: 'RegisterScreen', component: RegisterScreen},
     {name: 'HomeScreen', component: HomeScreen},
     {name: 'DocViewScreen', component: DocViewScreen},
+    {name: 'FirstAppScreen', component: FirstAppScreen},
+    {name: 'LoginScreen', component: LoginScreen},
+
+
+
   ];
 
   useEffect(() => {
@@ -63,7 +71,7 @@ const Navigation = () => {
       </View>
     );
   }
-  const initialRouteName: ScreenName = user ? 'HomeScreen' : 'RegisterScreen';
+  const initialRouteName: ScreenName = user ? 'HomeScreen' : 'FirstAppScreen';
   console.log('USER',user)
   return (
     <NavigationContainer theme={Theme}>
@@ -113,6 +121,22 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
+         <Stack.Screen
+          name="Installment"
+          component={Installment}
+          options={{
+            headerShown: true,
+            title: 'แบ่งงวดชำระ',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+ 
+ 
+
         <Stack.Screen
           name="AddExistProduct"
           component={AddExistProduct}

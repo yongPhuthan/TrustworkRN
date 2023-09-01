@@ -62,6 +62,7 @@ const CardApprovedDashBoard = (props: Props) => {
     //   id: selectedItemId,
     // });
   };
+  console.log('props status', props.status)
 
   return (
     <>

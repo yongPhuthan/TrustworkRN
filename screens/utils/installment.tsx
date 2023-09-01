@@ -31,27 +31,26 @@ import {
   faCashRegister,
   faCoins,
 } from '@fortawesome/free-solid-svg-icons';
-import SmallDivider from './styles/SmallDivider';
-import ContractFooter from './styles/ContractFooter';
-
+import SmallDivider from '../../components/styles/SmallDivider';
+import ContractFooter from '../../components/styles/ContractFooter';
+import {ParamListBase} from '../../types/navigationType';
+import {RouteProp} from '@react-navigation/native';
+import {useSignatureUpload} from '../../hooks/utils/useSignatureUpload';
 
 interface InstallmentDetail {
   installment: number;
   percentage: number;
   amount: number;
 }
-type StackNavigatorParams = {
-  DocViewScreen: {id: string};
-  // Define other screens here
-};
 
 type Props = {
+  navigation: StackNavigationProp<ParamListBase, 'Installment'>;
+  route: RouteProp<ParamListBase, 'Installment'>;
+
   data: any;
-  handleBackPress: () => void;
 };
 interface MyError {
   response: object;
-  // add other properties if necessary
 }
 type UpdateContractInput = {
   data: any;
@@ -82,11 +81,14 @@ const updateContract = async (input: UpdateContractInput): Promise<any> => {
   return responseData;
 };
 
-const Installment = (props: Props) => {
+const Installment = ({navigation}: Props) => {
   const route = useRoute();
-  const dataProps: any = props.data;
+  const dataProps: any = route.params?.data;
   const totalPrice = dataProps.total;
   const [installments, setInstallments] = useState<number>(0);
+  const {isSignatureUpload, signatureUrl, handleSignatureUpload} =
+    useSignatureUpload();
+
   const [installmentDetails, setInstallmentDetails] = useState<
     InstallmentDetail[]
   >([]);
@@ -97,8 +99,6 @@ const Installment = (props: Props) => {
     [key: number]: number;
   }>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const navigation = useNavigation();
-  const Stack = createStackNavigator<StackNavigatorParams>();
 
   const [installmentDetailsText, setInstallmentDetailsText] = useState<{
     [key: number]: string;
@@ -178,9 +178,18 @@ const Installment = (props: Props) => {
     dataProps.contract.signDate = dataProps.signDate;
     dataProps.contract.servayDate = dataProps.servayDate;
     dataProps.contract.id = dataProps.contractID;
+    if (dataProps.sellerSignature) {
+      navigation.navigate('ExistingSignature', {
+        data: dataProps,
+      });
+    } else {
+      navigation.navigate('Signature', {
+        text: 'signature',
+        data: dataProps, // Passing only serializable data
+      });
+    }
 
-
-    await mutate({data: dataProps});
+    // await mutate({data: dataProps});
   }, [
     isPercentagesValid,
     errorMessage,
@@ -218,9 +227,8 @@ const Installment = (props: Props) => {
     label: `แบ่งชำระ ${value} งวด`,
     value,
   }));
-  console.log('watch:', props.data);
   console.log('percen lenght:', Object.values(percentages).length);
-  console.log('DATAPROP', dataProps);
+  console.log('signatureUrl', signatureUrl);
 
   const renderItem = ({item, index}: {item: any; index: number}) => (
     <View style={styles.card}>
@@ -323,7 +331,7 @@ const Installment = (props: Props) => {
         isLoading={isLoading}
         finalStep={true}
         // finalStep={step === 3}
-        onBack={props.handleBackPress}
+        onBack={() => {}}
         onNext={handleSave}
         disabled={!isDirty || !isValid}
       />

@@ -2,6 +2,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {StackNavigationProp} from '@react-navigation/stack';
 import { CompanyUser, Service,Quotation } from './docType';
 
+
 export type Audit = {
   title: string;
   description: string;
@@ -45,14 +46,14 @@ export type ParamListBase = {
   SignUpScreen: undefined;
   LoginScreen: undefined;
   CompanyUserFormScreen: undefined;
-  ExistingSignature:undefined;
+  ExistingSignature:any;
   ContactInfoScreen: undefined;
   SettingCompany: undefined;
   ExistingProduct: {id: string};
+  FirstAppScreen: undefined;
   Signature: {
     text: string;
-    onOK: (signature: any) => void;
-  };
+    data:object;  };
   EditQuotation: {quotation: Quotation; company: CompanyUser};
   EditQuotationScreen: {id: string};
   EditContractOption: {id: string};
@@ -64,7 +65,7 @@ export type ParamListBase = {
     sellerId: string;
   };
   NavigationScreen: undefined;
-  InstallmentScreen: {apiData: object[]};
+  Installment: any;
 };
 
 
@@ -88,4 +89,6 @@ export type ScreenName =
   | 'CompanyUserFormScreen'
   | 'RootTab'
   | 'HomeScreen'
-  | 'RegisterScreen';
+  | 'RegisterScreen'
+  | 'FirstAppScreen'
+  | 'LoginScreen'

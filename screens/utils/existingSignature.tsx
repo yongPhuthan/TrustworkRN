@@ -14,9 +14,10 @@ import {RouteProp} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
 import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {CompanyUser, Service} from '../../types/docType';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
+import {useUpdateContract} from '../../hooks/contract/useUpdateContract';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ExistingSignature'>;
@@ -24,61 +25,31 @@ type Props = {
   // onGoBack: (data: string) => void;
 };
 
-const fetchExistingProducts = async (company: CompanyUser) => {
-  const user = auth().currentUser;
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
-
-  const idToken = await user.getIdToken();
-  const companyID = company.id;
-  const url = __DEV__
-    ? `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appQueryExistingProduct`
-    : `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appQueryExistingProduct`;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-
-    body: JSON.stringify({id: companyID}),
-  });
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-
-  const data = await response.json();
-  return data;
-};
-
 const ExistingSignature = ({navigation}: Props) => {
   const [imageUri, setImageUri] = useState('');
   const route = useRoute();
+  const data = route.params?.data;
+  const queryClient = useQueryClient();
   const {width, height} = Dimensions.get('window');
-  const companyID = route.params;
-
-  //   const {data, isLoading, isError} = useQuery(
-  //     ['existingProduct', companyID],
-  //     () => fetchExistingProducts(companyID as CompanyUser).then(res => res),
-  //     {
-  //       onSuccess: data => {
-  //         console.log('audit data', JSON.stringify(data));
-  //       },
-  //     },
-  //   );
-  //   if (isLoading) {
-  //     return (
-  //       <View>
-  //         <ActivityIndicator />
-  //       </View>
-  //     );
-  //   }
-  const handleAddNewProduct = () => {
-    navigation.navigate('AddProduct');
+  const {updateContract, dataApi, error} = useUpdateContract();
+  const {mutate, isLoading} = useMutation(updateContract, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['contractDashboardData']);
+      const newId = data?.quotationId.slice(0, 8) as string;
+      navigation.navigate('DocViewScreen', {id: newId});
+    },
+    onError: error => {
+      console.error('Failed to update:', error);
+    },
+  });
+  const handleOkAction = async signature => {
+    try {
+      await mutate(data);
+    } catch (error) {
+      console.error('Failed to upload the signature:', error);
+    }
   };
+
   return (
     <>
       <View style={styles.container}>
@@ -88,21 +59,25 @@ const ExistingSignature = ({navigation}: Props) => {
           <View style={styles.underline} />
           <Image style={styles.image} source={{uri: imageUri}} />
 
-          <TouchableOpacity style={styles.btn}>
-            <Text style={styles.label}>ใช้ลายเซ็นเดิม</Text>
+          <TouchableOpacity onPress={handleOkAction} style={styles.btn}>
+            {isLoading ? (
+              <ActivityIndicator color={'white'} />
+            ) : (
+              <Text style={styles.label}>ใช้ลายเซ็นเดิม</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
       <View style={styles.orContainer}>
         <Text style={styles.orText}>หรือ</Text>
 
-        <TouchableOpacity  
-          onPress={  ()=>  navigation.navigate('Signature', {
-              text: 'Some Text',
-              onOK: (signature) => {
-                console.log(signature);
-              }
-            })}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('Signature', {
+              text: 'signature',
+              data,
+            })
+          }>
           <Text style={styles.textLink}>เพิ่มลายเซ็นใหม่</Text>
         </TouchableOpacity>
       </View>

@@ -39,7 +39,7 @@ import {
 import SmallDivider from '../../components/styles/SmallDivider';
 import ContractFooter from '../../components/styles/ContractFooter';
 import CreateContractScreen from './createContractScreen';
-import Installment from '../../components/installment';
+import Installment from '../utils/installment';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ContractOptions'>;
   route: RouteProp<ParamListBase, 'ContractOptions'>;
@@ -255,8 +255,24 @@ const ContractOption = ({navigation}: Props) => {
   }, []);
 
   const handleNextPress = () => {
-    if (step < 3) {
+    if (step < 2) {
       setStep(step + 1);
+    } else  {
+      console.log("Navigating to Installment");
+
+      navigation.navigate('Installment', {
+        data: {
+          projectName: watch('projectName'),
+          signDate,
+          servayDate,
+          total: Number(data.allTotal),
+          signAddress: watch('signAddress'),
+          quotationId: data.id,
+          sellerId: data.sellerId,
+          contract: dirtyData,
+          contractID: contract?.id,
+        },
+      });
     }
     // Validate the inputs for step 2 and step 3 here in a similar way.
   };
@@ -355,9 +371,9 @@ const ContractOption = ({navigation}: Props) => {
       finishedDay: Number(watch('finishedDay')),
       workCheckDay: Number(watch('workCheckDay')),
       workCheckEnd: Number(watch('workCheckEnd')),
-    }).filter(([key]) => dirtyFields[key])
+    }).filter(([key]) => dirtyFields[key]),
   );
-  console.log('contractID', contract?.id);
+  console.log('step',step);
   return (
     <>
       {contract && (
@@ -458,25 +474,7 @@ const ContractOption = ({navigation}: Props) => {
               />
             </>
           )}
-          {step === 3 && (
-            <>
-              <Installment
-                handleBackPress={handleBackPress}
-                data={{
-                  projectName: watch('projectName'),
-                  signDate,
-                  servayDate,
-                  total: Number(data.allTotal),
-                  signAddress: watch('signAddress'),
-                  quotationId: data.id,
-                  sellerId: data.sellerId,
-                  contract:dirtyData,
-                  contractID: contract.id,
 
-                }}
-              />
-            </>
-          )}
           {step !== 3 && (
             <ContractFooter
               finalStep={false}

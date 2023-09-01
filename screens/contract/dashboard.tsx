@@ -18,7 +18,8 @@ import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
 import Modal from 'react-native-modal';
 import CardApprovedDashBoard from '../../components/CardApprovedDashBoard';
-import {useQuery} from '@tanstack/react-query';
+import {useMutation,useQueryClient,useQuery} from '@tanstack/react-query';
+
 import Lottie from 'lottie-react-native';
 import {Contract, Quotation, Customer, CompanyUser} from '../../types/docType';
 import {useFetchDashboardContract} from '../../hooks/contract/useFetchDashboard';
@@ -34,6 +35,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
   const [selectedItemId, setSelectedItemId] = useState<any | null>(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const {width, height} = Dimensions.get('window');
+  const queryClient = useQueryClient();
 
   const handleModalClose = () => {
     setShowModal(false); // Step 4
@@ -138,6 +140,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     {
       enabled: !!user,
       onSuccess: data => {
+        queryClient.invalidateQueries(['companySetting'])
         console.log('data contract', data);
         setCompanyData(data[0]);
         setQuotationData(data[1]);

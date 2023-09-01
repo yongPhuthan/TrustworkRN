@@ -17,7 +17,7 @@ import Divider from '../../components/styles/Divider';
 import {NavigationContainer} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
-
+import firebase from '../../firebase';
 import CardProject from '../../components/CardProject';
 import CardClient from '../../components/CardClient';
 import FooterBtn from '../../components/styles/FooterBtn';
@@ -32,16 +32,14 @@ import axios, {AxiosResponse, AxiosError} from 'axios';
 
 import messaging from '@react-native-firebase/messaging';
 import Lottie from 'lottie-react-native';
-import{ Audit, IdContractList,CompanyUser} from '../../types/docType'
-import{ParamListBase} from '../../types/navigationType'
-import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter'
-import {useFetchCompanyUser} from '../../hooks/company/useFetchCompany'; 
-
+import {Audit, IdContractList, CompanyUser} from '../../types/docType';
+import {ParamListBase} from '../../types/navigationType';
+import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
+import {useFetchCompanyUser} from '../../hooks/company/useFetchCompany';
 
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
 }
-
 
 const Quotation = ({navigation}: Props) => {
   const {
@@ -95,13 +93,12 @@ const Quotation = ({navigation}: Props) => {
   }, [serviceList]);
 
   const isDisabled = !client_name || serviceList.length === 0;
-  
+
   const {data, isLoading, isError} = useQuery(
     ['companyUser', email],
     () => fetchCompanyUser({email, isEmulator}).then(res => res),
     {
       onSuccess: data => {
-
         setCompanyUser(data);
         dispatch(stateAction.get_companyID(data.user.id));
       },
@@ -128,10 +125,12 @@ const Quotation = ({navigation}: Props) => {
     navigation.navigate('AddCustomer');
   };
 
-  const handleAddProductForm = () => {
-    if(companyUser?.user){
+  const handleAddProductForm = async () => {
+    if (companyUser?.user) {
       dispatch(stateAction.reset_audit());
-      navigation.navigate('ExistingProduct',{id:companyUser.user?.id});
+      navigation.navigate('ExistingProduct', {id: companyUser.user?.id});
+    } else {
+      await firebase.auth().signOut();
     }
   };
   const handleEditService = (index: number) => {
@@ -197,7 +196,7 @@ const Quotation = ({navigation}: Props) => {
       }
       // await mutate(apiData);
       // navigation.navigate('InstallmentScreen', {data: apiData});
-      navigation.navigate('SelectContract', {data: apiData} as any ) 
+      navigation.navigate('SelectContract', {data: apiData} as any);
 
       setIsLoadingMutation(false);
     } catch (error: Error | AxiosError | any) {
