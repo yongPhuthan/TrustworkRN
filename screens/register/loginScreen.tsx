@@ -2,15 +2,20 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, Alert } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {ParamListBase} from '../../types/navigationType';
 
-const LoginScreen = () => {
+interface Props {
+    navigation: StackNavigationProp<ParamListBase, 'LoginScreen'>;
+  }
+const LoginScreen = ({navigation}: Props) => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
 
     const handleLogin = async () => {
         try {
             await auth().signInWithEmailAndPassword(email, password);
-            Alert.alert('Success', 'Logged in successfully!');
+            navigation.navigate('HomeScreen');
         } catch (error) {
             Alert.alert('Error', error.message);
         }

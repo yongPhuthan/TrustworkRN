@@ -1,7 +1,8 @@
 // screens/FirstAppScreen.tsx
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
 import Navigation from '../../navigations/navigation';
+import firebase from '../../firebase';
 
 const FirstAppScreen = ({ navigation }) => {
 
@@ -12,7 +13,17 @@ const FirstAppScreen = ({ navigation }) => {
     const handleRegister = () => {
         navigation.navigate('RegisterScreen');
       };
+    //   useEffect(() => {
+    //     const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+    //       if (user) {
+    //         // If there's a user, sign them out
+    //         firebase.auth().signOut();
+    //       }
 
+    //     });
+    
+    //     return unsubscribe;
+    // }, []);
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Trustwork</Text>

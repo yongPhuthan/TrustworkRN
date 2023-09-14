@@ -41,9 +41,8 @@ type Props = {
   route: RouteProp<ParamListBase, 'AddExistProduct'>;
 };
 
-interface ImageForm {
-  image: FileList;
-}
+
+type Inputs = FormData;
 
 const AddExistProduct = ({navigation, route}: Props) => {
   const [count, setCount] = useState(0);
@@ -62,7 +61,7 @@ const AddExistProduct = ({navigation, route}: Props) => {
     dispatch,
   }: any = useContext(Store);
 
-  const handleFormSubmit = (data: FormData) => {
+  const handleFormSubmit: (data: FormData) => void = (data)=> {
     const selectedAudits = selectedAudit.map((obj: any) => {
       return {
         ...obj,
@@ -96,7 +95,7 @@ const AddExistProduct = ({navigation, route}: Props) => {
     setValue,
     reset,
     formState: {errors, isDirty, dirtyFields, isValid},
-  } = useForm({
+  } = useForm<Inputs>({
     mode: 'onChange',
     defaultValues: {
       title: item.title,
@@ -105,11 +104,12 @@ const AddExistProduct = ({navigation, route}: Props) => {
       
     },
   });
-  const handleSelectAudit = (data: FormData) => {
+  const handleSelectAudit = (data: Inputs) => {
     navigation.navigate('SelectAudit', {
-      title: data.title,
+      title: data.title ,
       description: data.description,
       serviceID: serviceID,
+      
     });
   };
   useEffect(() => {
@@ -132,13 +132,13 @@ const AddExistProduct = ({navigation, route}: Props) => {
               alignItems: 'center',
               marginBottom: 20,
               borderColor: 'gray',
-              borderWidth: imageUrl == null ? 1 : 0,
+              borderWidth: watch('serviceImage') == null ? 1 : 0,
               borderRadius: 10,
               borderStyle: 'dotted',
               // marginHorizontal: 100,
               padding: 10,
-              height: imageUrl == null ? 100 : 150,
-              width: imageUrl == null ? 200 : 'auto',
+              height: watch('serviceImage') !== null ? 'auto' : 150,
+              width: watch('serviceImage') !== null ? 200 : 'auto',
             }}
             onPress={handleLogoUpload}>
             {isImageUpload ? (
@@ -146,12 +146,12 @@ const AddExistProduct = ({navigation, route}: Props) => {
             ) : imageUrl ? (
               <Image
                 source={{uri: imageUrl}}
-                style={{width: 300, aspectRatio: 2, resizeMode: 'contain'}}
+                style={{width: 300, aspectRatio: 2, resizeMode: 'contain',height:'auto'}}
               />
             ) : watch('serviceImage') ? (
               <Image
                 source={{uri: watch('serviceImage')}}
-                style={{width: 300, aspectRatio: 2, resizeMode: 'contain'}}
+                style={{width: 300, aspectRatio: 2, resizeMode: 'contain',height:'auto'}}
               />
             ) : (
               <>

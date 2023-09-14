@@ -1,11 +1,12 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {StackNavigationProp} from '@react-navigation/stack';
-import { CompanyUser, Service,Quotation } from './docType';
+import { CompanyUser, Service,Quotation,AuditData } from './docType';
 
 
 export type Audit = {
   title: string;
   description: string;
+  
   serviceID: string;
 };
 
@@ -48,12 +49,15 @@ export type ParamListBase = {
   CompanyUserFormScreen: undefined;
   ExistingSignature:any;
   ContactInfoScreen: undefined;
+  ExistingCategories: undefined;
+  GalleryScreen: {code:string | undefined};
   SettingCompany: undefined;
+  GalleryUploadScreen: undefined;
   ExistingProduct: {id: string};
   FirstAppScreen: undefined;
   Signature: {
     text: string;
-    data:object;  };
+    data:Quotation  };
   EditQuotation: {quotation: Quotation; company: CompanyUser};
   EditQuotationScreen: {id: string};
   EditContractOption: {id: string};

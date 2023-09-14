@@ -27,16 +27,14 @@ import {useRoute} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Store} from '../../redux/store';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {Contract, Quotation, Customer} from '../../types/docType';
+import {Contract, Quotation, Customer,DefaultContractType} from '../../types/docType';
 import {useForm, Controller} from 'react-hook-form';
-import {PeriodPercentType} from '../../types/docType';
 
 import SmallDivider from '../../components/styles/SmallDivider';
 import ContractFooter from '../../components/styles/ContractFooter';
 import CreateContractScreen from './createContractScreen';
 import Lottie from 'lottie-react-native';
 import EditInstallment from '../../components/editInstallment';
-import {DefaultContractType} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'DefaultContract'>;
@@ -117,6 +115,8 @@ const createQuotation = async ( data: any) => {
   const user = auth().currentUser;
   let url;
 
+  console.log('DATA API ++++', data)
+
   if (__DEV__) {
     url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appCreateQuotation`;
   } else {
@@ -170,6 +170,7 @@ console.log('UPDATEDD')
 
 const DefaultContract = ({navigation}: Props) => {
   const route = useRoute();
+  const [defaultContractValues, setDefaultContractValues] = useState<DefaultContractType>();
   const id: any = route?.params;
   const [fcnToken, setFtmToken] = useState('');
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
@@ -214,11 +215,11 @@ if (!email) {
     {
       onSuccess: data => {
         console.log('data Query',data);
-
+      
         if (data) {
           setContract(data as any);
-          console.log(data);
-          reset({
+     
+          const defaultValues = {
             warantyTimeWork: data.warantyTimeWork,
             workCheckEnd: data.workCheckEnd,
             workCheckDay: data.workCheckDay,
@@ -227,11 +228,15 @@ if (!email) {
             workAfterGetDeposit: data.workAfterGetDeposit,
             prepareDay: data.prepareDay,
             finishedDay: data.finishedDay,
-            productWarantyYear:data.productWarantyYear,
-            skillWarantyYear:data.skillWarantyYear,
-          });
+            productWarantyYear: data.productWarantyYear,
+            skillWarantyYear: data.skillWarantyYear,
+          };
+          setDefaultContractValues(defaultValues);
+          reset(defaultValues);
         }
-      },
+      }
+      
+      
     }
 );
 
@@ -302,14 +307,17 @@ if (!email) {
         contract: dirtyValues,
       };
 
-      console.log('api data', JSON.stringify(apiData));
 
       if (!contract) {
         createContractAndQuotationMutation(apiData);
       } else if (isDirty) {
         updateContractMutation({...apiData});
       } else {
-        createQuotationMutation(apiData);
+        const newData = {
+          data: quotation,
+          contract: defaultContractValues,
+        };
+        createQuotationMutation(newData);
       }
 
       setIsLoadingMutation(false);
@@ -395,7 +403,7 @@ if (!email) {
     </>
   );
 
-  
+  console.log('workCheckDay', contract?.workCheckDay)
   return (
     <>
       {contract ? (

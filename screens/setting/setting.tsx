@@ -91,7 +91,7 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
-        navigation.navigate('RegisterScreen');
+        navigation.navigate('FirstAppScreen');
       }
     });
 

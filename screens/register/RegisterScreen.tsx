@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import {CheckBox} from '@rneui/themed';
 import CryptoJS from 'crypto-js';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   MultipleSelectList,
   SelectList,
@@ -35,7 +35,6 @@ import {
   ImagePickerResponse,
 } from 'react-native-image-picker';
 import {useMutation} from '@tanstack/react-query';
-import {S3Client} from '@aws-sdk/client-s3';
 
 import storage from '@react-native-firebase/storage';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
@@ -48,10 +47,10 @@ import {
   CLOUDFLARE_WORKER,
   CLOUDFLARE_R2_BUCKET_BASE_URL,
   CLOUDFLARE_DIRECT_UPLOAD_URL,
+  CLOUDFLARE_R2_PUBLIC_URL,
 } from '@env';
 import {ParamListBase} from '../../types/navigationType';
 import RNFS from 'react-native-fs';
-
 import {StackNavigationProp} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -96,11 +95,10 @@ const RegisterScreen = ({navigation}: Props) => {
   const [page, setPage] = useState<number>(1);
   const [taxID, setTaxID] = useState<string>('');
   const [email, setEmail] = useState('');
-
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [registrationCode, setRegistrationCode] = useState('');
-  const [logo, setLogo] = useState<string | null>(null);
+  const [logo, setLogo] = useState<string >('');
   const [bizType, setBizType] = useState('individual');
   const [selectedCategories, setSelectedCategories] = useState<object[]>([]);
   const [isImageUpload, setIsImageUpload] = useState(false);
@@ -109,6 +107,8 @@ const RegisterScreen = ({navigation}: Props) => {
   const [userLastName, setUserLastName] = useState<string>('');
   const [userName, setUserName] = useState<string>('');
   const [companyNumber, setCompanyNumber] = useState<string>('');
+  const [responseLog, setResponseLog] = useState<string | null>(null);
+const [code, setCode] = useState<string | null>(null);
   const windowWidth = Dimensions.get('window').width;
   const [userLoading, setUserLoading] = useState(false);
   const [error, setError] =
@@ -119,6 +119,10 @@ const RegisterScreen = ({navigation}: Props) => {
   const isNextDisabledPage3 =
     !email || !password || !confirmPassword || !registrationCode;
 
+    const CLOUDFLARE_ENDPOINT = __DEV__
+    ? CLOUDFLARE_WORKER_DEV
+    : CLOUDFLARE_WORKER;
+
   const categories: object[] = [
     {key: '1', value: 'Mobiles', disabled: true},
     {key: '2', value: 'อลูมิเนียม'},
@@ -128,6 +132,10 @@ const RegisterScreen = ({navigation}: Props) => {
     {key: '6', value: 'งานกระเบื้อง'},
     {key: '7', value: 'งานปูน'},
   ];
+
+  useEffect(() => {
+    setCode((Math.floor(100000 + Math.random() * 900000).toString()));
+  }, []); 
   const handleNextPage = () => {
     setPage(page + 1);
   };
@@ -136,7 +144,15 @@ const RegisterScreen = ({navigation}: Props) => {
       setPage(page - 1);
     }
   };
-
+  const slugifyString = (str: string) => {
+    return str
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/\./g, '-')
+      .replace(/-+/g, '-')
+      .replace(/[^a-z0-9-]/g, '-');
+  };
   const {mutate, isLoading, isError} = useMutation(createCompanySeller, {
     onSuccess: () => {
       navigation.navigate('HomeScreen');
@@ -223,19 +239,19 @@ const RegisterScreen = ({navigation}: Props) => {
           throw new Error(
             'User creation was successful, but no user data was returned.',
           );
-
-        }else{
-          const flagRef = firebase.firestore().collection('completionFlags').doc(user.uid);
-          flagRef.onSnapshot((snapshot) => {
-              if (snapshot.exists && snapshot.data()?.completed) {
-                  handleFunction(user.uid);
-                  setUserLoading(false);
-                  flagRef.onSnapshot(() => {});
-              }
+        } else {
+          const flagRef = firebase
+            .firestore()
+            .collection('completionFlags')
+            .doc(user.uid);
+          flagRef.onSnapshot(snapshot => {
+            if (snapshot.exists && snapshot.data()?.completed) {
+              handleFunction(user.uid);
+              setUserLoading(false);
+              flagRef.onSnapshot(() => {});
+            }
           });
-
         }
-
       })
       .catch(error => {
         let errorMessage = '';
@@ -258,30 +274,31 @@ const RegisterScreen = ({navigation}: Props) => {
       bizName,
       userName,
       userLastName,
-      userPosition: userPosition === '' ? 'individual' : userPosition,
+      code,
+      userPosition,
       rules: [selectedCategories],
       address,
       officeTel,
       mobileTel,
       bizType,
       logo: logo || 'logo',
-      companyNumber,
+      companyNumber:taxID,
     };
     console.log(data);
     mutate({data, uid});
   };
 
-
-
   async function uriToBlob(uri) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.onload = function () {
-        // Return the blob
+        // Log the blob type and size for debugging
+        console.log(
+          `Blob created with type: ${xhr.response.type} and size: ${xhr.response.size} bytes`,
+        );
         resolve(xhr.response);
       };
       xhr.onerror = function () {
-        // Reject with error
         reject(new Error('URI to Blob failed'));
       };
       xhr.responseType = 'blob';
@@ -289,8 +306,31 @@ const RegisterScreen = ({navigation}: Props) => {
       xhr.send(null);
     });
   }
-  const handleLogoUpload = () => {
-    console.log('POADIND')
+  const handlePress = async () => {
+    try {
+      const companyCode = '675198'; 
+      const response = await fetch(`${CLOUDFLARE_ENDPOINT}gallery?code=` + companyCode);
+  
+      if (!response.ok) {
+        throw new Error('Server responded with status: ' + response.status);
+      }
+  
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.indexOf('application/json') !== -1) {
+        const data = await response.json();
+        console.log(data);
+        setResponseLog(JSON.stringify(data));
+      } else {
+        throw new Error('Received non-JSON response');
+      }
+    } catch (error) {
+      console.error('Error fetching images:', error);
+    }
+  };
+  
+
+
+  const handleLogoUpload = useCallback(() => {
     setIsImageUpload(true);
     const options: ImageLibraryOptions = {
       mediaType: 'photo' as MediaType,
@@ -300,13 +340,12 @@ const RegisterScreen = ({navigation}: Props) => {
         console.log('No image path provided');
         return;
       }
-
-      const filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+      const name = imagePath.substring(imagePath.lastIndexOf('/') + 1);
       const fileType = imagePath.substring(imagePath.lastIndexOf('.') + 1);
+      const filename = slugifyString(name);
+
       const blob = (await uriToBlob(imagePath)) as Blob;
-      const CLOUDFLARE_ENDPOINT = __DEV__
-        ? CLOUDFLARE_WORKER_DEV
-        : CLOUDFLARE_WORKER;
+
 
       let contentType = '';
       switch (fileType.toLowerCase()) {
@@ -326,9 +365,13 @@ const RegisterScreen = ({navigation}: Props) => {
         const response = await fetch(`${CLOUDFLARE_ENDPOINT}${filename}`, {
           method: 'POST',
           headers: {
-            'Content-Type': contentType,
+            logo: 'true',
           },
-          body: blob,
+          body: JSON.stringify({
+            fileName: name,
+            fileType: contentType,
+            code,
+          }),
         });
 
         if (!response.ok) {
@@ -336,15 +379,24 @@ const RegisterScreen = ({navigation}: Props) => {
           console.error('Server responded with:', text);
           throw new Error('Server error');
         }
-        let data;
-        try {
-          const imageUrl = response.url;
-          console.log('Image uploaded successfully. URL:', imageUrl);
-          return imageUrl;
-        } catch (error) {
-          console.error('Failed to parse JSON:', error);
-          throw new Error('Failed to parse response');
-        }
+
+        const {presignedUrl} = await response.json();
+
+        const uploadToR2Response = await fetch(presignedUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': contentType,
+          },
+          body: blob,
+        });
+
+        if (!uploadToR2Response.ok) {
+          console.error('Failed to upload file to R2');
+        }  
+        console.log('Upload to R2 success');
+        const url = `${CLOUDFLARE_R2_PUBLIC_URL}${code}/logo/${filename}`;
+        return url;
+
       } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
       }
@@ -354,21 +406,18 @@ const RegisterScreen = ({navigation}: Props) => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
         setIsImageUpload(false);
-
       } else if (response.errorMessage) {
         console.log('ImagePicker Error: ', response.errorMessage);
         setIsImageUpload(false);
-
       } else if (response.assets && response.assets.length > 0) {
         const source = {uri: response.assets[0].uri ?? null};
         console.log('Image source:', source);
-
 
         if (source.uri) {
           try {
             const cloudflareUrl: string | undefined =
               await uploadImageToCloudflare(source.uri);
-            setLogo(cloudflareUrl || null);
+            setLogo(cloudflareUrl ?? '');
             setIsImageUpload(false);
           } catch (error) {
             console.error('Error uploading image to Cloudflare:', error);
@@ -377,11 +426,19 @@ const RegisterScreen = ({navigation}: Props) => {
         }
       }
     });
-  };
-  console.log('logo', logo);
-  useEffect(() => {
-    testFunctionsConnection();
-  }, []);
+  }, [
+    setIsImageUpload,
+    logo,
+    slugifyString,
+    uriToBlob,
+    CLOUDFLARE_WORKER_DEV,
+    CLOUDFLARE_WORKER,
+    code,
+    CLOUDFLARE_R2_PUBLIC_URL,
+    launchImageLibrary,
+  ]);
+
+
   const renderPage = () => {
     switch (page) {
       case 1:
@@ -421,7 +478,16 @@ const RegisterScreen = ({navigation}: Props) => {
                 </View>
               )}
             </TouchableOpacity>
-
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <TouchableOpacity onPress={handlePress} style={{ padding: 20, backgroundColor: 'blue' }}>
+      <Text style={{ color: 'white' }}>Fetch Images</Text>
+    </TouchableOpacity>
+    {responseLog && (
+      <Text style={{ marginTop: 20 }}>
+        Response: {responseLog}
+      </Text>
+    )}
+  </View>
             <Text>ชื่อธุรกิจ - บริษัท</Text>
 
             <TextInput
@@ -473,14 +539,12 @@ const RegisterScreen = ({navigation}: Props) => {
                 onPress={() => setBizType('business')}
               />
             </View>
-            {bizType === 'business' && (
-              <TextInput
-                placeholder="ตำแหน่งในบริษัท"
-                style={styles.input}
-                value={userPosition}
-                onChangeText={setUserPosition}
-              />
-            )}
+            <TextInput
+              placeholder="ตำแหน่ง"
+              style={styles.input}
+              value={userPosition}
+              onChangeText={setUserPosition}
+            />
             <SelectList
               setSelected={(val: object[]) => setSelectedCategories(val)}
               data={categories}
@@ -691,6 +755,7 @@ const RegisterScreen = ({navigation}: Props) => {
         return null;
     }
   };
+  console.log('CODE', code)
   return (
     <KeyboardAvoidingView
       style={{flex: 1}}

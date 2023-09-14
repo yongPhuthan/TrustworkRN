@@ -1,6 +1,6 @@
 import React, {createContext, useReducer} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {SelectedAuditData,AuditData} from '../types/docType';
+import {SelectedAuditData,AuditData} from '../docType';
 import * as contrains from './constrains';
 export type StateType = {
   docCounter: number;

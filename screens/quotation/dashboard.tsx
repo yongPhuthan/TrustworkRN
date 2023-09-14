@@ -19,7 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useQuery} from '@tanstack/react-query';
 import Lottie from 'lottie-react-native';
 import messaging from '@react-native-firebase/messaging';
-import {User, Quotation} from '../../types/docType';
+import {User, Quotation, CompanyUser} from '../../types/docType';
 import * as stateAction from '../../redux/actions';
 import {DashboardScreenProps} from '../../types/navigationType';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
@@ -27,7 +27,7 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(false);
   const {width, height} = Dimensions.get('window');
-
+const [email,setEmail] = useState('');
   const [selectedQuotation, setSelectedQuotation] = useState(null);
 
   const {
@@ -35,7 +35,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     dispatch,
   }: any = useContext(Store);
 
-  const [companyData, setCompanyData] = useState(null);
+  const [companyData, setCompanyData] = useState<CompanyUser | null>(null) 
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
 
   const getTokenAndEmail = async () => {
@@ -43,6 +43,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     if (currentUser) {
       const token = await currentUser.getIdToken();
       const email = currentUser.email;
+      setEmail(email);
       return {token, email};
     } else {
       // User is not logged in
@@ -56,7 +57,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     
     const user = await getTokenAndEmail();
     if (user) {
-      console.log('user', user);
+      console.log('user5', user);
       const {token, email} = user;
 
       if (email) {
@@ -262,10 +263,9 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     dispatch(stateAction.client_address(''));
     dispatch(stateAction.client_tel(''));
     dispatch(stateAction.client_tax(''));
-
-    navigation.navigate('CreateQuotation');
+navigation.navigate('GalleryScreen',{code:companyData?.code  });
+    // navigation.navigate('CreateQuotation');
   };
-
   return (
     <>
       {companyData && quotationData && (

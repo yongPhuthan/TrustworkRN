@@ -31,6 +31,9 @@ import ExistingSignature from '../screens/utils/existingSignature';
 import Installment from '../screens/utils/installment';
 import FirstAppScreen from '../screens/register/firstAppScreen';
 import LoginScreen from '../screens/register/loginScreen';
+import GalleryUploadScreen from '../screens/products/gallary/create';
+import ExistingCategories from '../screens/products/gallary/existing';
+import GalleryScreen from '../screens/products/imageGallery';
 
 const Theme = {
   ...DefaultTheme,
@@ -189,6 +192,32 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
+                <Stack.Screen
+          name="ExistingCategories"
+          component={ExistingCategories}
+          options={{
+            headerShown: true,
+            title: 'เพิ่มรายการ-สินค้า',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+                        <Stack.Screen
+          name="GalleryScreen"
+          component={GalleryScreen}
+          options={{
+            headerShown: true,
+            title: 'อัลบั้มผลงาน',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
         <Stack.Screen
           name="AddCustomer"
           component={AddCustomer}
@@ -294,6 +323,20 @@ const Navigation = () => {
           options={{
             headerShown: true,
             title: 'รายละเอียดสัญญา',
+            headerBackTitleVisible: false,
+
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+         <Stack.Screen
+          name="GalleryUploadScreen"
+          component={GalleryUploadScreen}
+          options={{
+            headerShown: true,
+            title: 'อัพโหลดอัลบั้ม',
             headerBackTitleVisible: false,
 
             headerStyle: {

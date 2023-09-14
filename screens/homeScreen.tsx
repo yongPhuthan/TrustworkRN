@@ -99,6 +99,7 @@ const HomeScreen = ({navigation}: NavigationScreen) => {
   return (
     <>
       <Tab.Navigator
+        initialRouteName="เสนอราคา"
         screenOptions={{
           tabBarActiveTintColor: '#0c5caa',
           tabBarInactiveTintColor: 'gray',

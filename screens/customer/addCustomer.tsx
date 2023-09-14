@@ -4,7 +4,13 @@ import {
   View,
   TextInput,
   Button,
+  Pressable,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
   StyleSheet,
+  ScrollView,
   TouchableOpacity,
 } from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
@@ -13,13 +19,12 @@ import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp, ParamListBase} from '@react-navigation/native';
-import{ CustomerForm, ServiceList,CompanyUser} from '../../types/docType'
+import {CustomerForm, ServiceList, CompanyUser} from '../../types/docType';
 
 type WatchedValues = {
   name: string;
   address: string;
 };
-
 
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'AddCustomer'>;
@@ -54,87 +59,90 @@ const AddCustomer = ({navigation, route}: Props) => {
     dispatch(stateAction.client_tax(data.companyId));
     navigation.goBack();
   };
-  const name = watch("name");
-  const address = watch("address");
-  
-  const isButtonDisabled = !name || !address; 
+  const name = watch('name');
+  const address = watch('address');
+
+  const isButtonDisabled = !name || !address;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.subContainer}>
-        <Text>{client_name}</Text>
-        <Controller
-          control={control}
-          rules={{required: true}}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              placeholder="ชื่อลูกค้า"
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-          name="name"
-        />
-        {errors.name && <Text>This is required.</Text>}
+    <KeyboardAvoidingView 
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    keyboardVerticalOffset={20}
+    style={styles.container}>
+        <ScrollView style={styles.subContainer}>
+          <Text>{client_name}</Text>
+          <Controller
+            control={control}
+            rules={{required: true}}
+            render={({field: {onChange, onBlur, value}}) => (
+              <TextInput
+                placeholder="ชื่อลูกค้า"
+                style={styles.inputName}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+            name="name"
+          />
+          {errors.name && <Text>This is required.</Text>}
 
-        <Controller
-          control={control}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              placeholder="ที่อยู่"
-              keyboardType="name-phone-pad"
-              multiline
-              textAlignVertical="top"
-              numberOfLines={4}
-              style={styles.inputAddress}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-          name="address"
-        />
+          <Controller
+            control={control}
+            render={({field: {onChange, onBlur, value}}) => (
+              <TextInput
+                placeholder="ที่อยู่"
+                keyboardType="name-phone-pad"
+                multiline
+                textAlignVertical="top"
+                numberOfLines={4}
+                style={styles.inputAddress}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+            name="address"
+          />
 
-        <Controller
-          control={control}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              placeholder="เบอร์โทรศัพท์"
-              keyboardType="phone-pad"
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-          name="mobilePhone"
-        />
+          <Controller
+            control={control}
+            render={({field: {onChange, onBlur, value}}) => (
+              <TextInput
+                placeholder="เบอร์โทรศัพท์"
+                keyboardType="phone-pad"
+                style={styles.inputName}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+            name="mobilePhone"
+          />
 
-        <Controller
-          control={control}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              placeholder="เลขทะเบียนภาษี(ถ้ามี)"
-              keyboardType="number-pad"
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-          name="companyId"
-        />
+          <Controller
+            control={control}
+            render={({field: {onChange, onBlur, value}}) => (
+              <TextInput
+                placeholder="เลขทะเบียนภาษี(ถ้ามี)"
+                keyboardType="numeric"
+                style={styles.inputName}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+            name="companyId"
+          />
 
-        {/* <Button title="บันทึก" onPress={handleSubmit(onSubmit)} /> */}
-        <TouchableOpacity         disabled={isButtonDisabled}
-             style={[styles.btn, isButtonDisabled && styles.disabledBtn]} 
-             onPress={handleSubmit(onSubmit)}>
-          <Text style={styles.label}>บันทึก</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <Pressable
+            disabled={isButtonDisabled}
+            style={[styles.btn, isButtonDisabled && styles.disabledBtn]}
+            onPress={handleSubmit(onSubmit)}>
+            <Text style={styles.label}>บันทึก</Text>
+          </Pressable>
+        </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -145,7 +153,7 @@ const styles = StyleSheet.create({
   subContainer: {
     backgroundColor: '#ffffff',
     padding: 30,
-    marginBottom: 10,
+    marginBottom: 50,
     height: 'auto',
   },
   btn: {
@@ -157,6 +165,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     marginTop: 40,
     backgroundColor: '#0073BA',
+    marginBottom: 100,
+
   },
   form: {
     border: '1px solid #0073BA',
@@ -177,7 +187,7 @@ const styles = StyleSheet.create({
     height: 40,
   },
   disabledBtn: {
-    backgroundColor: 'gray', 
+    backgroundColor: 'gray',
   },
   inputAddress: {
     borderWidth: 1,

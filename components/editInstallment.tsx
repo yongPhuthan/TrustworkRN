@@ -24,7 +24,7 @@ import {useQuery, useMutation} from 'react-query';
 import {useNavigation} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {v4 as uuidv4} from 'uuid';
-import {Contract, Quotation, Customer, CompanyUser} from '../types/docType';
+import {Contract, Quotation, Customer, CompanyUser} from '../docType';
 
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
@@ -35,7 +35,7 @@ import {
 import SmallDivider from './styles/SmallDivider';
 import ContractFooter from './styles/ContractFooter';
 import {HOST_URL} from '@env';
-import {PeriodPercentType} from '../types/docType';
+import {PeriodPercentType} from '../docType';
 
 interface InstallmentDetail {
   installment: number;

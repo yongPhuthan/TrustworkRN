@@ -13,6 +13,11 @@ declare module '@env' {
     export const CLOUDFLARE_R2_BUCKET_BASE_URL:string
     export const CLOUDFLARE_WORKER : string
     export const CLOUDFLARE_WORKER_DEV:string
+    export const CLOUDFLARE_WORKER_GALLERY:string
+    export const R2_ACCESS_KEY:string
+    export  const R2_ACCOUNT_ID:string
+    export const R2_SECRET_KEY :string
+    export const CLOUDFLARE_R2_PUBLIC_URL:string
     // Add more environment variables if needed
   }
   

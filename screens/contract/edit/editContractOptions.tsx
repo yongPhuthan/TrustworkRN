@@ -19,7 +19,7 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Store} from '../../../redux/Store';
+import {Store} from '../../../redux/store';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {Contract, Quotation, Customer} from '../../../types/docType';
 import {useForm, Controller} from 'react-hook-form';
@@ -28,7 +28,6 @@ import {PeriodPercentType} from '../../../types/docType';
 import SmallDivider from '../../../components/styles/SmallDivider';
 import ContractFooter from '../../../components/styles/ContractFooter';
 import CreateContractScreen from '../createContractScreen';
-import Installment from '../../../components/installment';
 import Lottie from 'lottie-react-native';
 import EditInstallment from '../../../components/editInstallment';
 

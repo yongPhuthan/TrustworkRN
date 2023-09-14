@@ -10,7 +10,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.395.0",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@fortawesome/react-native-fontawesome": "^0.3.0",
@@ -35,7 +34,6 @@
     "@tanstack/react-query": "^4.32.6",
     "amazon-cognito-identity-js": "^6.3.3",
     "aws-amplify": "^5.3.8",
-    "aws4fetch": "^1.0.17",
     "axios": "^1.4.0",
     "crypto-js": "^4.1.1",
     "css-select": "^5.1.0",

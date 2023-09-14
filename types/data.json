@@ -1,25 +1,41 @@
 {
-    "contract": {
-        "adjustPerDay": "9",
-        "deposit": 0,
-        "finishedDay": 9,
-        "id": "d3e82ddd-e4c5-48dc-9731-2c64993e02ef",
-        "installingDay": 15,
-        "offerCheck": [],
-        "prepareDay": 5,
-        "productWarantyYear": 1,
-        "projectName": "",
-        "quotationPageQty": 0,
-        "sellerId": "11fa0bc0-44f0-4b0b-a6f6-ede9a5ce4cf2",
-        "servayDate": "none",
-        "servayDateStamp": 0,
-        "signAddress": "none",
-        "signDate": "none",
-        "signDateStamp": 0,
-        "skillWarantyYear": 2,
-        "warantyTimeWork": 1,
-        "workAfterGetDeposit": 65,
-        "workCheckDay": 113,
-        "workCheckEnd": 8
-    }
+    "_bodyBlob": {
+        "_data": {
+            "__collector": [Object],
+            "blobId": "9633BB13-65E8-4744-A03C-39321F907729",
+            "name": "logo2-ecfc70e9-0a6a-407c-bcdd-7fa27973bfe5-png.txt",
+            "offset": 0,
+            "size": 0,
+            "type": "text/plain"
+        }
+    },
+    "_bodyInit": {
+        "_data": {
+            "__collector": [Object],
+            "blobId": "9633BB13-65E8-4744-A03C-39321F907729",
+            "name": "logo2-ecfc70e9-0a6a-407c-bcdd-7fa27973bfe5-png.txt",
+            "offset": 0,
+            "size": 0,
+            "type": "text/plain"
+        }
+    },
+    "bodyUsed": false,
+    "headers": {
+        "map": {
+            "cf-ray": "806121664cec45c4-BKK",
+            "connection": "keep-alive",
+            "content-length": "0",
+            "content-type": "text/plain;charset=UTF-8",
+            "date": "Wed, 13 Sep 2023 14:37:51 GMT",
+            "etag": "\"765143a182ba500ae7388af64ab0d546\"",
+            "server": "cloudflare",
+            "vary": "Accept-Encoding",
+            "x-amz-version-id": "7e757105e340249a5de492c62f961013"
+        }
+    },
+    "ok": true,
+    "status": 200,
+    "statusText": "",
+    "type": "default",
+    "url": "https://test.a61f30bb027ef64c9577c73f5981f073.r2.cloudflarestorage.com/logo2-ecfc70e9-0a6a-407c-bcdd-7fa27973bfe5-png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=2bae82f652a20b37bf9d07a7811d5be7%2F20230913%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20230913T143750Z&X-Amz-Expires=300&X-Amz-Signature=5b77c9e0d8616ccc90018761ec3ff871b2fc2c2af088460ad5a799d224b60c45&X-Amz-SignedHeaders=host&x-amz-acl=public-read&x-id=PutObject"
 }

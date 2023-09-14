@@ -29,6 +29,7 @@ export type Contract = {
 export type FormData = {
   title: string;
   description: string;
+  serviceImage: string;
   unitPrice: string;
   qty: string;
   unit: string;
@@ -48,6 +49,7 @@ export type ServiceList = {
 
 export type Quotation = {
   id: string;
+  quotationId:string;
   services: Service[];
   vat7: number;
   taxName: string;
@@ -126,6 +128,7 @@ export type SelectedAuditData = {
 export type CompanyUser = {
   id: string;
   bizName: string;
+  code: string;
   userName: string;
   userLastName: string;
   address: string;
@@ -192,9 +195,11 @@ export interface IdContractList {
 export type AuditData = {
   id: number;
   number: string;
+  description: string;
   image: string;
   title: string;
   content: string;
+  serviceID: string;
   createdAt: Date;
   auditShowTitle: string;
 };

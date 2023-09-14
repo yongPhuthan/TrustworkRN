@@ -116,6 +116,8 @@ const EditProductForm = ({navigation, route}: Props) => {
     navigation.navigate('SelectAudit', {
       title: data.title,
       description: data.description,
+      serviceID: data.id,
+
     });
   };
 
