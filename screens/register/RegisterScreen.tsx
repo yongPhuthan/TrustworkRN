@@ -14,6 +14,7 @@ import {
   Dimensions,
   TextInput,
 } from 'react-native';
+
 import {CheckBox} from '@rneui/themed';
 import CryptoJS from 'crypto-js';
 import React, {useState, useEffect, useCallback} from 'react';

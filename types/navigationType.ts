@@ -37,10 +37,12 @@ export type ParamListBase = {
   ContractCard: undefined;
   SelectAudit: Audit;
   DefaultContract: undefined;
+  DashboardQuotation: undefined;
   SelectContract: {id: string};
   EditProductForm: {item: Service};
   AddExistProduct: {item: Service};
   EditClientForm: undefined;
+  SettingsScreen: undefined;
   WebViewScreen: {id: string};
   DocViewScreen: {id: any};
   EditSetting:{company:CompanyUser}

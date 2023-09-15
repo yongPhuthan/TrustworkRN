@@ -34,6 +34,8 @@ import LoginScreen from '../screens/register/loginScreen';
 import GalleryUploadScreen from '../screens/products/gallary/create';
 import ExistingCategories from '../screens/products/gallary/existing';
 import GalleryScreen from '../screens/products/imageGallery';
+import SettingsScreen from '../screens/setting/setting';
+import Dashboard from '../screens/quotation/dashboard';
 
 const Theme = {
   ...DefaultTheme,
@@ -50,11 +52,11 @@ const Navigation = () => {
 
   const screens: ScreenItem[] = [
     {name: 'RegisterScreen', component: RegisterScreen},
-    {name: 'HomeScreen', component: HomeScreen},
+    {name: 'HomeScreen',  component: HomeScreen},
     {name: 'DocViewScreen', component: DocViewScreen},
     {name: 'FirstAppScreen', component: FirstAppScreen},
     {name: 'LoginScreen', component: LoginScreen},
-
+{name: 'DashboardQuotation', component: Dashboard},
 
 
   ];
@@ -74,7 +76,7 @@ const Navigation = () => {
       </View>
     );
   }
-  const initialRouteName: ScreenName = user ? 'HomeScreen' : 'FirstAppScreen';
+  const initialRouteName: ScreenName = user ? 'DashboardQuotation' : 'FirstAppScreen';
   console.log('USER',user)
   return (
     <NavigationContainer theme={Theme}>
@@ -82,7 +84,7 @@ const Navigation = () => {
         initialRouteName={initialRouteName}
         screenOptions={{headerShown: false}}>
         {screens.map(({name, component}) => (
-          <Stack.Screen key={name} name={name} component={component} />
+          <Stack.Screen  key={name} name={name}           component={component} />
         ))}
         <Stack.Screen
           name="CreateQuotation"
@@ -98,6 +100,7 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
+
         <Stack.Screen
           name="AddProduct"
           component={AddProductForm}
@@ -169,6 +172,19 @@ const Navigation = () => {
         <Stack.Screen
           name="EditSetting"
           component={EditSetting}
+          options={{
+            headerShown: true,
+            title: 'แก้ไขข้อมูลธุรกิจ',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+                <Stack.Screen
+          name="SettingsScreen"
+          component={SettingsScreen}
           options={{
             headerShown: true,
             title: 'แก้ไขข้อมูลธุรกิจ',

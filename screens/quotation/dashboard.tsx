@@ -5,6 +5,7 @@ import {
   FlatList,
   Dimensions,
   ActivityIndicator,
+  Animated,
   TouchableOpacity,
   Platform,
   Pressable,
@@ -14,8 +15,18 @@ import CardDashBoard from '../../components/CardDashBoard';
 import {HOST_URL, PROJECT_NAME, PROJECT_FIREBASE} from '@env';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
-import {FAB} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Header as HeaderRNE, HeaderProps, Icon,FAB} from '@rneui/themed';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+
+  faBell,
+
+  faCog,
+
+  faPlus,
+  faSheetPlastic,
+} from '@fortawesome/free-solid-svg-icons';
 import {useQuery} from '@tanstack/react-query';
 import Lottie from 'lottie-react-native';
 import messaging from '@react-native-firebase/messaging';
@@ -37,7 +48,15 @@ const [email,setEmail] = useState('');
 
   const [companyData, setCompanyData] = useState<CompanyUser | null>(null) 
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
-
+  const slideAnim = useState(new Animated.Value(-100))[0]; 
+  const [filters, setFilters] = useState([
+    'Filter 1',
+    'Filter 2',
+    'Filter 3',
+    'Filter 4',
+    // Add more as needed
+  ]);
+  const [activeFilter, setActiveFilter] = useState('Filter 1');
   const getTokenAndEmail = async () => {
     const currentUser = auth().currentUser;
     if (currentUser) {
@@ -86,28 +105,29 @@ const [email,setEmail] = useState('');
   };
   const user = getTokenAndEmail();
 
-  const {isLoading, error, data} = useQuery(
-    ['dashboardData'],
-    fetchDashboardData,
-    {
-      enabled: !!user,
-      onSuccess: data => {
-        setCompanyData(data[0]);
-        setQuotationData(data[1]);
-      },
-    },
-  );
+  // const {isLoading, error, data} = useQuery(
+  //   ['dashboardData'],
+  //   fetchDashboardData,
+  //   {
+  //     enabled: !!user,
+  //     onSuccess: data => {
+  //       setCompanyData(data[0]);
+  //       setQuotationData(data[1]);
+  //     },
+  //   },
+  // );
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-  if (error) {
-    console.log('error', error);
-  }
+  // if (isLoading) {
+  //   return (
+    
+  //     <View style={styles.loadingContainer}>
+  //       <ActivityIndicator />
+  //     </View>
+  //   );
+  // }
+  // if (error) {
+  //   console.log('error', error);
+  // }
   const handleModal = () => {
     console.log('SHOW');
     setShowModal(true);
@@ -138,10 +158,25 @@ const [email,setEmail] = useState('');
     await dispatch(stateAction.existing_audit_array(allAuditData));
     navigation.navigate('EditQuotation', {quotation, company: data[0]});
   };
+  const FilterButton = ({filter, isActive, onPress}) => {
+    return (
+<TouchableOpacity
+    style={[
+        styles.filterButton,
+        isActive ? styles.activeFilter : null,
+    ]}
+    onPress={onPress}
+>
+    <Text style={isActive ? {color: 'white'} : null}>{filter}</Text>
+</TouchableOpacity>
 
+      
+    );
+  };
   const renderItem = ({item}) => (
     <>
       <View>
+   
         <CardDashBoard
           status={item.status}
           date={item.dateOffer}
@@ -268,6 +303,54 @@ navigation.navigate('GalleryScreen',{code:companyData?.code  });
   };
   return (
     <>
+    <View>
+    <HeaderRNE
+            containerStyle={{backgroundColor: '#ffffffff',borderBottomColor:'white'}}
+            leftComponent={<Text
+              style={{
+                color: '#042d60',
+                fontSize: 18,
+                fontWeight: 'bold',
+                width: 100,
+              }}
+              onPress={() => {}}
+            >
+              Trustwork
+            </Text>
+            }
+      
+            rightComponent={
+              <TouchableOpacity
+                onPress={
+                  () => {}
+                }>
+                <FontAwesomeIcon
+                  icon={faCog}
+                  color="#1f303cff"
+                  size={22}
+                />
+              </TouchableOpacity>
+            }
+          />
+       <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={filters}
+          renderItem={({item}) => (
+            <FilterButton
+              filter={item}
+              isActive={item === activeFilter}
+              onPress={() => {
+                setActiveFilter(item);
+              }}
+            />
+          )}
+          keyExtractor={(item) => item}
+        />
+                <View style={{ height: 0.5, backgroundColor: 'gray', width: '100%' }}/>
+
+        </View>
+
       {companyData && quotationData && (
         <View
           style={{
@@ -313,7 +396,17 @@ navigation.navigate('GalleryScreen',{code:companyData?.code  });
             theme={{colors: {accent: 'white'}}}
           />
         </View>
+        
       )}
+      <FAB 
+        icon={{ name: 'add', color: 'white' }}
+        color='#1f303cff'
+      style={{ backgroundColor: '#1f303cff', position: 'absolute', right: 16, bottom: 25 }}
+      onPress={() => {
+        // handle the press event, for example, navigate to another screen or show a modal
+      }}
+    />
+
     </>
   );
 };
@@ -410,5 +503,17 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  filterButton: {
+    padding: 10,
+    marginHorizontal: 5,
+    marginVertical: 20,
+    backgroundColor: '#E5E5E5',
+    borderRadius: 8,
+    height: 40,
+  },
+  activeFilter: {
+    backgroundColor: '#1f303cff',
+    color: 'white',
   },
 });
