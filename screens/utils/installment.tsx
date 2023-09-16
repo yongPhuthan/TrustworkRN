@@ -35,7 +35,7 @@ import SmallDivider from '../../components/styles/SmallDivider';
 import ContractFooter from '../../components/styles/ContractFooter';
 import {ParamListBase} from '../../types/navigationType';
 import {RouteProp} from '@react-navigation/native';
-import {useSignatureUpload} from '../../hooks/utils/useSignatureUpload';
+import {useSignatureUpload} from '../../hooks/utils/image/useSignatureUpload';
 
 interface InstallmentDetail {
   installment: number;

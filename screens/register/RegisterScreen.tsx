@@ -156,7 +156,7 @@ const [code, setCode] = useState<string | null>(null);
   };
   const {mutate, isLoading, isError} = useMutation(createCompanySeller, {
     onSuccess: () => {
-      navigation.navigate('HomeScreen');
+      navigation.navigate('DashboardQuotation');
     },
     onError: (error: any) => {
       console.error('There was a problem calling the function:', error);
@@ -309,8 +309,8 @@ const [code, setCode] = useState<string | null>(null);
   }
   const handlePress = async () => {
     try {
-      const companyCode = '675198'; 
-      const response = await fetch(`${CLOUDFLARE_ENDPOINT}gallery?code=` + companyCode);
+      
+      const response = await fetch(`${CLOUDFLARE_ENDPOINT}gallery?code=` + code);
   
       if (!response.ok) {
         throw new Error('Server responded with status: ' + response.status);

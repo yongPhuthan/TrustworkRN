@@ -29,7 +29,7 @@ import {
 } from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 import SmallDivider from '../../components/styles/SmallDivider';
-import {useImageUpload} from '../../hooks/utils/useImageUpload';
+import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'EditProductForm'>;

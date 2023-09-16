@@ -1,16 +1,20 @@
-import React, {useState,useCallback} from 'react';
+import React, {useState, useCallback} from 'react';
 import {
   View,
   Image,
   Modal,
-  Button,
+  ActivityIndicator,
   FlatList,
   TouchableOpacity,
+  Dimensions,
   StyleSheet,
   Text,
 } from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
+import {useQuery,useQueryClient,useMutation} from '@tanstack/react-query';
+import { GlobalStyles } from '../../styles/GlobalStyles';
+
 import {RouteProp} from '@react-navigation/native';
 import {CheckBox} from '@rneui/themed';
 import {
@@ -25,14 +29,16 @@ import {
   PROJECT_FIREBASE,
   CLOUDFLARE_WORKER,
   CLOUDFLARE_R2_BUCKET_BASE_URL,
-  CLOUDFLARE_R2_PUBLIC_URL,
-  CLOUDFLARE_WORKER_GALLERY,
   CLOUDFLARE_DIRECT_UPLOAD_URL,
+  CLOUDFLARE_R2_PUBLIC_URL,
 } from '@env';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faExpand, faExpandArrowsAlt} from '@fortawesome/free-solid-svg-icons';
 import CustomCheckbox from '../../components/CustomCheckbox';
-import useImagesQuery from '../../hooks/utils/useImageQuery';
+import useImagesQuery from '../../hooks/utils/image/useImageQuery';
+import { useSlugify } from '../../hooks/utils/useSlugify';
+import { useUriToBlob } from '../../hooks/utils/image/useUriToBlob';
+import { set } from 'react-hook-form';
 type ImageData = {
   id: number;
   url: string;
@@ -44,22 +50,9 @@ type Props = {
   route: RouteProp<ParamListBase, 'GalleryScreen'>;
   code: string;
 };
+const CLOUDFLARE_ENDPOINT = __DEV__ ? CLOUDFLARE_WORKER_DEV : CLOUDFLARE_WORKER;
 
-const fetchImagesByEmail = async email => {
-  const response = await fetch('YOUR_ENDPOINT_URL', {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      email: email, // Assuming email is sent as a header
-    },
-  });
 
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-
-  return response.json();
-};
 
 const mockData: ImageData[] = [
   {
@@ -93,145 +86,76 @@ const mockData: ImageData[] = [
     defaultChecked: false,
   },
 ];
+const getGallery = async code => {
+  try {
+    const response = await fetch(`${CLOUDFLARE_ENDPOINT}gallery?code=` + code);
+
+    if (!response.ok) {
+      throw new Error('Server responded with status: ' + response.status);
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.indexOf('application/json') !== -1) {
+      const data = await response.json();
+      console.log(data);
+      return data;
+    } else {
+      throw new Error('Received non-JSON response');
+    }
+  } catch (error) {
+    console.error('Error fetching images:', error);
+  }
+};
+const {width, height} = Dimensions.get('window');
+const imageContainerWidth = (width / 3) - 10;  
 
 const GalleryScreen = ({navigation, route}: Props) => {
-  const [data, setData] = useState(mockData);
   const {code} = route.params;
   const [isImageUpload, setIsImageUpload] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<ImageData[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>('');
-  // const {data: images, isLoading, isError} = useImagesQuery(email);
+  const [responseLog, setResponseLog] = useState<string | null>(null);
+
+
+  const slugify = useSlugify();
+  const uriToBlobFunction = useUriToBlob();
+  const queryClient = useQueryClient();
+
   const handleCheckbox = (id: number) => {
-    const updatedData = data.map(img => {
+    const updatedData = galleryImages.map(img => {
       if (img.id === id) {
         return {...img, defaultChecked: !img.defaultChecked};
       }
       return img;
     });
-    setData(updatedData);
+    setGalleryImages(updatedData);
   };
-  const slugifyString = (str: string) => {
-    return str
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/\./g, '-')
-      .replace(/-+/g, '-')
-      .replace(/[^a-z0-9-]/g, '-');
-  };
-  async function uriToBlob(uri) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        // Return the blob
-        resolve(xhr.response);
-      };
-      xhr.onerror = function () {
-        // Reject with error
-        reject(new Error('URI to Blob failed'));
-      };
-      xhr.responseType = 'blob';
-      xhr.open('GET', uri, true);
-      xhr.send(null);
-    });
-  }
 
-  // const uploadImageToCloudflare = async (imagePath: string, email: string) => {
-  //   if (!imagePath) {
-  //     console.log('No image path provided');
-  //     return;
-  //   }
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['gallery', code],
+    queryFn: () => {
+      if (code && code !== 'undefined') {
+        return  getGallery(code)
+      } else {
+        console.error('The id is undefined. Skipping the API call.');
+        return Promise.resolve(null);
+      }
+    },
+    onSuccess: (data :any) => {
+      if (data) {
+        console.log('data key', data)
+        const transformedData = data.map((item: string, index: number) => ({
+          id: index + 1,
+          url: `${CLOUDFLARE_R2_PUBLIC_URL}${item}`,
+          defaultChecked: false,
+        }));
 
-  //   const filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
-  //   const fileType = imagePath.substring(imagePath.lastIndexOf('.') + 1);
-  //   const blob = (await uriToBlob(imagePath)) as Blob;
-  //   const CLOUDFLARE_ENDPOINT = __DEV__
-  //     ? CLOUDFLARE_WORKER_DEV
-  //     : CLOUDFLARE_WORKER_GALLERY;
+        setGalleryImages(transformedData);
 
-  //   let contentType = '';
-  //   switch (fileType.toLowerCase()) {
-  //     case 'jpg':
-  //     case 'jpeg':
-  //       contentType = 'image/jpeg';
-  //       break;
-  //     case 'png':
-  //       contentType = 'image/png';
-  //       break;
-  //     default:
-  //       console.error('Unsupported file type:', fileType);
-  //       return;
-  //   }
-
-  //   try {
-
-  //     const folderListing = await fetch(`${CLOUDFLARE_ENDPOINT}`, {
-  //       method: 'GET',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         email: email,
-  //       },
-  //     });
-
-  //     if (!folderListing.ok) {
-  //       throw new Error(`Error fetching folder listing. Server responded with status: ${folderListing.status}`);
-  //     }
-      
-  //     const JSON_CONTENT_TYPE = 'application/json; charset=UTF-8';
-  //     const STATUS_BAD_REQUEST = 400;      
-  //     const folderData = await folderListing.json();
-
-  //     if (folderData && folderData.message) {
-  //       console.error('Server responded with:', folderData.message);
-  //       throw new Error(folderData.message);
-  //     }
-
-  //     if (
-  //       folderData &&
-  //       folderData.objects &&
-  //       folderData.objects.some(obj => obj.name && obj.name.startsWith(email))
-  //     ) {
-  //       console.log('Folder with email name exists');
-  //       await uploadImage(blob, `${email}/${filename}`, contentType, email);
-  //     } else {
-  //       console.log('Folder with email name does not exist');
-  //       // Logic to create a new folder and then upload the image
-  //       await uploadImage(blob, `${email}/${filename}`, contentType, email);
-  //     }
-  //   } catch (error) {
-  //     console.error(
-  //       'There was a problem with the fetch operation:',
-  //       error.message,
-  //     );
-  //   }
-  // };
-
-
-
-  // const handleUploadMoreImages = () => {
-  //   const options: ImageLibraryOptions = {
-  //     mediaType: 'photo' as MediaType,
-  //   };
-
-  //   launchImageLibrary(options, async (response: ImagePickerResponse) => {
-  //     if (response.didCancel) {
-  //     } else if (response.errorMessage) {
-  //     } else if (response.assets && response.assets.length > 0) {
-  //       const source = {uri: response.assets[0].uri ?? null};
-  //       console.log('Image source:', source);
-
-  //       if (source.uri) {
-  //         try {
-  //           await uploadImageToCloudflare(source.uri, code);
-  //           // You might want to refetch the images after successful upload
-  //           // to reflect the newly uploaded image in the gallery
-  //         } catch (error) {
-  //           console.error('Error uploading image to Cloudflare:', error);
-  //         }
-  //       }
-  //     }
-  //   });
-  // };
+      }
+    },
+  });
 
 
   const handleUploadMoreImages = useCallback(() => {
@@ -246,9 +170,9 @@ const GalleryScreen = ({navigation, route}: Props) => {
       }
       const name = imagePath.substring(imagePath.lastIndexOf('/') + 1);
       const fileType = imagePath.substring(imagePath.lastIndexOf('.') + 1);
-      const filename = slugifyString(name);
+      const filename = slugify(name);  
 
-      const blob = (await uriToBlob(imagePath)) as Blob;
+      const blob = (await uriToBlobFunction(imagePath)) as Blob;
       const CLOUDFLARE_ENDPOINT = __DEV__
         ? CLOUDFLARE_WORKER_DEV
         : CLOUDFLARE_WORKER;
@@ -298,11 +222,10 @@ const GalleryScreen = ({navigation, route}: Props) => {
 
         if (!uploadToR2Response.ok) {
           console.error('Failed to upload file to R2');
-        }  
+        }
         console.log('Upload to R2 success');
         const url = `${CLOUDFLARE_R2_PUBLIC_URL}${code}/gallery/${filename}`;
         return url;
-
       } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
       }
@@ -321,8 +244,9 @@ const GalleryScreen = ({navigation, route}: Props) => {
 
         if (source.uri) {
           try {
-            const cloudflareUrl: string | undefined =
-              await uploadImageToCloudflare(source.uri);
+            const cloudflareUrl: string | undefined  =  await uploadImageToCloudflare(source.uri);
+            queryClient.invalidateQueries(['gellery', code]);
+            console.log('Cloudflare URL:', cloudflareUrl);
             // setLogo(cloudflareUrl ?? '');
             setIsImageUpload(false);
           } catch (error) {
@@ -334,19 +258,19 @@ const GalleryScreen = ({navigation, route}: Props) => {
     });
   }, [
     setIsImageUpload,
-    slugifyString,
-    uriToBlob,
+    slugify,
+    uriToBlobFunction,
     CLOUDFLARE_WORKER_DEV,
     CLOUDFLARE_WORKER,
     code,
     CLOUDFLARE_R2_PUBLIC_URL,
     launchImageLibrary,
   ]);
-
   return (
+
     <View style={styles.container}>
       <FlatList
-        data={data}
+        data={galleryImages}
         numColumns={3}
         renderItem={({item}) => (
           <View
@@ -375,14 +299,44 @@ const GalleryScreen = ({navigation, route}: Props) => {
             </TouchableOpacity>
           </View>
         )}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={item => item?.id?.toString()}
+        ListEmptyComponent={
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              height: height * 0.5,
+
+              alignItems: 'center',
+            }}>
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={handleUploadMoreImages}
+              >
+              <Text style={styles.uploadButtonText}>อัพโหลดภาพตัวอย่างผลงาน</Text>
+            </TouchableOpacity>
+
+          </View>
+        }
       />
 
-      <TouchableOpacity
-        style={styles.uploadButton}
-        onPress={handleUploadMoreImages}>
-        <Text style={styles.uploadButtonText}>Upload more image</Text>
-      </TouchableOpacity>
+       {data && data.length > 0 && (
+        <View style={styles.buttonContainer}>
+    <TouchableOpacity
+      style={[styles.uploadButton, styles.uploadMoreButton]}
+      onPress={handleUploadMoreImages}>
+      <Text style={styles.uploadButtonText}>เพิ่มรูปภาพ</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={[styles.uploadButton, styles.saveButton]}
+      onPress={handleUploadMoreImages}>
+      <Text style={styles.uploadButtonText}>บันทึก</Text>
+    </TouchableOpacity>
+</View>
+
+      )} 
+
       <Modal
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}>
@@ -406,19 +360,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  saveButton: {
-    backgroundColor: '#3498DB',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 20,
-  },
   imageContainer: {
-    flex: 1,
+    width: imageContainerWidth,
     flexDirection: 'column',
     margin: 5,
     position: 'relative',
-  },
+},
+
   image: {
     width: '100%',
     aspectRatio: 1,
@@ -470,14 +418,22 @@ const styles = StyleSheet.create({
   selected: {
     backgroundColor: '#F2F2F2',
   },
-  uploadButton: {
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    height: 90,
+},
+
+uploadButton: {
+    flex: 1,  // Take up half the width
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 20,
-    padding: 15,
+    margin: 10,
+    padding: 3,
     borderRadius: 5,
-    backgroundColor: '#3498DB', // You can use a gradient here for a more modern look
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -486,10 +442,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-  },
-  uploadButtonText: {
+},
+
+uploadMoreButton: {
+    backgroundColor: '#3498DB',
+},
+
+saveButton: {
+    backgroundColor: '#1f303cff',  // Change to desired color for the 'บันทึก' button
+},
+
+uploadButtonText: {
     marginLeft: 10,
+    fontSize: 16,
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: 'Sukhumvit Set Bold',
+},
+
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

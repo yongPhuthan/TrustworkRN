@@ -16,16 +16,15 @@ import {HOST_URL, PROJECT_NAME, PROJECT_FIREBASE} from '@env';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Header as HeaderRNE, HeaderProps, Icon,FAB} from '@rneui/themed';
+import {Header as HeaderRNE, HeaderProps, Icon, FAB} from '@rneui/themed';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
-
   faBell,
-
   faCog,
-
+  faCogs,
   faPlus,
   faSheetPlastic,
+  faUserCog,
 } from '@fortawesome/free-solid-svg-icons';
 import {useQuery} from '@tanstack/react-query';
 import Lottie from 'lottie-react-native';
@@ -38,7 +37,7 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(false);
   const {width, height} = Dimensions.get('window');
-const [email,setEmail] = useState('');
+  const [email, setEmail] = useState('');
   const [selectedQuotation, setSelectedQuotation] = useState(null);
 
   const {
@@ -46,9 +45,9 @@ const [email,setEmail] = useState('');
     dispatch,
   }: any = useContext(Store);
 
-  const [companyData, setCompanyData] = useState<CompanyUser | null>(null) 
+  const [companyData, setCompanyData] = useState<CompanyUser | null>(null);
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
-  const slideAnim = useState(new Animated.Value(-100))[0]; 
+  const slideAnim = useState(new Animated.Value(-100))[0];
   const [filters, setFilters] = useState([
     'Filter 1',
     'Filter 2',
@@ -71,9 +70,9 @@ const [email,setEmail] = useState('');
   };
   const fetchDashboardData = async () => {
     const url = __DEV__
-    ? `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/queryDashBoard`
-   : `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/queryDashBoard`
-    
+      ? `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/queryDashBoard`
+      : `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/queryDashBoard`;
+
     const user = await getTokenAndEmail();
     if (user) {
       console.log('user5', user);
@@ -105,29 +104,29 @@ const [email,setEmail] = useState('');
   };
   const user = getTokenAndEmail();
 
-  // const {isLoading, error, data} = useQuery(
-  //   ['dashboardData'],
-  //   fetchDashboardData,
-  //   {
-  //     enabled: !!user,
-  //     onSuccess: data => {
-  //       setCompanyData(data[0]);
-  //       setQuotationData(data[1]);
-  //     },
-  //   },
-  // );
+  const {isLoading, error, data} = useQuery(
+    ['dashboardData'],
+    fetchDashboardData,
+    {
+      enabled: !!user,
+      onSuccess: data => {
+        setCompanyData(data[0]);
+        setQuotationData(data[1]);
+      },
+    },
+  );
 
-  // if (isLoading) {
-  //   return (
-    
-  //     <View style={styles.loadingContainer}>
-  //       <ActivityIndicator />
-  //     </View>
-  //   );
-  // }
-  // if (error) {
-  //   console.log('error', error);
-  // }
+  if (isLoading) {
+    return (
+
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+  if (error) {
+    console.log('error', error);
+  }
   const handleModal = () => {
     console.log('SHOW');
     setShowModal(true);
@@ -160,23 +159,16 @@ const [email,setEmail] = useState('');
   };
   const FilterButton = ({filter, isActive, onPress}) => {
     return (
-<TouchableOpacity
-    style={[
-        styles.filterButton,
-        isActive ? styles.activeFilter : null,
-    ]}
-    onPress={onPress}
->
-    <Text style={isActive ? {color: 'white'} : null}>{filter}</Text>
-</TouchableOpacity>
-
-      
+      <TouchableOpacity
+        style={[styles.filterButton, isActive ? styles.activeFilter : null]}
+        onPress={onPress}>
+        <Text style={isActive ? {color: 'white'} : null}>{filter}</Text>
+      </TouchableOpacity>
     );
   };
   const renderItem = ({item}) => (
     <>
       <View>
-   
         <CardDashBoard
           status={item.status}
           date={item.dateOffer}
@@ -298,41 +290,39 @@ const [email,setEmail] = useState('');
     dispatch(stateAction.client_address(''));
     dispatch(stateAction.client_tel(''));
     dispatch(stateAction.client_tax(''));
-navigation.navigate('GalleryScreen',{code:companyData?.code  });
+    navigation.navigate('GalleryScreen', {code: companyData?.code});
     // navigation.navigate('CreateQuotation');
   };
+
+  console.log('COMPANY DATA', companyData)
   return (
     <>
-    <View>
-    <HeaderRNE
-            containerStyle={{backgroundColor: '#ffffffff',borderBottomColor:'white'}}
-            leftComponent={<Text
+      <View>
+        <HeaderRNE
+          containerStyle={{
+            backgroundColor: '#ffffffff',
+            borderBottomColor: 'white',
+          }}
+          leftComponent={
+            <Text
               style={{
                 color: '#042d60',
                 fontSize: 18,
                 fontWeight: 'bold',
                 width: 100,
               }}
-              onPress={() => {}}
-            >
+              onPress={() => {}}>
               Trustwork
             </Text>
-            }
-      
-            rightComponent={
-              <TouchableOpacity
-                onPress={
-                  () => {}
-                }>
-                <FontAwesomeIcon
-                  icon={faCog}
-                  color="#1f303cff"
-                  size={22}
-                />
-              </TouchableOpacity>
-            }
-          />
-       <FlatList
+          }
+          rightComponent={
+            <TouchableOpacity onPress={() => {     navigation.navigate('SettingsScreen');
+            }}>
+              <FontAwesomeIcon icon={faCog} color="#1f303cff" size={22} />
+            </TouchableOpacity>
+          }
+        />
+        <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
           data={filters}
@@ -345,11 +335,10 @@ navigation.navigate('GalleryScreen',{code:companyData?.code  });
               }}
             />
           )}
-          keyExtractor={(item) => item}
+          keyExtractor={item => item}
         />
-                <View style={{ height: 0.5, backgroundColor: 'gray', width: '100%' }}/>
-
-        </View>
+        {/* <View style={{height: 0.5, backgroundColor: 'gray', width: '100%'}} /> */}
+      </View>
 
       {companyData && quotationData && (
         <View
@@ -379,34 +368,21 @@ navigation.navigate('GalleryScreen',{code:companyData?.code  });
             }
             contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
           />
-          <FAB
-            style={styles.fab}
-            icon="plus"
-            color="white"
-            // onPress={()=>navigation.navigate('ExistingSignature')}
-          //   onPress={  ()=>  navigation.navigate('Signature', {
-          //     text: 'Some Text',
-          //     onOK: (signature) => {
-          //       console.log(signature);
-          //     }
-          //   })
-            
-          // }
-            onPress={() => createNewQuotation()}
-            theme={{colors: {accent: 'white'}}}
-          />
-        </View>
-        
-      )}
-      <FAB 
-        icon={{ name: 'add', color: 'white' }}
-        color='#1f303cff'
-      style={{ backgroundColor: '#1f303cff', position: 'absolute', right: 16, bottom: 25 }}
-      onPress={() => {
-        // handle the press event, for example, navigate to another screen or show a modal
-      }}
-    />
 
+        </View>
+      )}
+      <FAB
+        icon={{name: 'add', color: 'white'}}
+        color="#1f303cff"
+        style={{
+          backgroundColor: '#1f303cff',
+          position: 'absolute',
+          right: 16,
+          bottom: 25,
+        }}
+        onPress={() => createNewQuotation()}
+
+      />
     </>
   );
 };

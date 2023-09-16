@@ -12,7 +12,7 @@ import {
   ScreenItem,
   ScreenName,
 } from '../types/navigationType';
-import HomeScreen from '../screens/homeScreen';
+// import HomeScreen from '../screens/homeScreen';
 import Quotation from '../screens/quotation/create';
 import AddProductForm from '../screens/products/addProduct';
 import AddCustomer from '../screens/customer/addCustomer';
@@ -52,7 +52,7 @@ const Navigation = () => {
 
   const screens: ScreenItem[] = [
     {name: 'RegisterScreen', component: RegisterScreen},
-    {name: 'HomeScreen',  component: HomeScreen},
+    // {name: 'HomeScreen',  component: HomeScreen},
     {name: 'DocViewScreen', component: DocViewScreen},
     {name: 'FirstAppScreen', component: FirstAppScreen},
     {name: 'LoginScreen', component: LoginScreen},
@@ -77,12 +77,26 @@ const Navigation = () => {
     );
   }
   const initialRouteName: ScreenName = user ? 'DashboardQuotation' : 'FirstAppScreen';
-  console.log('USER',user)
+  const commonScreenOptions = {
+    headerTitleStyle: {
+      fontFamily: 'Sukhumvit Set Bold',  
+   
+
+    },
+    headerStyle: {
+      backgroundColor: '#ffffff',
+    },
+    headerTintColor: 'black',
+  };
+  
   return (
     <NavigationContainer theme={Theme}>
       <Stack.Navigator
         initialRouteName={initialRouteName}
-        screenOptions={{headerShown: false}}>
+        screenOptions={{ 
+          ...commonScreenOptions, 
+          headerShown: false
+        }}>
         {screens.map(({name, component}) => (
           <Stack.Screen  key={name} name={name}           component={component} />
         ))}
@@ -90,6 +104,7 @@ const Navigation = () => {
           name="CreateQuotation"
           component={Quotation}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'สร้างใบเสนอราคา',
             headerBackTitle: '',
@@ -105,6 +120,7 @@ const Navigation = () => {
           name="AddProduct"
           component={AddProductForm}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'เพิ่มรายการ-สินค้า',
             headerBackTitleVisible: false,
@@ -118,6 +134,7 @@ const Navigation = () => {
           name="Signature"
           component={SignatureScreen}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'เพิ่มลายเซ็นเอกสาร',
             headerBackTitleVisible: false,
@@ -131,6 +148,7 @@ const Navigation = () => {
           name="Installment"
           component={Installment}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'แบ่งงวดชำระ',
             headerBackTitleVisible: false,
@@ -147,6 +165,7 @@ const Navigation = () => {
           name="AddExistProduct"
           component={AddExistProduct}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'เพิ่มรายการ-สินค้า',
             headerBackTitleVisible: false,
@@ -160,6 +179,7 @@ const Navigation = () => {
           name="EditProductForm"
           component={EditProductForm}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'เพิ่มรายการ-สินค้า',
             headerBackTitleVisible: false,
@@ -173,6 +193,7 @@ const Navigation = () => {
           name="EditSetting"
           component={EditSetting}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'แก้ไขข้อมูลธุรกิจ',
             headerBackTitleVisible: false,
@@ -186,8 +207,9 @@ const Navigation = () => {
           name="SettingsScreen"
           component={SettingsScreen}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
-            title: 'แก้ไขข้อมูลธุรกิจ',
+            title: 'ตั้งค่า',
             headerBackTitleVisible: false,
             headerStyle: {
               backgroundColor: '#ffffff',
@@ -199,6 +221,7 @@ const Navigation = () => {
           name="ExistingProduct"
           component={ExistingProducts}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'เพิ่มรายการ-สินค้า',
             headerBackTitleVisible: false,
@@ -212,6 +235,7 @@ const Navigation = () => {
           name="ExistingCategories"
           component={ExistingCategories}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'เพิ่มรายการ-สินค้า',
             headerBackTitleVisible: false,
@@ -225,6 +249,7 @@ const Navigation = () => {
           name="GalleryScreen"
           component={GalleryScreen}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'อัลบั้มผลงาน',
             headerBackTitleVisible: false,
@@ -238,6 +263,7 @@ const Navigation = () => {
           name="AddCustomer"
           component={AddCustomer}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'เพิ่มลูกค้า',
             headerBackTitleVisible: false,
@@ -252,6 +278,7 @@ const Navigation = () => {
           name="ExistingSignature"
           component={ExistingSignature}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'เซ็นเอกสาร',
             headerBackTitleVisible: false,
@@ -266,6 +293,7 @@ const Navigation = () => {
           name="SelectAudit"
           component={SelectAudit}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'เลือกมาตรฐานการทำงาน',
             headerBackTitleVisible: false,
@@ -280,6 +308,7 @@ const Navigation = () => {
           name="SelectContract"
           component={SelectContract}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'รับทราบข้อกำหนดสัญญา',
             headerBackTitleVisible: false,
@@ -294,6 +323,7 @@ const Navigation = () => {
           name="EditQuotation"
           component={EditQuotation}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'แก้ไขเอกสาร',
             headerBackTitleVisible: false,
@@ -323,6 +353,7 @@ const Navigation = () => {
           name="DefaultContract"
           component={DefaultContract}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'รายละเอียดสัญญา',
             headerBackTitleVisible: false,
@@ -337,6 +368,7 @@ const Navigation = () => {
           name="ContractOptions"
           component={ContractOption}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'รายละเอียดสัญญา',
             headerBackTitleVisible: false,
@@ -351,12 +383,15 @@ const Navigation = () => {
           name="GalleryUploadScreen"
           component={GalleryUploadScreen}
           options={{
+            ...commonScreenOptions,
             headerShown: true,
             title: 'อัพโหลดอัลบั้ม',
             headerBackTitleVisible: false,
 
             headerStyle: {
               backgroundColor: '#ffffff',
+              
+              
             },
             headerTintColor: 'black',
           }}

@@ -33,7 +33,7 @@ import {
   ImageLibraryOptions,
   ImagePickerResponse,
 } from 'react-native-image-picker';
-import {useImageUpload} from '../../hooks/utils/useImageUpload';
+import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'AddExistProduct'>;

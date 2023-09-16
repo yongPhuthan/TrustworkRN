@@ -5,7 +5,7 @@ import {ParamListBase} from '../../types/navigationType';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {View, Button, StyleSheet} from 'react-native';
 import Signature from 'react-native-signature-canvas';
-import {useSignatureUpload} from '../../hooks/utils/useSignatureUpload';
+import {useSignatureUpload} from '../../hooks/utils/image/useSignatureUpload';
 import {ActivityIndicator} from 'react-native-paper';
 import {useUpdateContract} from '../../hooks/contract/useUpdateContract';
 import {useMutation,useQueryClient} from '@tanstack/react-query';

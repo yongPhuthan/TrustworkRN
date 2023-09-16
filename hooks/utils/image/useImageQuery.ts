@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import {
   CLOUDFLARE_WORKER_GALLERY,
   CLOUDFLARE_WORKER_DEV
-
 } from '@env';
 
 const fetchImagesByEmail = async (email) => {
