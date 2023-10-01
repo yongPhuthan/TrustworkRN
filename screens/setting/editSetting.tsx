@@ -71,6 +71,8 @@ const updateCompanySellerAPI = async ({
   if (!user) {
     throw new Error('User not authenticated');
   }
+  const idToken = await user.getIdToken();
+
   console.log('email', JSON.stringify(dataInputForm));
  
   const url = __DEV__
@@ -82,7 +84,7 @@ const updateCompanySellerAPI = async ({
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${user?.uid}`,
+      Authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify({data: dataInputForm}),
   });

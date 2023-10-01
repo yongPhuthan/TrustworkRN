@@ -7,8 +7,10 @@ import {
   ScrollView,
   StyleSheet,
   Image,
+  FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  Dimensions
 } from 'react-native';
 import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
 
@@ -17,7 +19,7 @@ import {useForm, Controller} from 'react-hook-form';
 import {Store} from '../../redux/store';
 
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faCloudUpload, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
+import {faCloudUpload, faPlus} from '@fortawesome/free-solid-svg-icons';
 import * as stateAction from '../../redux/actions';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
@@ -43,7 +45,8 @@ type Props = {
 
 
 type Inputs = FormData;
-
+const {width, height} = Dimensions.get('window');
+const imageContainerWidth = width / 3 - 10;
 const AddExistProduct = ({navigation, route}: Props) => {
   const [count, setCount] = useState(0);
   const [discountPercent, setDiscountPercent] = useState(0);
@@ -57,7 +60,7 @@ const AddExistProduct = ({navigation, route}: Props) => {
 
   const serviceID = uuidv4();
   const {
-    state: {serviceList, selectedAudit},
+    state: {serviceList, selectedAudit, code, serviceImages},
     dispatch,
   }: any = useContext(Store);
 
@@ -126,6 +129,61 @@ const AddExistProduct = ({navigation, route}: Props) => {
     <ScrollView style={styles.container}>
       <View style={styles.subContainer}>
         <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        {isImageUpload ? (
+            <ActivityIndicator size="small" color="gray" />
+          ) : serviceImages ? (
+            <FlatList
+              data={serviceImages}
+              horizontal={true}
+              renderItem={({item, index}) => {
+                return (
+                  <View style={styles.imageContainer}>
+                    <Image source={{uri: item}} style={styles.image} />
+                  </View>
+                );
+              }}
+              keyExtractor={(item, index) => index.toString()}
+              ListEmptyComponent={
+                <View>
+                  <FontAwesomeIcon
+                    icon={faCloudUpload}
+                    style={{marginVertical: 5, marginHorizontal: 50}}
+                    size={32}
+                    color="gray"
+                  />
+                  <Text style={{textAlign: 'center', color: 'gray'}}>
+                    ภาพตัวอย่างสินค้า
+                  </Text>
+                </View>
+              }
+              ListFooterComponent={
+                <TouchableOpacity
+                  style={styles.addButtonContainer}
+                  onPress={() => {
+                    navigation.navigate('GalleryScreen', {code});
+                  }}>
+                  <FontAwesomeIcon icon={faPlus} size={32} color="gray" />
+                </TouchableOpacity>
+              }
+            />
+          ) : (
+            <View>
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate('GalleryScreen', {code});
+                }}>
+                <FontAwesomeIcon
+                  icon={faCloudUpload}
+                  style={{marginVertical: 5, marginHorizontal: 50}}
+                  size={32}
+                  color="gray"
+                />
+                <Text style={{textAlign: 'center', color: 'gray'}}>
+                  ภาพตัวอย่างสินค้า
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
           <TouchableOpacity
             style={{
               justifyContent: 'center',
@@ -523,6 +581,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     paddingHorizontal: 20,
   },
+  imageContainer: {
+    width: imageContainerWidth,
+    flexDirection: 'column',
+    margin: 5,
+    position: 'relative',
+  },
   containerCounter: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -586,6 +650,17 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'space-between',
   },
+  addButtonContainer: {
+    width: 100,
+    margin: 5,
+    height: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: 'gray',
+    borderStyle: 'dotted',
+    borderWidth: 1,
+    borderRadius: 4, // Optional, for rounded edges
+  },
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -605,5 +680,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  image: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 0,
+    resizeMode: 'cover',
   },
 });

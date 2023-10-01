@@ -1,18 +1,18 @@
 import {
-    StyleSheet,
-    Text,
-    View,
-    ScrollView,
-    TouchableOpacity,
-    ActivityIndicator,
-    Image,
-    NativeModules,
-  } from 'react-native';
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  NativeModules,
+} from 'react-native';
 import React, {useState, useEffect, useContext} from 'react';
 import {ParamListBase} from '../../types/navigationType';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
-import {HOST_URL,PROJECT_NAME,PROJECT_FIREBASE} from '@env';
+import {HOST_URL, PROJECT_NAME, PROJECT_FIREBASE} from '@env';
 import Lottie from 'lottie-react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
@@ -31,10 +31,10 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import firebase from '../../firebase';
 
 import {
-    launchCamera,
-    launchImageLibrary,
-    MediaType,
-  } from 'react-native-image-picker';
+  launchCamera,
+  launchImageLibrary,
+  MediaType,
+} from 'react-native-image-picker';
 import {useQuery} from '@tanstack/react-query';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Audit, CompanyUser, IdContractList, Service} from '../../types/docType';
@@ -44,7 +44,9 @@ interface SettingScreenProps {
 const fetchCompanyUser = async (isEmulator: boolean) => {
   const user = await auth().currentUser;
   if (!user) {
+
     throw new Error('User not authenticated');
+
   } else {
     const idToken = await user.getIdToken();
     const {email} = user;
@@ -84,13 +86,14 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
   }: any = useContext(Store);
   const [logo, setLogo] = useState<string | null>(null);
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(true); 
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   useEffect(() => {
     const unsubscribe = firebase.auth().onAuthStateChanged(user => {
       if (user) {
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
+  handleLogout();
         navigation.navigate('FirstAppScreen');
       }
     });
@@ -124,12 +127,7 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
     },
   );
   if (isLoading) {
-    return (
-      <ActivityIndicator />
-    );
-  }
-  if(error){
-    handleLogout()
+    return <ActivityIndicator />;
   }
 
 
@@ -158,202 +156,203 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
     });
   };
 
-
-
   if (!isAuthenticated) {
     return null;
   }
 
   return (
     <>
-    {company && (
-            <ScrollView style={{flex: 1, backgroundColor: '#f5f5f5'}}>
-            {/* Business Details */}
-            <View style={{backgroundColor: '#fff', paddingVertical: 24}}>
-              {/* Logo */}
-              <TouchableOpacity
-                style={{alignItems: 'center', marginBottom: 24}}
-                onPress={handleLogoUpload}>
-                {logo ? (
-                  <Image
-                    source={{
-                      uri: logo,
-                    }}
-                    style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
-                  />
-                ) : (
-                  <View
-                    style={{
-                      width: 80,
-                      height: 80,
-                      backgroundColor: '#ddd',
-                      borderRadius: 40,
-                      alignItems: 'center',
-                    }}
-                  />
-                )}
-              </TouchableOpacity>
-              {/* Business Name and Address */}
-              <View style={{alignItems: 'center'}}>
-                <Text
+      {company && (
+        <ScrollView style={{flex: 1, backgroundColor: '#f5f5f5'}}>
+          {/* Business Details */}
+          <View style={{backgroundColor: '#fff', paddingVertical: 24}}>
+            {/* Logo */}
+            <TouchableOpacity
+              style={{alignItems: 'center', marginBottom: 24}}
+              onPress={handleLogoUpload}>
+              {logo ? (
+                <Image
+                  source={{
+                    uri: logo,
+                  }}
+                  style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
+                />
+              ) : (
+                <View
                   style={{
-                    fontSize: 18,
-                    fontWeight: 'bold',
-                    color: '#333',
-                    marginBottom: 12,
-                  }}>
-                  {company?.bizName}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    marginBottom: 10,
-                    fontWeight: '600',
-                    color: '#333',
-                  }}>
-                  {company?.userName} {company?.userLastName}
-                </Text>
-                {businessDetails.map(item => (
-                  <View
-                    key={item.id}
-                    style={{
-                      flexDirection: 'row',
-                      maxWidth: '92%',
-                      marginBottom: 8,
-                    }}>
-                    <Text style={{fontSize: 14, fontWeight: '600', color: '#333'}}>
-                      {item.value}
-                    </Text>
-                  </View>
-                ))}
-                <Text
-                  style={{
-                    fontSize: 14,
-                    marginBottom: 10,
-                    fontWeight: '600',
-                    color: '#333',
-                  }}>
-                  {company?.officeTel} {company?.mobileTel}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    marginBottom: 10,
-                    fontWeight: '600',
-                    color: '#333',
-                  }}>
-                  {company?.userEmail}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    marginBottom: 10,
-                    fontWeight: '600',
-                    color: '#333',
-                  }}>
-                  {company?.companyNumber}
-                </Text>
-              </View>
-            </View>
+                    width: 80,
+                    height: 80,
+                    backgroundColor: '#ddd',
+                    borderRadius: 40,
+                    alignItems: 'center',
+                  }}
+                />
+              )}
+            </TouchableOpacity>
             {/* Business Name and Address */}
-            {/* Account */}
-            <View style={{backgroundColor: '#fff', marginTop: 10}}>
-              <TouchableOpacity
-                onPress={() => {
-                  navigation.navigate('TopUpScreen');
-                }}
-                style={{paddingVertical: 16, paddingHorizontal: 24}}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <FontAwesomeIcon icon={faCoins} size={24} color="#F5A623" />
-    
-                    <Text
-                      style={{
-                        fontSize: 15,
-                        fontWeight: '600',
-                        marginLeft: 10,
-                        color: '#333',
-                      }}>
-                      เครดิต
-                    </Text>
-                  </View>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '800',
-                        color: '#ed8022',
-                        marginRight: 8,
-                      }}>
-                      {Number(credit)
-                        .toFixed(2)
-                        .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
-                    </Text>
-                    <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
-                  </View>
-                </View>
-              </TouchableOpacity>
-              <View
+            <View style={{alignItems: 'center'}}>
+              <Text
                 style={{
-                  width: '90%',
-                  alignSelf: 'center',
-                  borderBottomWidth: 0.3,
-                  borderBottomColor: '#cccccc',
-                }}></View>
-              <TouchableOpacity
-                style={{paddingVertical: 15, paddingHorizontal: 24}}
-                onPress={() =>
-                  navigation.navigate('EditSetting', {company})
-                }>
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  color: '#333',
+                  marginBottom: 12,
+                }}>
+                {company?.bizName}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  marginBottom: 10,
+                  fontWeight: '600',
+                  color: '#333',
+                }}>
+                {company?.userName} {company?.userLastName}
+              </Text>
+              {businessDetails.map(item => (
                 <View
+                  key={item.id}
                   style={{
                     flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    maxWidth: '92%',
+                    marginBottom: 8,
                   }}>
-                  <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
-                    แก้ไขข้อมูลธุรกิจ
+                  <Text
+                    style={{fontSize: 14, fontWeight: '600', color: '#333'}}>
+                    {item.value}
                   </Text>
-                  <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
                 </View>
-              </TouchableOpacity>
-              <View
+              ))}
+              <Text
                 style={{
-                  width: '90%',
-                  alignSelf: 'center',
-                  borderBottomWidth: 0.3,
-                  borderBottomColor: '#cccccc',
-                }}></View>
-              <TouchableOpacity
-                style={{paddingVertical: 15, paddingHorizontal: 24}}
-                onPress={() => toggleLogoutModal()}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}>
-                  <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
-                    Logout
-                  </Text>
-                  <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
-                </View>
-              </TouchableOpacity>
-              <View
+                  fontSize: 14,
+                  marginBottom: 10,
+                  fontWeight: '600',
+                  color: '#333',
+                }}>
+                {company?.officeTel} {company?.mobileTel}
+              </Text>
+              <Text
                 style={{
-                  width: '90%',
-                  alignSelf: 'center',
-                  borderBottomWidth: 0.3,
-                  borderBottomColor: '#cccccc',
-                }}></View>
+                  fontSize: 14,
+                  marginBottom: 10,
+                  fontWeight: '600',
+                  color: '#333',
+                }}>
+                {company?.userEmail}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  marginBottom: 10,
+                  fontWeight: '600',
+                  color: '#333',
+                }}>
+                {company?.companyNumber}
+              </Text>
             </View>
-          </ScrollView>
-    )}
+          </View>
+          {/* Business Name and Address */}
+          {/* Account */}
+          <View style={{backgroundColor: '#fff', marginTop: 10}}>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('TopUpScreen');
+              }}
+              style={{paddingVertical: 16, paddingHorizontal: 24}}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <FontAwesomeIcon icon={faCoins} size={24} color="#F5A623" />
+
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: '600',
+                      marginLeft: 10,
+                      color: '#333',
+                    }}>
+                    เครดิต
+                  </Text>
+                </View>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '800',
+                      color: '#ed8022',
+                      marginRight: 8,
+                    }}>
+                    {Number(credit)
+                      .toFixed(2)
+                      .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+                  </Text>
+                  <FontAwesomeIcon
+                    icon={faChevronRight}
+                    size={24}
+                    color="#aaa"
+                  />
+                </View>
+              </View>
+            </TouchableOpacity>
+            <View
+              style={{
+                width: '90%',
+                alignSelf: 'center',
+                borderBottomWidth: 0.3,
+                borderBottomColor: '#cccccc',
+              }}></View>
+            <TouchableOpacity
+              style={{paddingVertical: 15, paddingHorizontal: 24}}
+              onPress={() => navigation.navigate('EditSetting', {company})}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
+                  แก้ไขข้อมูลธุรกิจ
+                </Text>
+                <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
+              </View>
+            </TouchableOpacity>
+            <View
+              style={{
+                width: '90%',
+                alignSelf: 'center',
+                borderBottomWidth: 0.3,
+                borderBottomColor: '#cccccc',
+              }}></View>
+            <TouchableOpacity
+              style={{paddingVertical: 15, paddingHorizontal: 24}}
+              onPress={() => toggleLogoutModal()}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
+                  Logout
+                </Text>
+                <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
+              </View>
+            </TouchableOpacity>
+            <View
+              style={{
+                width: '90%',
+                alignSelf: 'center',
+                borderBottomWidth: 0.3,
+                borderBottomColor: '#cccccc',
+              }}></View>
+          </View>
+        </ScrollView>
+      )}
 
       <Modal isVisible={isLogoutModalVisible}>
         <View style={{backgroundColor: 'white', padding: 20, borderRadius: 10}}>
@@ -399,9 +398,9 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
 export default SettingsScreen;
 
 const styles = StyleSheet.create({
-    loadingContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-      },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   date: {
-    fontSize: 16,
+    fontSize: 14,
   },
   modalButton: {
     backgroundColor: '#2196F3',

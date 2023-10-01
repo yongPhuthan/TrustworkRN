@@ -1,12 +1,20 @@
 import {
   StyleSheet,
-  Dimensions,
   Text,
   View,
-  Touchable,
+  TextInput,
+  Pressable,
+  ScrollView,
+  FlatList,
+  Dimensions,
+  ActivityIndicator,
   TouchableOpacity,
+  Platform,
+  Switch,
 } from 'react-native';
 import React, {useState, useContext, useEffect, useRef} from 'react';
+import Modal from 'react-native-modal';
+
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AddServices from './AddServices';
 import {Store} from '../redux/store';
@@ -16,27 +24,38 @@ type Props = {
     title: string;
     description: string;
     unitPrice: number;
-    discountPercent:number
+    discountPercent: number;
     qty: number;
     total: number;
   };
   index: number;
-  handleEditService: Function;
+  handleEditService: () => void;
+  visibleModalIndex: boolean;
+  setVisibleModalIndex: () => void;
+  handleModalClose: () => void;
+  handleRemoveService: () => void;
 };
 const windowWidth = Dimensions.get('window').width;
 
 const CardProject = (props: Props) => {
-  const {serviceList} = props;
-
+  const {
+    serviceList,
+    handleRemoveService,
+    index,
+    handleEditService,
+    setVisibleModalIndex,
+    visibleModalIndex,
+    handleModalClose,
+  } = props;
 
   return (
     <View>
       <TouchableOpacity
         style={styles.subContainer}
-        onPress={() => props.handleEditService()}>
+        onPress={setVisibleModalIndex}>
         <View style={styles.summary}>
           <Text style={styles.summaryText}>
-            {props.index+1}. {serviceList.title}
+            {props.index + 1}. {serviceList.title}
           </Text>
         </View>
         <View style={styles.description}>
@@ -68,8 +87,84 @@ const CardProject = (props: Props) => {
        
                </View>
         ):('')} */}
-   
       </TouchableOpacity>
+      {Platform.OS === 'android' ? (
+        <Modal
+          backdropOpacity={0.1}
+          backdropTransitionOutTiming={100}
+          style={styles.modalContainer}
+          isVisible={showEditServiceModal}
+          onBackdropPress={handleModalClose}>
+          <Pressable onPress={handleEditService}>
+            <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
+          </Pressable>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+          <Pressable
+            onPress={() => {
+              // setShowModal(false); // Step 4
+            }}>
+            <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
+          </Pressable>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+        </Modal>
+      ) : (
+        <Modal
+          backdropTransitionOutTiming={100}
+          style={styles.modalContainer}
+          isVisible={visibleModalIndex}
+          onBackdropPress={handleModalClose}>
+          <Text style={styles.title}>
+            รายการที่{index + 1}. {serviceList.title}
+          </Text>
+          <TouchableOpacity onPress={handleEditService}>
+            <Text style={styles.closeButtonText}>แก้ไขรายการ</Text>
+          </TouchableOpacity>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+          <TouchableOpacity onPress={handleRemoveService}>
+            <Text style={styles.deleteButtonText}>ลบ</Text>
+          </TouchableOpacity>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -89,6 +184,12 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     paddingHorizontal: 30,
     paddingVertical: 30,
+  },
+  title: {
+    marginBottom: 20,
+    fontSize: 14,
+    fontFamily: 'Sukhumvit Set Bold',
+    color: 'gray',
   },
   summary: {
     flexDirection: 'row',
@@ -122,13 +223,65 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     marginTop: 30,
   },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    width: '90%',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
+    // bottom: '40%',
+    left: 0,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    borderBottomWidth: 1,
+    borderColor: 'white',
+    paddingBottom: 10,
+    paddingTop: 10,
+    fontWeight: 'bold',
+    fontFamily: 'Sukhumvit set',
+  },
+  deleteButtonText: {
+    fontSize: 20,
+    borderBottomWidth: 1,
+    fontWeight: 'bold',
+    textDecorationColor: 'red',
+    color: 'red',
+    borderColor: 'white',
+    paddingBottom: 10,
+    fontFamily: 'Sukhumvit set',
+    paddingTop: 10,
+  },
   icon: {
     width: 24,
     height: 24,
     marginRight: 8,
   },
+  closeButton: {
+    paddingVertical: 10,
+  },
+  headerModal: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    backgroundColor: '#ffffff',
+  },
   label: {
     fontSize: 16,
     color: '#19232e',
+  },
+  containerModal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modal: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 5,
+    width: '80%',
+    height: '80%',
   },
 });

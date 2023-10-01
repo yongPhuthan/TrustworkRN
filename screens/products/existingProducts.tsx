@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useContext} from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,10 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {CompanyUser, Service} from '../../types/docType';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
-
+import * as stateAction from '../../redux/actions';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faPlus, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
+import {Store} from '../../redux/store';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ExistingProduct'>;
   route: RouteProp<ParamListBase, 'ExistingProduct'>;
@@ -59,7 +62,10 @@ const ExistingProducts = ({navigation}: Props) => {
   const route = useRoute();
   const {width, height} = Dimensions.get('window');
   const companyID = route.params;
-
+  const {
+    state: {serviceList, selectedAudit, code, serviceImages},
+    dispatch,
+  }: any = useContext(Store);
   const {data, isLoading, isError} = useQuery(
     ['existingProduct', companyID],
     () => fetchExistingProducts(companyID as CompanyUser).then(res => res),
@@ -83,9 +89,9 @@ const ExistingProducts = ({navigation}: Props) => {
 
   return (
     <View style={styles.container}>
-      {products.length > 0 && (
+      {/* {products.length > 0 && (
         <Text style={styles.titleText}>เลือกจากรายการเดิม</Text>
-      )}
+      )} */}
       <FlatList
         data={products.slice(-5)}
         renderItem={({item}) => (
@@ -93,7 +99,11 @@ const ExistingProducts = ({navigation}: Props) => {
             <TouchableOpacity
               style={styles.card}
               onPress={() =>
-                navigation.navigate('AddExistProduct', {item: item})
+               { 
+                
+                dispatch(stateAction.service_images(item.serviceImages))
+
+                navigation.navigate('AddExistProduct', {item: item})}
               }>
               <Image
                 source={{uri: item.serviceImage}}
@@ -118,17 +128,23 @@ const ExistingProducts = ({navigation}: Props) => {
             <TouchableOpacity
               onPress={handleAddNewProduct}
               style={styles.emptyListButton}>
-              <Text style={styles.emptyListText}>+ เพิ่มรายการใหม่</Text>
+              <Text style={styles.emptyListText}>เพิ่มรายการใหม่</Text>
             </TouchableOpacity>
           </View>
         }
         keyExtractor={item => item.id}
       />
       {products.length > 0 && (
+
         <TouchableOpacity
           onPress={handleAddNewProduct}
           style={styles.emptyListButton}>
-          <Text style={styles.emptyListText}>+ เพิ่มรายการใหม่</Text>
+                   <View style={styles.header}>
+                                <FontAwesomeIcon style={styles.icon} icon={faPlus} size={20} color="white" />
+
+                   <Text style={styles.emptyListText}>เพิ่มรายการใหม่</Text>
+                   </View>
+
         </TouchableOpacity>
       )}
     </View>
@@ -178,27 +194,37 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
   emptyListButton: {
-    padding: 16,
+    padding: 14,
     borderRadius: 8,
-    backgroundColor: '#FFF',
+    backgroundColor: '#0073BA',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
-    marginTop: 20,
   },
   emptyListText: {
-    fontSize: 18,
-    color: '#333',
-    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#FFFFFF',
+    // fontWeight: 'bold',
+    fontFamily: 'Sukhumvit Set Bold',
+    marginLeft: 10,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center', 
+    justifyContent: 'center', 
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  icon: {
+    color: 'white',
+    marginLeft: 8, 
   },
 });
 

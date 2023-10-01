@@ -6,11 +6,23 @@ export const all_data = (payload: any) => ({
   type: contrains.ALL_DATA,
   payload,
 });
-
+export const remove_audits_in_service_list = (index) => ({
+  type: contrains.REMOVE_AUDITS_IN_SERVICE_LIST,
+  index,
+});
 export const all_total = (payload: number) => ({
   type: contrains.ALLTOTAL,
   payload,
 });
+
+export const remove_serviceList = (index: number) => {
+  console.log('Action creator received index:', index);
+  return {
+    type: contrains.REMOVE_SERVICE,
+    payload: index,
+  };
+};
+
 export const is_emulator = (payload: boolean) => ({
   type: contrains.IS_EMULATOR,
   payload,
@@ -25,8 +37,27 @@ export const deposit_action = (payload: string) => ({
   type: contrains.DEPOSIT,
   payload,
 });
+
+export const service_images = (payload: string[]) => ({
+  type: contrains.SERVICE_IMAGES,
+  payload,
+});
+
+export const reset_service_images = () => ({
+  type: contrains.RESET_SERVICE_IMAGES,
+  
+});
+export const reset_materials = () => ({
+  type: contrains.RESET_MATERIALS,
+  
+});
+
 export const payment_type = (payload: string) => ({
   type: contrains.PAYMENT_TYPE,
+  payload,
+});
+export const code_company = (payload: string) => ({
+  type: contrains.CODE,
   payload,
 });
 export const prepare_work_days = (payload: number) => ({
@@ -148,9 +179,17 @@ export const selected_audit = (payload: object) => ({
   type: contrains.SELECTED_AUDIT,
   payload,
 });
-
+export const selected_materials = (payload: object) => ({
+  type: contrains.SELECTED_MATERIALS,
+  payload,
+});
 export const existing_audit_array = (payload: object) => ({
   type: contrains.EXISTING_ARRAY_AUDIT,
+  payload,
+});
+
+export const existing_materials_array = (payload: object) => ({
+  type: contrains.EXISTING_ARRAY_MATERIALS,
   payload,
 });
 
@@ -168,6 +207,12 @@ export const remove_selected_audit = (payload: object) => ({
   type: contrains.REMOVE_SELECTED_AUDIT,
   payload,
 });
+
+export const remove_selected_materials = (payload: object) => ({
+  type: contrains.REMOVE_SELECTED_MATERIALS,
+  payload,
+});
+
 
 export const remove_selected_contract = (payload: object) => ({
   type: contrains.REMOVE_SELECTED_CONTRACT,
@@ -316,6 +361,12 @@ export const clientName = (payload: string) => {
     dispatch(client_name(payload));
   };
 };
+
+export const codeCompany = (payload: string) => {
+  return (dispatch: any) => {
+    dispatch(code_company(payload));
+  };
+};
 export const clientAddress = (payload: string) => {
   return (dispatch: any) => {
     dispatch(client_address(payload));
@@ -366,10 +417,21 @@ export const selectedAudit = (payload: object) => {
     dispatch(selected_audit(payload));
   };
 };
+export const selectedMaterials = (payload: object) => {
+  return (dispatch: any) => {
+    dispatch(selected_materials(payload));
+  };
+};
 
 export const existingAuditArray = (payload: any) => {
   return (dispatch: any) => {
     dispatch(existing_audit_array(payload));
+  };
+}
+
+export const existingMaterialsArray = (payload: any) => {
+  return (dispatch: any) => {
+    dispatch(existing_materials_array(payload));
   };
 }
 export const removeSelectedAudit = (payload: object) => {
@@ -377,6 +439,17 @@ export const removeSelectedAudit = (payload: object) => {
     dispatch(remove_selected_audit(payload));
   };
 };
+
+export const removeSelectedMaterials = (payload: object) => {
+  return (dispatch: any) => {
+    dispatch(remove_selected_materials(payload));
+  };
+};
+export const removeServiceList = (index: number) => {
+  return (dispatch: any) => {
+    dispatch(remove_serviceList(index));
+  };
+}
 
 export const resetAudit = () => {
   return (dispatch: any) => {
@@ -402,6 +475,17 @@ export const resetContract = () => {
   };
 };
 
+export const resetServiceImages = () => {
+  return (dispatch: any) => {
+    dispatch(reset_service_images());
+  };
+};
+export const resetMaterials = () => {
+  return (dispatch: any) => {
+    dispatch(reset_materials());
+  };
+};
+
 
 export const isEmulator = (payload: boolean) => {
   return (dispatch: any) => {
@@ -412,5 +496,15 @@ export const isEmulator = (payload: boolean) => {
 export const getCompanyID = (payload: string) => {
   return (dispatch: any) => {
     dispatch(get_companyID(payload));
+  };
+};
+export const removeAudits = (index) => {
+  return (dispatch) => {
+    dispatch(remove_audits_in_service_list(index));
+  };
+};
+export const serviceImages = (payload: string[]) => {
+  return (dispatch: any) => {
+    dispatch(service_images(payload));
   };
 };

@@ -1,0 +1,101 @@
+ [{
+     "id": "5d3bdf79-7dec-4b0d-8cfc-0412bfe6032d",
+     "title": "ประตูบานเลื่อน",
+     "description": "",
+     "unitPrice": "85590",
+     "serviceImages": ["https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/128878/gallery/1baa9b2c-a0a1-4cd5-80d5-52449f435ac5-png", "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/128878/gallery/6d73f380-9d12-4a7b-b33f-e3ea09f57e48-png", "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/128878/gallery/b7bb5f64-e9ec-4b2e-a600-a39c3d9dfd35-png", "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/128878/gallery/cb0a6bf7-b78b-4fb9-9bdd-b89f3c898e25-png"],
+     "qty": 1,
+     "discountPercent": 0,
+     "total": "85590",
+     "audits": [{
+         "id": 1,
+         "number": 101,
+         "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+         "title": "การันตีการตรวจเช็คการป้องกันน้ำ",
+         "content": "การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน",
+         "auditEffectDescription": "ผลกระทบที่เกิดจากการไม่การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน",
+         "auditEffectImage": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+         "auditShowTitle": "การันตีการตรวจเช็คการป้องกันน้ำ",
+         "category": "อลูมิเนียม",
+         "subCategory": "none",
+         "createdAt": "2023-09-18T13:26:41.202Z",
+         "defaultChecked": false,
+         "serviceID": "5d3bdf79-7dec-4b0d-8cfc-0412bfe6032d"
+     }, {
+         "id": 2,
+         "number": 102,
+         "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+         "title": "ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน",
+         "content": "ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน",
+         "auditEffectDescription": "ผลกระทบที่เกิดจากการไม่ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน",
+         "auditEffectImage": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+         "auditShowTitle": "ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน",
+         "category": "อลูมิเนียม",
+         "subCategory": "none",
+         "createdAt": "2023-09-18T13:26:41.202Z",
+         "defaultChecked": false,
+         "serviceID": "5d3bdf79-7dec-4b0d-8cfc-0412bfe6032d"
+     }],
+     "materials": [{
+         "id": 3,
+         "name": "กลอนฝัง",
+         "description": "หนา 1.2 มม",
+         "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/72bc249d-5534-459b-a034-f68019e0764a-png",
+         "companyId": "1f2c0a80-d2aa-4c91-a328-1721927237ad",
+         "created": "2023-09-27T07:15:03.704Z",
+         "updated": "2023-09-27T07:15:03.704Z"
+     }]
+ }, 
+ 
+ {
+     "id": "1ebe0536-4bd3-44a0-8987-a9cf34f3cbd8",
+     "title": "หน้าต่างบานกระจก",
+     "description": "",
+     "unitPrice": "7859",
+     "serviceImages": ["https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/128878/gallery/1baa9b2c-a0a1-4cd5-80d5-52449f435ac5-png", "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/128878/gallery/6d73f380-9d12-4a7b-b33f-e3ea09f57e48-png"],
+     "qty": 1,
+     "discountPercent": 0,
+     "total": "7859",
+     "audits": [{
+         "id": 1,
+         "number": 101,
+         "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+         "title": "การันตีการตรวจเช็คการป้องกันน้ำ",
+         "content": "การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน",
+         "auditEffectDescription": "ผลกระทบที่เกิดจากการไม่การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน",
+         "auditEffectImage": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+         "auditShowTitle": "การันตีการตรวจเช็คการป้องกันน้ำ",
+         "category": "อลูมิเนียม",
+         "subCategory": "none",
+         "createdAt": "2023-09-18T13:26:41.202Z",
+         "defaultChecked": false,
+         "serviceID": "1ebe0536-4bd3-44a0-8987-a9cf34f3cbd8"
+     }, {
+         "id": 2,
+         "number": 102,
+         "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+         "title": "ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน",
+         "content": "ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน",
+         "auditEffectDescription": "ผลกระทบที่เกิดจากการไม่ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน",
+         "auditEffectImage": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+         "auditShowTitle": "ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน",
+         "category": "อลูมิเนียม",
+         "subCategory": "none",
+         "createdAt": "2023-09-18T13:26:41.202Z",
+         "defaultChecked": false,
+         "serviceID": "1ebe0536-4bd3-44a0-8987-a9cf34f3cbd8"
+     }],
+     "selectedMaterials": [{
+         "id": 3,
+         "name": "กลอนฝัง",
+         "description": "หนา 1.2 มม",
+         "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/72bc249d-5534-459b-a034-f68019e0764a-png",
+         "companyId": "1f2c0a80-d2aa-4c91-a328-1721927237ad",
+         "created": "2023-09-27T07:15:03.704Z",
+         "updated": "2023-09-27T07:15:03.704Z"
+     }]
+ }
+]
+
+
+[{"audits": [[Object]], "description": "", "discountPercent": 0, "id": "db4a52c1-1096-43b9-b49e-8c32a3cfcdca", "materials": [], "qty": 1, "serviceImages": [], "title": "1", "total": "5590", "unitPrice": "5590"}, {"audits": [[Object]], "description": "", "discountPercent": 0, "id": "d8eb409e-cba8-4b69-ab9a-fa6a368dd4d9", "materials": [], "qty": 1, "serviceImages": [], "title": "2", "total": "0", "unitPrice": ""}, {"audits": [[Object]], "description": "", "discountPercent": 0, "id": "0a35b211-30ab-441b-a517-57b3caea080a", "materials": [], "qty": 1, "serviceImages": [], "title": "3", "total": "5990", "unitPrice": "5990"}]

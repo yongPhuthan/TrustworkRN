@@ -1,9 +1,12 @@
 import React, {useState, useEffect} from 'react';
-import {StyleSheet, ActivityIndicator, View} from 'react-native';
+import {StyleSheet, ActivityIndicator, View,TouchableOpacity,Text} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import RegisterScreen from '../screens/register/registerScreen';
+import { useNavigation } from '@react-navigation/native';
+
 import firebase from '../firebase';
 import {
   Audit,
@@ -36,6 +39,10 @@ import ExistingCategories from '../screens/products/gallary/existing';
 import GalleryScreen from '../screens/products/imageGallery';
 import SettingsScreen from '../screens/setting/setting';
 import Dashboard from '../screens/quotation/dashboard';
+import ExistingMaterials from '../screens/products/materials/existing';
+import ExistingWorkers from '../screens/workers/existing';
+import AddNewWorker from '../screens/workers/addNew';
+import AddNewMaterial from '../screens/products/materials/addNew';
 
 const Theme = {
   ...DefaultTheme,
@@ -56,49 +63,76 @@ const Navigation = () => {
     {name: 'DocViewScreen', component: DocViewScreen},
     {name: 'FirstAppScreen', component: FirstAppScreen},
     {name: 'LoginScreen', component: LoginScreen},
-{name: 'DashboardQuotation', component: Dashboard},
-
-
+    {name: 'DashboardQuotation', component: Dashboard},
   ];
 
   useEffect(() => {
-    const unsubscribe = firebase.auth().onAuthStateChanged(user => {
-      setUser(user);
+    const bootstrapAsync = async () => {
+      let userToken;
+      try {
+        userToken = await AsyncStorage.getItem('userToken');
+      } catch (e) {
+        console.error('Error loading user token', e);
+      }
+
+      if (userToken) {
+        console.log('get token');
+        setUser(userToken);
+
+        
+      } else {
+        // setUser(null);
+        console.log('not get token');
+        console.log('userToken', userToken);
+        firebase.auth().signOut();
+      }
       setLoadingUser(false);
+    };
+
+    bootstrapAsync();
+
+    const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+      try {
+        setUser(user);
+
+      } catch (error) {
+        console.error('Error in onAuthStateChanged:', error);
+      }
     });
 
-    return unsubscribe;
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
-  if (loadingUser) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
-  const initialRouteName: ScreenName = user ? 'DashboardQuotation' : 'FirstAppScreen';
+
   const commonScreenOptions = {
     headerTitleStyle: {
-      fontFamily: 'Sukhumvit Set Bold',  
-   
-
+      fontFamily: 'Sukhumvit Set Bold',
     },
     headerStyle: {
       backgroundColor: '#ffffff',
     },
     headerTintColor: 'black',
   };
-  
+  if (loadingUser) {
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <ActivityIndicator size="large"  />
+      </View>
+    );
+  }
+console.log('user', user)
+console.log('loadinguser', loadingUser)
   return (
     <NavigationContainer theme={Theme}>
       <Stack.Navigator
-        initialRouteName={initialRouteName}
-        screenOptions={{ 
-          ...commonScreenOptions, 
-          headerShown: false
+        initialRouteName={user ? 'DashboardQuotation' : 'FirstAppScreen'}
+        screenOptions={{
+          ...commonScreenOptions,
+          headerShown: false,
         }}>
         {screens.map(({name, component}) => (
-          <Stack.Screen  key={name} name={name}           component={component} />
+          <Stack.Screen key={name} name={name} component={component} />
         ))}
         <Stack.Screen
           name="CreateQuotation"
@@ -128,9 +162,11 @@ const Navigation = () => {
               backgroundColor: '#ffffff',
             },
             headerTintColor: 'black',
+          
           }}
+          
         />
-            <Stack.Screen
+        <Stack.Screen
           name="Signature"
           component={SignatureScreen}
           options={{
@@ -144,7 +180,7 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="Installment"
           component={Installment}
           options={{
@@ -158,8 +194,6 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
- 
- 
 
         <Stack.Screen
           name="AddExistProduct"
@@ -203,7 +237,7 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
-                <Stack.Screen
+        <Stack.Screen
           name="SettingsScreen"
           component={SettingsScreen}
           options={{
@@ -231,7 +265,7 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
-                <Stack.Screen
+        <Stack.Screen
           name="ExistingCategories"
           component={ExistingCategories}
           options={{
@@ -245,13 +279,69 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
-                        <Stack.Screen
+        <Stack.Screen
           name="GalleryScreen"
           component={GalleryScreen}
           options={{
             ...commonScreenOptions,
             headerShown: true,
             title: 'อัลบั้มผลงาน',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+        <Stack.Screen
+          name="ExistingMaterials"
+          component={ExistingMaterials}
+          options={{
+            ...commonScreenOptions,
+            headerShown: true,
+            title: 'เลือกวัสดุ-อุปกรณ์ที่ใช้ในงาน',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+        <Stack.Screen
+          name="ExistingWorkers"
+          component={ExistingWorkers}
+          options={{
+            ...commonScreenOptions,
+            headerShown: true,
+            title: 'เลือกทีมผู้ติดตั้ง',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+        <Stack.Screen
+          name="AddNewWorker"
+          component={AddNewWorker}
+          options={{
+            ...commonScreenOptions,
+            headerShown: true,
+            title: 'เลือกทีมผู้ติดตั้ง',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+        <Stack.Screen
+          name="AddNewMaterial"
+          component={AddNewMaterial}
+          options={{
+            ...commonScreenOptions,
+            headerShown: true,
+            title: 'เพิ่มวัสดุอุปกรณ์ใหม่',
             headerBackTitleVisible: false,
             headerStyle: {
               backgroundColor: '#ffffff',
@@ -274,7 +364,7 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
-          <Stack.Screen
+        <Stack.Screen
           name="ExistingSignature"
           component={ExistingSignature}
           options={{
@@ -319,7 +409,7 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
-                <Stack.Screen
+        <Stack.Screen
           name="EditQuotation"
           component={EditQuotation}
           options={{
@@ -334,7 +424,7 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
-          {/* <Stack.Screen
+        {/* <Stack.Screen
           name="DocViewScreen"
           component={DocViewScreen}
           
@@ -364,7 +454,7 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="ContractOptions"
           component={ContractOption}
           options={{
@@ -379,7 +469,7 @@ const Navigation = () => {
             headerTintColor: 'black',
           }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="GalleryUploadScreen"
           component={GalleryUploadScreen}
           options={{
@@ -390,8 +480,6 @@ const Navigation = () => {
 
             headerStyle: {
               backgroundColor: '#ffffff',
-              
-              
             },
             headerTintColor: 'black',
           }}

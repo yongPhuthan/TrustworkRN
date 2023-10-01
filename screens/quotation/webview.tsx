@@ -47,7 +47,7 @@ const DocViewScreen = ({ navigation, route }: Props) => {
     }
   };
   const backHome =()=>{
-    navigation.navigate('HomeScreen')
+    navigation.navigate('DashboardQuotation')
   }
 
   useEffect(() => {

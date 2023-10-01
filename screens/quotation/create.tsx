@@ -3,9 +3,14 @@ import {
   Text,
   View,
   TextInput,
+  Pressable,
   ScrollView,
   FlatList,
+  Dimensions,
+  ActivityIndicator,
   TouchableOpacity,
+  Platform,
+  Switch,
 } from 'react-native';
 import {v4 as uuidv4} from 'uuid';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
@@ -17,6 +22,7 @@ import Divider from '../../components/styles/Divider';
 import {NavigationContainer} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
+import Modal from 'react-native-modal';
 import firebase from '../../firebase';
 import CardProject from '../../components/CardProject';
 import CardClient from '../../components/CardClient';
@@ -27,6 +33,7 @@ import * as stateAction from '../../redux/actions';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useQuery} from '@tanstack/react-query';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import Signature from 'react-native-signature-canvas';
 
 import axios, {AxiosResponse, AxiosError} from 'axios';
 
@@ -36,6 +43,8 @@ import {Audit, IdContractList, CompanyUser} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
 import {useFetchCompanyUser} from '../../hooks/company/useFetchCompany';
+import SignatureComponent from '../../components/utils/signature';
+import SmallDivider from '../../components/styles/SmallDivider';
 
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
@@ -80,9 +89,16 @@ const Quotation = ({navigation}: Props) => {
   const [dateEnd, setDateEnd] = useState<String>('');
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [token, setToken] = useState<FirebaseAuthTypes.User | null>(null);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [singatureModal, setSignatureModal] = useState(false);
+  const [signature, setSignature] = useState('');
   const quotationId = uuidv4();
   const [fcnToken, setFtmToken] = useState('');
   const [discount, setDiscount] = useState('0');
+  const [showEditServiceModal, setShowEditServiceModal] = useState(false);
+  const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(null);
+
+  const dataSignature = {};
   const [vat7, setVat7] = useState(false);
   const totalPrice = useMemo(() => {
     let total = 0;
@@ -121,8 +137,30 @@ const Quotation = ({navigation}: Props) => {
     setCustomerName(value);
   };
 
+  const useSignature = () => {
+    if (companyUser?.signature) {
+      setPickerVisible(!pickerVisible);
+      setSignature(companyUser?.signature);
+    } else {
+      setSignatureModal(!singatureModal);
+      setPickerVisible(!pickerVisible);
+    }
+  };
+  const handleSignatureSuccess = () => {
+    setSignatureModal(false)
+  };
   const handleAddClientForm = () => {
     navigation.navigate('AddCustomer');
+  };
+
+  const handleModal = () => {
+    console.log('SHOW');
+    setShowEditServiceModal(true);
+  };
+  const handleModalClose = () => {
+    setVisibleModalIndex(null);
+
+    // setShowEditServiceModal(false);
   };
 
   const handleAddProductForm = async () => {
@@ -134,7 +172,9 @@ const Quotation = ({navigation}: Props) => {
     }
   };
   const handleEditService = (index: number) => {
+    setShowEditServiceModal(!showEditServiceModal);
     navigation.navigate('EditProductForm', {item: serviceList[index]});
+
   };
 
   const handleEditClient = () => {
@@ -196,7 +236,9 @@ const Quotation = ({navigation}: Props) => {
       }
       // await mutate(apiData);
       // navigation.navigate('InstallmentScreen', {data: apiData});
-      navigation.navigate('SelectContract', {data: apiData} as any);
+      // navigation.navigate('SelectContract', {data: apiData} as any);
+      navigation.navigate('DefaultContract', {data: apiData} as any);
+
 
       setIsLoadingMutation(false);
     } catch (error: Error | AxiosError | any) {
@@ -273,20 +315,20 @@ const Quotation = ({navigation}: Props) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Lottie
-          style={{width: '25%'}}
-          source={require('../../assets/animation/lf20_rwq6ciql.json')}
-          autoPlay
-          loop
-        />
+        <ActivityIndicator />
       </View>
     );
   }
   const idContractList = selectedContract.map((obj: IdContractList) => obj.id);
+  console.log('company', companyUser);
 
-  console.log('company user' + JSON.stringify(companyUser));
-  console.log('serviceList' + JSON.stringify(serviceList));
-  // console.log('fcmToken', fcnToken);
+  const handleRemoveService = (index: number) => {
+    setVisibleModalIndex(null);
+    dispatch(stateAction.remove_serviceList(index));
+  };
+  
+
+console.log('serviceList', serviceList)
   return (
     <View style={{flex: 1}}>
       <ScrollView style={styles.container}>
@@ -325,59 +367,76 @@ const Quotation = ({navigation}: Props) => {
           </View>
           {serviceList.map((item: any, index: number) => (
             <CardProject
-              index={index + 1}
+            handleModalClose={handleModalClose}
+            visibleModalIndex={visibleModalIndex === index}
+            setVisibleModalIndex={()=>setVisibleModalIndex(index)}
+              index={index}
+              handleRemoveService={() => handleRemoveService(index)}
               handleEditService={() => handleEditService(index)}
               serviceList={item}
               key={index}
-            />
+            /> 
           ))}
 
           <AddServices handleAddProductFrom={handleAddProductForm} />
           <Divider />
-
+          {/* <View>
+          <Pressable
+            onPress={() => navigation.navigate('ExistingWorkers', {id:companyID})}
+            style={styles.btn}>
+            <Text style={{color:'white'}}>เลือกทีมงานติดตั้ง</Text>
+          </Pressable>
+        </View> */}
+          {/* <Divider /> */}
           <Summary
             title={'ยอดรวม'}
             price={totalPrice}
             onValuesChange={handleValuesChange}
           />
-        </View>
+          <SmallDivider />
+          <View style={styles.signatureRow}>
+            <Text style={styles.signHeader}>เพิ่มลายเซ็น</Text>
+            <Switch
+              trackColor={{false: '#767577', true: '#81b0ff'}}
+              thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={() => useSignature()}
+              value={signature ? true : false}
+              style={Platform.select({
+                ios: {
+                  transform: [{scaleX: 0.7}, {scaleY: 0.7}],
+                  marginTop: 5,
+                },
+                android: {},
+              })}
+            />
+          </View>
+          <Modal
+            isVisible={singatureModal}
+            style={styles.modal}
+            onBackdropPress={() => setSignatureModal(false)}>
+            <View style={styles.containerModal}>
+              <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
+              <SignatureComponent
+                onClose={() => setSignatureModal(false)}
+                setSignatureUrl={setSignature}
+                onSignatureSuccess={handleSignatureSuccess}
+              />
+            </View>
+          </Modal>
 
-        {/* {selectedContract.length > 0 ? (
-            <View style={styles.cardContainer}>
-              {selectedContract.map((item: selectedContract) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.card}
-                  onPress={handleSelectContract}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Icon name="chevron-right" size={24} color="gray" />
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.subContainer}>
-              {selectedContract.length === 0 && (
-                <TouchableOpacity
-                  style={styles.selectButton}
-                  onPress={handleSelectContract}>
-                  <Text style={styles.selectButtonText}>Select Audit</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )} */}
+        </View>
       </ScrollView>
       <View>
-        {/* <TouchableOpacity style={styles.button} onPress={signOutPage}>
-            <Text style={styles.buttonText}>sign out page</Text>
-          </TouchableOpacity> */}
-        <FooterBtn disabled={isDisabled} onPress={handleButtonPress} />
+        <FooterBtn btnText='ดำเนินการต่อ' disabled={isDisabled} onPress={handleButtonPress} />
       </View>
     </View>
   );
 };
 
 export default Quotation;
-
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#e9f7ff',
@@ -398,6 +457,40 @@ const styles = StyleSheet.create({
     border: '1px solid #0073BA',
     borderRadius: 10,
   },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    width: '90%',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
+    // bottom: '40%',
+    left: 0,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    borderBottomWidth: 1,
+    borderColor: 'white',
+    paddingBottom: 10,
+    paddingTop: 10,
+    fontWeight: 'bold',
+    fontFamily: 'Sukhumvit set',
+  },
+  deleteButtonText: {
+    fontSize: 18,
+    borderBottomWidth: 1,
+    fontWeight: 'bold',
+    textDecorationColor: 'red',
+    color: 'red',
+    borderColor: 'white',
+    paddingBottom: 10,
+    fontFamily: 'Sukhumvit set',
+    paddingTop: 10,
+  },
+
+
   date: {
     textAlign: 'right',
   },
@@ -424,6 +517,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  signatureRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   buttonText: {
     color: 'white',
     fontSize: 18,
@@ -437,6 +534,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     color: '#19232e',
+    fontFamily: 'Sukhumvit Set Bold',
   },
   header: {
     flexDirection: 'row',
@@ -503,5 +601,84 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     marginTop: 15,
     marginBottom: 10,
+  },
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    marginTop: 40,
+    backgroundColor: '#0073BA',
+  },
+  signHeader: {
+    flexDirection: 'row',
+    marginTop: 10,
+    fontSize: 16,
+  },
+  summaryTotal: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    justifyContent: 'space-between',
+  },
+  pickerWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  pickerAndroidContainer: {
+    borderWidth: 0.2,
+    borderColor: 'gray',
+    height: 40,
+    borderRadius: 5,
+    backgroundColor: 'white',
+    width: 120,
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+  },
+  signText: {
+    fontSize: 18,
+    marginVertical: 10,
+  },
+  addButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'gray',
+    width: '100%',
+  },
+  modal: {
+    marginTop: 100,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    borderRadius: 10,
+    height: windowHeight * 0.2,
+  },
+  closeButton: {
+    paddingVertical: 10,
+  },
+  headerModal: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    backgroundColor: '#ffffff',
+  },
+  containerModal: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#fff',
+    width: windowWidth,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#323232',
+    marginLeft: 20,
+
+    fontFamily: 'Sukhumvit set',
   },
 });

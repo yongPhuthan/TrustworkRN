@@ -37,8 +37,11 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(false);
   const {width, height} = Dimensions.get('window');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState<String>('');
   const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [originalQuotationData, setOriginalQuotationData] = useState<
+    Quotation[] | null
+  >(null);
 
   const {
     state: {isEmulator},
@@ -49,18 +52,25 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
   const slideAnim = useState(new Animated.Value(-100))[0];
   const [filters, setFilters] = useState([
-    'Filter 1',
-    'Filter 2',
-    'Filter 3',
-    'Filter 4',
-    // Add more as needed
+    'ALL',
+    'PENDING',
+    'APPROVED',
+    'CONTRACT',
+    'ONPROCESS',
   ]);
-  const [activeFilter, setActiveFilter] = useState('Filter 1');
+  const [activeFilter, setActiveFilter] = useState('ALL');
+  const filteredQuotationData = useMemo(() => {
+    if (!originalQuotationData) return null;
+
+    if (activeFilter === 'ALL') return originalQuotationData;
+
+    return originalQuotationData.filter(q => q.status === activeFilter);
+  }, [originalQuotationData, activeFilter]);
   const getTokenAndEmail = async () => {
     const currentUser = auth().currentUser;
     if (currentUser) {
       const token = await currentUser.getIdToken();
-      const email = currentUser.email;
+      const email = currentUser.email as string;
       setEmail(email);
       return {token, email};
     } else {
@@ -75,7 +85,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
     const user = await getTokenAndEmail();
     if (user) {
-      console.log('user5', user);
       const {token, email} = user;
 
       if (email) {
@@ -89,6 +98,19 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             email: email,
           }),
         });
+        if (response.status === 401) {
+          const errorData = await response.json();
+          if (
+            errorData.message ===
+            'Token has been revoked. Please reauthenticate.'
+          ) {
+            const newToken = await auth().currentUser?.getIdToken(true);
+            return fetchDashboardData();
+          } else {
+            auth().signOut();
+          }
+        }
+
         const data = await response.json();
         await AsyncStorage.setItem('dashboardData', JSON.stringify(data));
         if (data && data[1]) {
@@ -104,6 +126,22 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
   const user = getTokenAndEmail();
 
+  const updateContractData = (filter: string) => {
+    setActiveFilter(filter);
+
+    if (quotationData) {
+      let filteredData = quotationData;
+
+      if (filter !== 'ALL') {
+        filteredData = quotationData.filter(
+          (quotation: Quotation) => quotation.status === filter,
+        );
+      }
+
+      setQuotationData(filteredData);
+    }
+  };
+
   const {isLoading, error, data} = useQuery(
     ['dashboardData'],
     fetchDashboardData,
@@ -112,20 +150,22 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       onSuccess: data => {
         setCompanyData(data[0]);
         setQuotationData(data[1]);
+        setOriginalQuotationData(data[1]);
+
+        dispatch(stateAction.code_company(data[0].code));
       },
     },
   );
 
   if (isLoading) {
     return (
-
       <View style={styles.loadingContainer}>
         <ActivityIndicator />
       </View>
     );
   }
   if (error) {
-    console.log('error', error);
+    console.log('error55', error);
   }
   const handleModal = () => {
     console.log('SHOW');
@@ -133,6 +173,9 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
   const handleModalClose = () => {
     setShowModal(false);
+  };
+  const handleFilterClick = filter => {
+    setActiveFilter(filter);
   };
 
   const editQuotation = async (services, customer, quotation) => {
@@ -157,6 +200,8 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     await dispatch(stateAction.existing_audit_array(allAuditData));
     navigation.navigate('EditQuotation', {quotation, company: data[0]});
   };
+
+
   const FilterButton = ({filter, isActive, onPress}) => {
     return (
       <TouchableOpacity
@@ -168,7 +213,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
   const renderItem = ({item}) => (
     <>
-      <View>
+      <View style={{marginTop:10}}>
         <CardDashBoard
           status={item.status}
           date={item.dateOffer}
@@ -290,11 +335,12 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     dispatch(stateAction.client_address(''));
     dispatch(stateAction.client_tel(''));
     dispatch(stateAction.client_tax(''));
-    navigation.navigate('GalleryScreen', {code: companyData?.code});
-    // navigation.navigate('CreateQuotation');
+    // navigation.navigate('GalleryScreen', {code: companyData?.code});
+    navigation.navigate('CreateQuotation');
   };
 
-  console.log('COMPANY DATA', companyData)
+  console.log('status', quotationData);
+
   return (
     <>
       <View>
@@ -316,8 +362,10 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             </Text>
           }
           rightComponent={
-            <TouchableOpacity onPress={() => {     navigation.navigate('SettingsScreen');
-            }}>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('SettingsScreen');
+              }}>
               <FontAwesomeIcon icon={faCog} color="#1f303cff" size={22} />
             </TouchableOpacity>
           }
@@ -325,13 +373,15 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
+          // data={filteredData}
+
           data={filters}
           renderItem={({item}) => (
             <FilterButton
               filter={item}
               isActive={item === activeFilter}
               onPress={() => {
-                setActiveFilter(item);
+                updateContractData(item);
               }}
             />
           )}
@@ -349,7 +399,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             backgroundColor: '#f5f5f5',
           }}>
           <FlatList
-            data={quotationData}
+            data={filteredQuotationData}
             renderItem={renderItem}
             keyExtractor={item => item.id}
             ListEmptyComponent={
@@ -368,12 +418,11 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             }
             contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
           />
-
         </View>
       )}
       <FAB
         icon={{name: 'add', color: 'white'}}
-        color="#1f303cff"
+        color="#0073BA"
         style={{
           backgroundColor: '#1f303cff',
           position: 'absolute',
@@ -381,7 +430,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           bottom: 25,
         }}
         onPress={() => createNewQuotation()}
-
       />
     </>
   );

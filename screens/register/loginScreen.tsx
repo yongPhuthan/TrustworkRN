@@ -4,6 +4,7 @@ import { View, TextInput, Button, Text, StyleSheet, Alert } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {ParamListBase} from '../../types/navigationType';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Props {
     navigation: StackNavigationProp<ParamListBase, 'LoginScreen'>;
@@ -11,15 +12,24 @@ interface Props {
 const LoginScreen = ({navigation}: Props) => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-
     const handleLogin = async () => {
         try {
-            await auth().signInWithEmailAndPassword(email, password);
-            navigation.navigate('HomeScreen');
+            const userCredential = await auth().signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            const token = await user.getIdToken();
+            console.log('Token after login:', token); // Log the token
+            if (token) {
+                await AsyncStorage.setItem('userToken', token);
+                navigation.navigate('DashboardQuotation');
+            } else {
+                console.error('Token is undefined after login');
+            }
         } catch (error) {
             Alert.alert('Error', error.message);
         }
     };
+    
+    
 
     return (
         <View style={styles.container}>

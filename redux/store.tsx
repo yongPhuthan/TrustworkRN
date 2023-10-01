@@ -1,7 +1,8 @@
 import React, {createContext, useReducer} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {SelectedAuditData,AuditData} from '../docType';
+import {SelectedAuditData, AuditData} from '../docType';
 import * as contrains from './constrains';
+import {Service} from '../types/docType';
 export type StateType = {
   docCounter: number;
   allData: string;
@@ -11,13 +12,16 @@ export type StateType = {
   client_tel: string;
   client_tax: string;
   client_address: string;
-  serviceList: [];
+  serviceList: Service[];
   selectedAudit: AuditData[];
   selectedContract: [];
   periodPercent: JSON[];
+  selectedMaterials: [];
   allTotal: number;
   isEmulator: boolean;
   companyID: string;
+  code: string;
+  serviceImages: string[];
 };
 
 type ActionType = {
@@ -43,11 +47,14 @@ export const Store = createContext<ContextType>({
     serviceList: [],
     selectedAudit: [],
     selectedContract: [],
+    selectedMaterials: [],
     allTotal: 0,
     periodPercent: [],
     // isEmulator:true,
     isEmulator: true,
     companyID: '',
+    code: '',
+    serviceImages: [],
   },
   dispatch: () => {},
 });
@@ -68,12 +75,19 @@ const initialState: StateType = {
   periodPercent: [],
   isEmulator: true,
   companyID: '',
+  code: '',
+  selectedMaterials: [],
+  serviceImages: [],
 };
 
 function reducer(state: StateType, action: ActionType): StateType {
   switch (action.type) {
     case contrains.ALL_DATA:
       return {...state, allData: action.payload as string};
+    case contrains.CODE:
+      return {...state, code: action.payload as string};
+    case contrains.SERVICE_IMAGES:
+      return {...state, serviceImages: action.payload as string[]};
     case contrains.DOC_COUNTER:
       return {...state, docCounter: action.payload as number};
     case contrains.PAYMENT_TYPE:
@@ -93,7 +107,13 @@ function reducer(state: StateType, action: ActionType): StateType {
         ...state,
         serviceList: [...state.serviceList, action.payload] as any,
       };
-
+      case contrains.REMOVE_SERVICE:
+        console.log('Removing service at index:', action.payload);
+        return {
+          ...state,
+          serviceList: state.serviceList.filter((_, i) => i !== action.payload),
+        };
+      
     case contrains.UPDATE_SERVICE_LIST:
       return {
         ...state,
@@ -114,11 +134,15 @@ function reducer(state: StateType, action: ActionType): StateType {
         ...state,
         selectedAudit: [...state.selectedAudit, action.payload] as any,
       };
-      case contrains.EXISTING_ARRAY_AUDIT:
-        return {
-          ...state,
-          selectedAudit: [...state.selectedAudit, ...(action.payload as AuditData[])]
-        };
+
+    case contrains.EXISTING_ARRAY_AUDIT:
+      return {
+        ...state,
+        selectedAudit: [
+          ...state.selectedAudit,
+          ...(action.payload as AuditData[]),
+        ],
+      };
     case contrains.REMOVE_SELECTED_AUDIT:
       return {
         ...state,
@@ -129,6 +153,42 @@ function reducer(state: StateType, action: ActionType): StateType {
 
     case contrains.RESET_AUDIT:
       return {...state, selectedAudit: []};
+    case contrains.RESET_MATERIALS:
+      return {...state, selectedMaterials: []};
+
+    case contrains.SELECTED_MATERIALS:
+      return {
+        ...state,
+        selectedMaterials: [...state.selectedMaterials, action.payload] as any,
+      };
+    case contrains.REMOVE_AUDITS_IN_SERVICE_LIST:
+      return {
+        ...state,
+        serviceList: state.serviceList.map((service, i) =>
+          i === action.index ? {...service, audits: []} : service,
+        ),
+      };
+    case contrains.EXISTING_ARRAY_MATERIALS:
+      return {
+        ...state,
+        selectedMaterials: [
+          ...state.selectedMaterials,
+          ...(action.payload as any),
+        ],
+      } as any;
+    case contrains.RESET_MATERIALS:
+      return {...state, selectedMaterials: []};
+    case contrains.RESET_SERVICE_IMAGES:
+      return {...state, serviceImages: []};
+
+    case contrains.REMOVE_SELECTED_MATERIALS:
+      return {
+        ...state,
+        selectedMaterials: state.selectedMaterials.filter(
+          a => a.name !== action.payload.name,
+        ) as any,
+      };
+
     case contrains.START_SERVICE_LIST:
       return {...state, serviceList: action.payload as any};
     case contrains.ALLTOTAL:

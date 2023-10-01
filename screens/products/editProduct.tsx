@@ -8,14 +8,25 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Image
+  SafeAreaView,
+  Dimensions,
+  FlatList,
+  Image,
 } from 'react-native';
 import Divider from '../../components/styles/Divider';
-import {useForm, Controller} from 'react-hook-form';
+import {Header as HeaderRNE, HeaderProps} from '@rneui/themed';
+import {
+  faCloudUpload,
+  faEdit,
+  faPlus,
+  faImages,
+} from '@fortawesome/free-solid-svg-icons';
+import { useForm, Controller, set } from 'react-hook-form';
 import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
-import {faCloudUpload, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
-
+import SelectAudit from '../../components/audits/selectAudit';
+import ExistingMaterials from '../../components/materials/existing';
+import GalleryScreen from '../../components/gallery/existing';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {v4 as uuidv4} from 'uuid';
@@ -26,6 +37,10 @@ import {
   ServiceList,
   EditProductList,
   Service,
+  SelectedMaterialData,
+  AuditData,
+  Audit,
+  SelectedAuditData,
 } from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 import SmallDivider from '../../components/styles/SmallDivider';
@@ -34,9 +49,9 @@ import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'EditProductForm'>;
   route: RouteProp<ParamListBase, 'EditProductForm'>;
-  // onGoBack: (data: string) => void;
 };
-
+const {width, height} = Dimensions.get('window');
+const imageContainerWidth = width / 3 - 10;
 const EditProductForm = ({navigation, route}: Props) => {
   const {control, handleSubmit, formState} = useForm<FormData>();
   const {isDirty} = formState;
@@ -45,49 +60,56 @@ const EditProductForm = ({navigation, route}: Props) => {
   const [count, setCount] = useState(0);
   const [unitPrice, setPrice] = useState(item.unitPrice);
   const [total, setTotalCost] = useState(item.total);
+  const [serviceImages,setServicesImages] = useState<string[]>(item.serviceImages);
   const [serviceListState, setServiceList] = useState<ServiceList[]>([]);
   const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
+  const [materials, setMaterials] = useState<SelectedMaterialData[]>(item.materials);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
+  const [isModalImagesVisible, setModalImagesVisible] = useState(false);
 
+  const [audits, setAudits] = useState<Audit[]>(item.audits);
   const {
-    state: {serviceList, selectedAudit},
+    state: {serviceList, selectedAudit, code, selectedMaterials},
     dispatch,
   }: any = useContext(Store);
 
+
   const handleFormSubmit = (data: FormData) => {
-    if (!isDirty) {
-      // If the form data hasn't been modified, you might want to show a message
-      // or simply return without processing the form further.
-      navigation.goBack();
-
-      return;
-    } else {
-      const newServiceItem = {
-        id: item.id,
-        title: data.title ? data.title : item.title,
-        description: data.description ? data.description : item.description,
-        unitPrice: data.unitPrice ? Number(data.unitPrice.replace(/,/g, '')) : Number(item.unitPrice),
-        qty: data.qty ? Number(data.qty) : Number(item.qty),
-        total: Number(qty * unitPrice),
+//     if (!isDirty) {
+// navigation.goBack();
+//       return;
+//     }
+  
+    const newServiceItem = {
+      id: item.id,
+      title: data.title ? data.title : item.title,
+      description: data.description ? data.description : item.description,
+      materials,
+      serviceImages,
+      audits,
+      unitPrice: data.unitPrice
+        ? Number(data.unitPrice.replace(/,/g, ''))
+        : Number(item.unitPrice),
+      qty,
+      total: Number(qty * unitPrice),
+    };
+    
+    const index = serviceList.findIndex(
+      (serviceItem: any) => serviceItem.id === item.id,
+    );
+  
+    if (index !== -1) {
+      const updatedServiceList = [...serviceList];
+      updatedServiceList[index] = {
+        ...updatedServiceList[index],
+        ...newServiceItem,
       };
-      console.log('newServiceItem unit', newServiceItem.unitPrice);
-      const index = serviceList.findIndex(
-        (serviceItem: any) => serviceItem.id === item.id,
-      );
-
-      if (index !== -1) {
-        const updatedServiceList = [...serviceList];
-        updatedServiceList[index] = {
-          ...updatedServiceList[index],
-          ...newServiceItem,
-        };
-        console.log('updatedServiceList', updatedServiceList);
-
-        dispatch(stateAction.update_service_list(updatedServiceList));
-        navigation.goBack();
-      }
+      dispatch(stateAction.update_service_list(updatedServiceList));
+      navigation.goBack();
     }
   };
-
+  
   const handleDelete = () => {
     // Find the index of the item in the serviceList array
     const index = serviceList.findIndex(
@@ -111,323 +133,380 @@ const EditProductForm = ({navigation, route}: Props) => {
       !isNaN(value) && value !== '' && value !== null && value !== undefined
     );
   }
-
+  const onGoback = () => {
+    dispatch(stateAction.reset_audit());
+    dispatch(stateAction.reset_service_images());
+    navigation.goBack();
+  }
   const handleSelectAudit = (data: FormData) => {
     navigation.navigate('SelectAudit', {
       title: data.title,
       description: data.description,
       serviceID: data.id,
-
     });
   };
 
   useEffect(() => {
-    // Calculate the total cost based on the quantity and price values
     setTotalCost(qty * unitPrice);
-    if(imageUrl){
+    if (imageUrl) {
       item.serviceImage = imageUrl;
     }
   }, [qty, unitPrice]);
 
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.subContainer}>
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <TouchableOpacity
-            style={{
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 20,
-              borderColor: 'gray',
-              borderWidth: imageUrl == null ? 1 : 0,
-              borderRadius: 10,
-              borderStyle: 'dotted',
-              // marginHorizontal: 100,
-              padding: 10,
-              height: imageUrl == null ? 100 : 150,
-              width: imageUrl == null ? 200 : 'auto',
-            }}
-            onPress={handleLogoUpload}>
+    <>
+      <SafeAreaView>
+        <HeaderRNE
+          backgroundColor="#ffffff"
+          containerStyle={{
+            borderBottomColor: '#ccc',
+            borderBottomWidth: 1,
+
+          }}
+          leftComponent={{
+            onPress: ()=>onGoback(),
+            icon: 'arrow-back',
+            color: 'black',
+          }}
+          rightComponent={
+            <TouchableOpacity
+              onPress={handleSubmit(handleFormSubmit)}
+              style={styles.headerRight}>
+              <Text style={styles.headingRight}>บันทึก</Text>
+            </TouchableOpacity>
+          }
+          centerComponent={{text: 'แก้ไขรายการ', style: styles.heading}}
+        />
+      </SafeAreaView>
+      <ScrollView style={styles.container}>
+        <View style={styles.subContainer}>
+        <View
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
             {isImageUpload ? (
               <ActivityIndicator size="small" color="gray" />
-            ) : item.serviceImage ? (
-              <Image
-              source={{uri: item.serviceImage}}
-              style={{width: 300, aspectRatio: 2, resizeMode: 'contain'}}
-            />
-            ):(<View>
-              <FontAwesomeIcon
-                icon={faCloudUpload}
-                style={{marginVertical: 5, marginHorizontal: 50}}
-                size={32}
-                color="gray"
-              />
-              <Text style={{textAlign: 'center', color: 'gray'}}>
-                ภาพตัวอย่างสินค้า
-              </Text>
-            </View>)}
-          </TouchableOpacity>
-        </View>
-        <Controller
-          control={control}
-          name="title"
-          defaultValue={item.title}
-          render={({field: {onChange, value}}) => (
-            <TextInput
-              placeholder="ชื่อสินค้า-บริการ.."
-              style={styles.inputName}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="description"
-          defaultValue={item.description}
-          render={({field: {onChange, value}}) => (
-            <TextInput
-              placeholder="รายละเอียด..."
-              keyboardType="name-phone-pad"
-              multiline
-              textAlignVertical="top"
-              numberOfLines={4}
-              style={styles.inputAddress}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-        />
-        <View style={styles.summary}>
-          <Text style={styles.priceHead}>ราคา:</Text>
-          <Controller
-            control={control}
-            name="unitPrice"
-            defaultValue={Number(item.unitPrice)
-              .toFixed(2)
-              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
-            render={({field: {onChange, value}}) => (
-              <TextInput
-                style={[styles.input, {textAlign: 'right'}]}
-                placeholder="0"
-                keyboardType="number-pad"
-                onChangeText={value => {
-                  onChange(value);
-                  setPrice(parseFloat(value));
+            ) : (
+              <FlatList
+                data={serviceImages}
+                horizontal={true}
+                renderItem={({item, index}) => {
+                  return (
+                    <View style={styles.imageContainer}>
+                      <Image source={{uri: item}} style={styles.image} />
+                    </View>
+                  );
                 }}
-                value={value}
-              />
-            )}
-          />
-        </View>
-        {/* <View style={styles.summary}>
-          <Text style={styles.price}>ราคา:</Text>
-          <Controller
-            control={control}
-            name="unitPrice"
-            defaultValue={String(item.unitPrice)}
-            render={({field: {onChange, value}}) => (
-              <TextInput
-                style={styles.price}
-                placeholder="0"
-                keyboardType="number-pad"
-                onChangeText={value => {
-                  onChange(value);
-                  setPrice(parseInt(value, 1));
-                }}
-                value={value}
-              />
-            )}
-          />
-        </View> */}
-        <View style={styles.summary}>
-          <Text style={styles.price}>จำนวน:</Text>
-
-          {/* START COUNTER BUTTON */}
-          <View style={styles.containerCounter}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => {
-                if (count > 0) {
-                  setCount(count - 1);
-                  setQuantity(qty - 1);
+                keyExtractor={(item, index) => index.toString()}
+                ListFooterComponent={
+                  serviceImages.length > 0 ? (
+                    <TouchableOpacity
+                      style={styles.addButtonContainer}
+                      onPress={() => {
+                        navigation.navigate('GalleryScreen', {code});
+                      }}>
+                      <FontAwesomeIcon icon={faPlus} size={32} color="gray" />
+                    </TouchableOpacity>
+                  ) : null
                 }
-              }}>
-              <Text style={styles.buttonText}>-</Text>
-            </TouchableOpacity>
+                ListEmptyComponent={
+                  <View>
+                    <TouchableOpacity
+                      style={{
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginBottom: 20,
+                        borderColor: 'gray',
+                        borderWidth: imageUrl == null ? 1 : 0,
+                        borderRadius: 10,
+                        borderStyle: 'dotted',
+                        // marginHorizontal: 100,
+                        padding: 10,
+                        height: imageUrl == null ? 100 : 150,
+                        width: imageUrl == null ? 200 : 'auto',
+                      }}
+                      onPress={() => {
+                        navigation.navigate('GalleryScreen', {code});
+                      }}>
+                      <FontAwesomeIcon
+                        icon={faImages}
+                        style={{marginVertical: 5, marginHorizontal: 50}}
+                        size={32}
+                        color="gray"
+                      />
+                      <Text style={{textAlign: 'center', color: 'gray'}}>
+                        ภาพตัวอย่างผลงาน
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                }
+              />
+            )}
+          </View>
+          <Controller
+            control={control}
+            name="title"
+            defaultValue={item.title}
+            render={({field: {onChange, value}}) => (
+              <TextInput
+                placeholder="ชื่อสินค้า-บริการ.."
+                style={styles.inputName}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="description"
+            defaultValue={item.description}
+            render={({field: {onChange, value}}) => (
+              <TextInput
+                placeholder="รายละเอียด..."
+                keyboardType="name-phone-pad"
+                multiline
+                textAlignVertical="top"
+                numberOfLines={4}
+                style={styles.inputAddress}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+          />
+          <View style={styles.summary}>
+            <Text style={styles.priceHead}>ราคา:</Text>
             <Controller
               control={control}
-              name="qty"
-              defaultValue={String(item.qty)}
+              name="unitPrice"
+              defaultValue={Number(item.unitPrice)
+                .toFixed(2)
+                .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
               render={({field: {onChange, value}}) => (
                 <TextInput
-                  style={styles.counter}
+                  style={[styles.input, {textAlign: 'right'}]}
                   placeholder="0"
                   keyboardType="number-pad"
                   onChangeText={value => {
                     onChange(value);
-                    setQuantity(parseInt(value, 1));
+                    setPrice(parseFloat(value));
                   }}
-                  value={qty.toString()}
+                  value={value}
                 />
               )}
             />
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => {
-                setCount(count + 1);
-                setQuantity(qty + 1);
-              }}>
-              <Text style={styles.buttonText}>+</Text>
-            </TouchableOpacity>
           </View>
+          <View style={styles.summary}>
+            <Text style={styles.price}>จำนวน:</Text>
 
-          {/* END COUNTER BUTTON */}
-        </View>
-        {/* <View style={styles.summary}>
-          <Text style={styles.price}>หน่วย:</Text>
-          <Controller
-            control={control}
-            name="unit"
-            defaultValue={item.unit }
-            render={({field: {onChange, value}}) => (
-              <TextInput
-                style={styles.price}
-                placeholder="ชุด"
-                keyboardType="number-pad"
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-          />
-        </View>
-        <View style={styles.summary}>
-          <Text style={styles.price}>ส่วนลด(%):</Text>
-          <Controller
-            control={control}
-            name="discountPercent"
-            defaultValue={String(item.discountPercent)}
-            render={({field: {onChange, value}}) => (
-              <TextInput
-                style={styles.price}
-                placeholder="0"
-                keyboardType="number-pad"
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-          />
-        </View> */}
-        <Divider />
-        <View style={styles.summary}>
-          <Text style={styles.price}>รวมเป็นเงิน:</Text>
-
-          <Controller
-            control={control}
-            name="total"
-            defaultValue=""
-            render={({field: {value}}) => (
-              <TextInput
-                style={styles.priceSummary}
-                placeholder="0"
-                keyboardType="number-pad"
-                value={
-                  isValidNumber(qty) && isValidNumber(unitPrice)
-                    ? Number(qty * unitPrice)
-                        .toFixed(2)
-                        .replace(/\d(?=(\d{3})+\.)/g, '$&,')
-                    : '0'
-                }
-                editable={false}
-              />
-            )}
-          />
-        </View>
-        <View
-          style={{
-            ...Platform.select({
-              ios: {
-                paddingVertical: 10,
-              },
-              android: {
-                paddingVertical: 0,
-              },
-            }),
-          }}></View>
-        <SmallDivider />
-
-        <View>
-          {selectedAudit?.length > 0 ? (
-            <View style={styles.cardContainer}>
-              <Text
-                style={{
-                  marginBottom: 20,
-                  marginTop: 20,
-
-                  fontSize: 16,
-                  fontWeight: 'bold',
-                  color: '#333',
+            <View style={styles.containerCounter}>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => {
+                  if (count > 0) {
+                    setCount(count - 1);
+                    setQuantity(qty - 1);
+                  }
                 }}>
-                มาตรฐานของบริการนี้:
-              </Text>
-              {selectedAudit?.map((item: any) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.card}
-                  onPress={handleSubmit(handleSelectAudit)}>
-                  <Text style={styles.cardTitle}>{item.auditShowTitle}</Text>
-                  <Icon name="chevron-right" size={24} color="gray" />
-                </TouchableOpacity>
-              ))}
+                <Text style={styles.buttonText}>-</Text>
+              </TouchableOpacity>
+              <Controller
+                control={control}
+                name="qty"
+                defaultValue={String(item.qty)}
+                render={({field: {onChange, value}}) => (
+                  <TextInput
+                    style={styles.counter}
+                    placeholder="0"
+                    keyboardType="number-pad"
+                    onChangeText={value => {
+                      onChange(value);
+                      setQuantity(parseInt(value, 1));
+                    }}
+                    value={qty.toString()}
+                  />
+                )}
+              />
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => {
+                  setCount(count + 1);
+                  setQuantity(qty + 1);
+                }}>
+                <Text style={styles.buttonText}>+</Text>
+              </TouchableOpacity>
             </View>
-          ) : (
-            <View>
-              {selectedAudit.length === 0 && (
-                <TouchableOpacity
-                  style={styles.selectButton}
-                  onPress={handleSubmit(handleSelectAudit)}>
-                  <Text style={styles.selectButtonText}>
-                    เลือกมาตรฐานการทำงาน
-                  </Text>
-                </TouchableOpacity>
+
+            {/* END COUNTER BUTTON */}
+          </View>
+          <Divider />
+          <View style={styles.summary}>
+            <Text style={styles.price}>รวมเป็นเงิน:</Text>
+
+            <Controller
+              control={control}
+              name="total"
+              defaultValue=""
+              render={({field: {value}}) => (
+                <TextInput
+                  style={styles.priceSummary}
+                  placeholder="0"
+                  keyboardType="number-pad"
+                  value={
+                    isValidNumber(qty) && isValidNumber(unitPrice)
+                      ? Number(qty * unitPrice)
+                          .toFixed(2)
+                          .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                      : '0'
+                  }
+                  editable={false}
+                />
               )}
-            </View>
-          )}
+            />
+          </View>
+          <View
+            style={{
+              ...Platform.select({
+                ios: {
+                  paddingVertical: 10,
+                },
+                android: {
+                  paddingVertical: 0,
+                },
+              }),
+            }}></View>
+          <SmallDivider />
+
+          <View>
+            {audits?.length > 0 ? (
+              <View style={styles.cardContainer}>
+                <Text
+                  style={{
+                    marginBottom: 20,
+                    marginTop: 20,
+
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    color: '#333',
+                  }}>
+                  มาตรฐานของบริการนี้:
+                </Text>
+                {audits?.map((item: any) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.card}
+                    onPress={() => setModalVisible(true)}
+                    >
+                    <Text style={styles.cardTitle}>{item.auditShowTitle}</Text>
+                    <Icon name="chevron-right" size={24} color="gray" />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View>
+                {audits.length === 0 && (
+                  <TouchableOpacity
+                    style={styles.selectButton}
+                    onPress={() => setModalVisible(true)}
+                    >
+                    <Text style={styles.selectButtonText}>
+                      เลือกมาตรฐานการทำงาน
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </View>
+          <View
+            style={{
+              ...Platform.select({
+                ios: {
+                  paddingVertical: 10,
+                },
+                android: {
+                  paddingVertical: 0,
+                },
+              }),
+            }}></View>
+          <SmallDivider />
+          <View>
+            {materials?.length > 0 ? (
+              <View style={styles.cardContainer}>
+                <Text
+                  style={{
+                    marginBottom: 20,
+                    marginTop: 20,
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    color: '#333',
+                  }}>
+                  วัสดุอุปกรณ์ที่นำเสนอ:
+                </Text>
+                {materials?.map((item: any,index:number) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.card}
+                    onPress={() => setIsModalMaterialsVisible(true)}
+                    >
+                    <Text style={styles.cardTitle}>{item.name}</Text>
+                    <Icon name="chevron-right" size={24} color="gray" />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View>
+                {materials?.length === 0 && (
+                  <TouchableOpacity
+                    style={styles.selectButton}
+                    onPress={() => setIsModalMaterialsVisible(true)}
+                    >
+                    <Text style={styles.selectButtonText}>
+                      เลือกวัสดุอุปกรณ์
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </View>
+          <View
+            style={{
+              ...Platform.select({
+                ios: {
+                  paddingVertical: 10,
+                },
+                android: {
+                  paddingVertical: 0,
+                },
+              }),
+            }}></View>
+          <SmallDivider />
         </View>
-        <View
-          style={{
-            ...Platform.select({
-              ios: {
-                paddingVertical: 10,
-              },
-              android: {
-                paddingVertical: 0,
-              },
-            }),
-          }}></View>
-        <SmallDivider />
-        <View
-          style={{
-            ...Platform.select({
-              ios: {
-                paddingVertical: 10,
-              },
-              android: {
-                paddingVertical: 0,
-              },
-            }),
-          }}></View>
-        <TouchableOpacity
-          style={styles.btn}
-          onPress={handleSubmit(handleFormSubmit)}>
-          <Text style={styles.label}>บันทึก</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonContainer} onPress={handleDelete}>
-          <Icon name="close" size={24} color="red" />
-          <Text style={styles.buttonLabel}>ลบรายการ</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        <SelectAudit
+          isVisible={isModalVisible}
+          onClose={() => setModalVisible(false)}
+          selectedAudits={audits}
+          setSelectedAudits={setAudits}
+          title="Some Title"
+          description="Some Description"
+          onPress={() => {
+            /* Handle onPress here if needed */
+          }}
+        />
+        <ExistingMaterials
+          isVisible={isModalMaterialsVisible}
+          onClose={() => setIsModalMaterialsVisible(false)}
+          selectedMaterialArray={materials}
+          setSelectedMaterialArray={setMaterials}
+          onPress={() => {
+            /* Handle onPress here if needed */
+          }}
+        />
+        <GalleryScreen
+          isVisible={isModalImagesVisible}
+          onClose={() => setModalImagesVisible(false)}
+          serviceImages={serviceImages}
+          setServiceImages={setServicesImages}
+        />
+      </ScrollView>
+    </>
   );
 };
 export default EditProductForm;
@@ -551,6 +630,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  imageContainer: {
+    width: imageContainerWidth,
+    flexDirection: 'column',
+    margin: 5,
+    position: 'relative',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -659,5 +744,43 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     fontWeight: '500',
+  },
+  headerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    width: '100%',
+    paddingVertical: 15,
+  },
+  heading: {
+    fontSize: 16,
+    fontFamily: 'Sukhumvit Set Bold',
+    color: 'black',
+  },
+  headerRight: {
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  image: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 0,
+    resizeMode: 'cover',
+  },
+  headingRight: {
+    fontSize: 16,
+    fontFamily: 'Sukhumvit Set Bold',
+    color: '#397af8',
+  },
+  addButtonContainer: {
+    width: 100,
+    margin: 5,
+    height: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: 'gray',
+    borderStyle: 'dotted',
+    borderWidth: 1,
+    borderRadius: 4, // Optional, for rounded edges
   },
 });

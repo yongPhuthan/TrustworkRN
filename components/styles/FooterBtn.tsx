@@ -6,6 +6,7 @@ import {faPlus, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faC
 type Props = {
   onPress: Function;
   disabled: boolean;
+  btnText: string;
 };
 
 const FooterBtn = (props: Props) => {
@@ -15,10 +16,8 @@ const FooterBtn = (props: Props) => {
       <View style={styles.containerBtn}>
         <TouchableOpacity style={styles.disabledButton} disabled>
           <View style={styles.header}>
-            <Text style={styles.buttonText}>ดำเนินการต่อ</Text>
-            <FontAwesomeIcon style={styles.icon} icon={faChevronRight} size={20} color="white" />
-
-
+            <Text style={styles.buttonText}>{props.btnText}</Text>
+            {/* <FontAwesomeIcon style={styles.icon} icon={faChevronRight} size={20} color="white" /> */}
           </View>
         </TouchableOpacity>
       </View>
@@ -26,16 +25,11 @@ const FooterBtn = (props: Props) => {
   }
   return (
     <View style={styles.containerBtn}>
-      {/* Your main content here */}
-      <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
-        <View style={styles.header}>
-          <Text style={styles.buttonText}>ดำเนินการต่อ</Text>
-          <FontAwesomeIcon style={styles.icon} icon={faChevronRight} size={20} color="white" />
+    <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
+    <Text style={styles.buttonText}>{props.btnText}</Text>
 
-
-        </View>
-      </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
+  </View>
   );
 };
 
@@ -43,52 +37,53 @@ export default FooterBtn;
 
 const styles = StyleSheet.create({
   containerBtn: {
+    display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-    shadowColor: 'black',
-    shadowOffset: {width: 1, height: 2},
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    bottom: 0,
-
+    alignItems: 'center', 
+    backgroundColor: '#FFFFFF',
     width: '100%',
-
     paddingBottom: 30,
+    shadowColor: '#000', // สีเงา
+    shadowOffset: {
+      width: 0, // ตำแหน่งแนวนอนของเงา
+      height: 10, // ตำแหน่งแนวตั้งของเงา
+    },
+    shadowOpacity: 0.10, // ความโปร่งใสของเงา
+    shadowRadius: 20, // รัศมีของเงา
+    elevation: 5, // สำหรับ Android เพื่อให้มีเงา
   },
   button: {
     width: '90%',
-    top: '30%',
     height: 50,
-    // backgroundColor: '#ec7211',
-
+    top: '30%',
     backgroundColor: '#0073BA',
     borderRadius: 5,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center', // Aligns content of the button to the right
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
+    fontFamily: 'Sukhumvit Set Bold',
     marginRight: 8,
     marginTop: 1,
+    alignSelf: 'center', // Aligns text horizontally in the center
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
+    alignItems: 'center', // Aligns items vertically in the center
+    justifyContent: 'center', // Aligns items to the right
   },
   icon: {
     color: 'white',
-    marginTop: 3,
+    marginLeft: 8, // Added some space between text and icon
   },
   disabledButton: {
     width: '90%',
     top: '30%',
     height: 50,
     backgroundColor: '#d9d9d9',
-
     borderRadius: 5,
     justifyContent: 'center',
     alignItems: 'center',

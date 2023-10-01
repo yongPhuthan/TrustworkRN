@@ -25,18 +25,6 @@ export type Contract = {
   companyUser: CompanyUser | null;
   sellerId: string;
 };
-
-export type FormData = {
-  title: string;
-  description: string;
-  serviceImage: string;
-  unitPrice: string;
-  qty: string;
-  unit: string;
-  id: string;
-  discountPercent: string;
-  total: string;
-};
 export type ServiceList = {
   id: string;
   title: string;
@@ -87,6 +75,7 @@ export type Quotation = {
   created: Date;
   updated: Date;
 };
+
 export type CustomerForm = {
   name: string;
   address: string;
@@ -94,6 +83,16 @@ export type CustomerForm = {
   companyId: string;
   phone: string,
   taxId:string
+
+};
+
+export type Workers = {
+  id: string;
+  name: string;
+  mainSkill: string;
+  workerStatus: string;
+  image: string;
+
 };
 export type Service = {
   id: string;
@@ -101,15 +100,45 @@ export type Service = {
   description: string;
   unitPrice: number;
   qty: number;
+  discountPercent: number; 
+  total: number; 
   unit: string;
-  total: number;
-  serviceImage:string;
+  serviceImage: string;
+  serviceImages: string[];
   quotations: Quotation | null;
   quotationId: string | null;
   company: CompanyUser | null;
   companyId: string | null;
-  audits: SelectedAuditData[];
+  audits: Audit[]; 
+  materials: SelectedMaterialData[]; 
 };
+
+export type SelectedAuditData = {
+  id: number;
+  number: number;
+  image: string;
+  title: string;
+  content: string;
+  auditEffectDescription: string;
+  auditEffectImage: string;
+  auditShowTitle: string;
+  category: string;
+  subCategory: string;
+  createdAt: string;
+  defaultChecked: boolean;
+  serviceID: string;
+};
+
+export type SelectedMaterialData = {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  companyId: string;
+  created: string;
+  updated: string;
+};
+
 
 export type SelectedContractData = {
   contract: Contract | null;
@@ -118,12 +147,7 @@ export type SelectedContractData = {
   ContractDataId: number;
 };
 
-export type SelectedAuditData = {
-  service: Service | null;
-  serviceId: string;
-  AuditData: AuditData;
-  AuditDataId: number;
-};
+
 
 export type CompanyUser = {
   id: string;
@@ -192,17 +216,7 @@ export type ContractData = {
 export interface IdContractList {
   id: string;
 }
-export type AuditData = {
-  id: number;
-  number: string;
-  description: string;
-  image: string;
-  title: string;
-  content: string;
-  serviceID: string;
-  createdAt: Date;
-  auditShowTitle: string;
-};
+
 export type PeriodPercent = {
   amount: number;
   details: string;
@@ -255,3 +269,43 @@ export interface Audit {
   imageUri: string;
   defaultChecked: boolean;
 }
+
+export type AuditData = {
+  id: number;
+  number: number;
+  image: string;
+  title: string;
+  content: string;
+  auditEffectDescription: string;
+  auditEffectImage: string;
+  auditShowTitle: string;
+  category: string;
+  subCategory: string;
+  createdAt: string;
+  defaultChecked: boolean;
+  serviceID: string;
+};
+
+export type MaterialData = {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  companyId: string;
+  created: string;
+  updated: string;
+};
+
+export type FormData = {
+  id: string;
+  title: string;
+  description: string;
+  unitPrice: string;
+  serviceImages: string[];
+  qty: number;
+  discountPercent: number;
+  total: string;
+  audits: AuditData[];
+  materials?: MaterialData[];
+};
+

@@ -20,6 +20,7 @@ import * as stateAction from '../../redux/actions';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {CustomerForm, ServiceList, CompanyUser} from '../../types/docType';
+import SaveButton from '../../components/ui/Button/SaveButton';
 
 type WatchedValues = {
   name: string;
@@ -65,12 +66,15 @@ const AddCustomer = ({navigation, route}: Props) => {
   const isButtonDisabled = !name || !address;
 
   return (
-    <KeyboardAvoidingView 
-    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    keyboardVerticalOffset={20}
-    style={styles.container}>
+    <View style={{flex: 1}}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={20}
+        style={styles.container}>
         <ScrollView style={styles.subContainer}>
-          <Text>{client_name}</Text>
+        <Text style={styles.priceTitle}>ชื่อลูกค้า</Text>
+
+          {/* <Text>{client_name}</Text> */}
           <Controller
             control={control}
             rules={{required: true}}
@@ -86,6 +90,7 @@ const AddCustomer = ({navigation, route}: Props) => {
             name="name"
           />
           {errors.name && <Text>This is required.</Text>}
+          <Text style={styles.priceTitle}>ที่อยู่</Text>
 
           <Controller
             control={control}
@@ -104,6 +109,7 @@ const AddCustomer = ({navigation, route}: Props) => {
             )}
             name="address"
           />
+          <Text style={styles.priceTitle}>เบอร์โทร</Text>
 
           <Controller
             control={control}
@@ -119,6 +125,7 @@ const AddCustomer = ({navigation, route}: Props) => {
             )}
             name="mobilePhone"
           />
+          <Text style={styles.priceTitle}>เลขภาษี (ถ้ามี)</Text>
 
           <Controller
             control={control}
@@ -126,7 +133,7 @@ const AddCustomer = ({navigation, route}: Props) => {
               <TextInput
                 placeholder="เลขทะเบียนภาษี(ถ้ามี)"
                 keyboardType="numeric"
-                style={styles.inputName}
+                style={styles.inputLast}
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
@@ -134,27 +141,35 @@ const AddCustomer = ({navigation, route}: Props) => {
             )}
             name="companyId"
           />
-
-          <Pressable
+          {/* <Pressable
             disabled={isButtonDisabled}
             style={[styles.btn, isButtonDisabled && styles.disabledBtn]}
             onPress={handleSubmit(onSubmit)}>
             <Text style={styles.label}>บันทึก</Text>
-          </Pressable>
+          </Pressable> */}
         </ScrollView>
-    </KeyboardAvoidingView>
+        <SaveButton
+          onPress={handleSubmit(onSubmit)}
+          disabled={isButtonDisabled}
+        />
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
 export default AddCustomer;
 
 const styles = StyleSheet.create({
-  container: {},
+  container: {
+    height: '100%',
+    paddingBottom: 150,
+
+  },
   subContainer: {
     backgroundColor: '#ffffff',
     padding: 30,
-    marginBottom: 50,
-    height: 'auto',
+    height: '100%',
+  
   },
   btn: {
     flexDirection: 'row',
@@ -166,7 +181,6 @@ const styles = StyleSheet.create({
     marginTop: 40,
     backgroundColor: '#0073BA',
     marginBottom: 100,
-
   },
   form: {
     border: '1px solid #0073BA',
@@ -182,9 +196,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    marginVertical: 10,
+    marginVertical: 5,
     fontSize: 16,
     height: 40,
+  },
+  inputLast: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginVertical: 5,
+    fontSize: 16,
+    height: 40,
+    marginBottom: 100,
   },
   disabledBtn: {
     backgroundColor: 'gray',
@@ -195,12 +220,19 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    marginVertical: 10,
+    marginVertical: 5,
     fontSize: 16,
     height: 100,
   },
   label: {
     fontSize: 16,
     color: 'white',
+  },
+  priceTitle: {
+    fontSize: 14,
+    color: 'black',
+marginTop: 15,
+    fontFamily: 'Sukhumvit Set Bold',
+
   },
 });

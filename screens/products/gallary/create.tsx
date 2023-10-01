@@ -80,6 +80,7 @@ const GalleryUploadScreen = ({navigation, route}: Props) => {
       xhr.send(null);
     });
   }
+
   const uploadImageToCloudflare = async (imagePath: string) => {
     if (!imagePath) {
       console.log('No image path provided');
@@ -211,7 +212,6 @@ const GalleryUploadScreen = ({navigation, route}: Props) => {
       <MultipleSelectList
         setSelected={(val: object[]) => setSelectedCategories(val)}
         data={categories}
-        
         save="value"
         placeholder={'เลือกหมวดหมู่ธุรกิจ'}
       />
@@ -246,25 +246,28 @@ const GalleryUploadScreen = ({navigation, route}: Props) => {
         </View>
       </Modal>
       <Modal
-  visible={isCategoryModalVisible}
-  transparent={true}
-  animationType="slide"
-  onRequestClose={hideCategoryModal}>
-  <TouchableOpacity style={styles.modalContainer} onPress={hideCategoryModal}>
-    <View style={styles.modalContent}>
-      <TextInput
-        style={styles.textInput}
-        placeholder="ใส่หมวดหมู่ใหม่"
-        value={newCategory}
-        onChangeText={setNewCategory}
-      />
-      <TouchableOpacity style={styles.saveButton} onPress={handleSaveCategory}>
-        <Text style={styles.buttonText}>บันทึก</Text>
-      </TouchableOpacity>
-    </View>
-  </TouchableOpacity>
-</Modal>
-
+        visible={isCategoryModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={hideCategoryModal}>
+        <TouchableOpacity
+          style={styles.modalContainer}
+          onPress={hideCategoryModal}>
+          <View style={styles.modalContent}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="ใส่หมวดหมู่ใหม่"
+              value={newCategory}
+              onChangeText={setNewCategory}
+            />
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSaveCategory}>
+              <Text style={styles.buttonText}>บันทึก</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -373,7 +376,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  
 });
 
 export default GalleryUploadScreen;

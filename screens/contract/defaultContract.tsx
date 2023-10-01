@@ -36,6 +36,7 @@ import CreateContractScreen from './createContractScreen';
 import Lottie from 'lottie-react-native';
 import EditInstallment from '../../components/editInstallment';
 import {ParamListBase} from '../../types/navigationType';
+import FooterBtn from '../../components/styles/FooterBtn';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'DefaultContract'>;
   route: RouteProp<ParamListBase, 'DefaultContract'>;
@@ -43,7 +44,6 @@ type Props = {
 interface MyError {
   response: object;
 }
-const db = firebase.firestore();
 
 const fetchContractByEmail = async ( email: string) => {
   const user = auth().currentUser;
@@ -464,13 +464,15 @@ if (!email) {
               </View>
             </ScrollView>
           </KeyboardAvoidingView>
+          <FooterBtn btnText='บันทึก' disabled={!isValid} onPress={handleDonePress} />
+{/* 
           <ContractFooter
               finalStep={false}
               onBack={handleBackPress}
               onNext={handleDonePress}
               isLoading={isLoading}
               disabled={!isValid }
-            />
+            /> */}
         </SafeAreaView>
       ) : (
         // ... Same for the other part of the ternary operator ...
@@ -499,13 +501,15 @@ if (!email) {
                 <SmallDivider />
               </View>
             </ScrollView>
-            <ContractFooter
+            <FooterBtn btnText='บันทึกใบเสนอราคา' disabled={!isValid || !isDirty} onPress={handleDonePress} />
+
+            {/* <ContractFooter
               finalStep={false}
               onBack={handleBackPress}
               onNext={handleDonePress}
               isLoading={isLoading}
               disabled={!isValid || !isDirty}
-            />
+            /> */}
           </KeyboardAvoidingView>
         </SafeAreaView>
       )}
@@ -519,7 +523,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 0,
   },
   headerForm: {
     flexDirection: 'row',

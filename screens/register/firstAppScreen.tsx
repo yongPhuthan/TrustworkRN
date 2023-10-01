@@ -3,8 +3,12 @@ import React, {useState, useEffect} from 'react';
 import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
 import Navigation from '../../navigations/navigation';
 import firebase from '../../firebase';
+import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FirstAppScreen = ({ navigation }) => {
+    const [loadingUser, setLoadingUser] = useState(true);
+    const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
 
     const handleLogin = () => {
         navigation.navigate('LoginScreen');
@@ -24,6 +28,8 @@ const FirstAppScreen = ({ navigation }) => {
     
     //     return unsubscribe;
     // }, []);
+
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Trustwork</Text>

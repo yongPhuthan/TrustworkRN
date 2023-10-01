@@ -56,6 +56,10 @@ export type ParamListBase = {
   SettingCompany: undefined;
   GalleryUploadScreen: undefined;
   ExistingProduct: {id: string};
+  ExistingMaterials: {id: string};
+  AddNewMaterial: undefined;
+  ExistingWorkers: {id: string};
+  AddNewWorker: undefined;
   FirstAppScreen: undefined;
   Signature: {
     text: string;
@@ -98,3 +102,4 @@ export type ScreenName =
   | 'RegisterScreen'
   | 'FirstAppScreen'
   | 'LoginScreen'
+  | 'DashboardQuotation'

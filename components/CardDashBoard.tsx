@@ -48,7 +48,7 @@ const CardDashBoard = (props: Props) => {
           backgroundColor:
             props.status === 'pending'
               ? '#ccc'
-              : props.status === 'approved'
+              : props.status === 'APPROVED'
               ? '#43a047'
               : props.status === 'contract'
               ? '#1079ae'
@@ -68,7 +68,7 @@ const CardDashBoard = (props: Props) => {
           }}>
           {props.status === 'pending'
             ? 'รออนุมัติ'
-            : props.status === 'approved'
+            : props.status === 'APPROVED'
             ? 'อนุมัติแล้ว'
             : props.status === 'contract'
             ? 'ทำสัญญาแล้ว'
@@ -91,11 +91,9 @@ export default CardDashBoard;
 const styles = StyleSheet.create({
   subContainer: {
     backgroundColor: '#ffffff',
-    marginBottom: 10,
-    marginTop: 10,
+
     height: 'auto',
     borderColor: '#ccc',
-    marginVertical: 10,
     width:windowWidth,
     paddingHorizontal: 20,
     paddingVertical: 15,

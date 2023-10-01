@@ -31,10 +31,34 @@ const ContractFooter = (props: Props) => {
   const {onNext, onBack, disabled, isLoading} = props;
   return (
     <View style={styles.containerBtn}>
-      <KeyboardAvoidingView
+<TouchableOpacity
+            style={[
+              styles.submitedButton,
+              {
+                backgroundColor: props.finalStep
+                  ? 'green'
+                  : props.disabled
+                  ? '#ccc'
+                  : '#0073BA',
+                opacity: props.disabled ? 0.5 : 1,
+              },
+            ]}
+            onPress={() => props.onNext()}
+            disabled={props.disabled}>
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Text style={styles.buttonText}>
+                {props.finalStep ? 'บันทึกสัญญา' : 'ไปต่อ55'}
+              </Text>
+            )}
+          </TouchableOpacity>
+      {/* <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{flex: 1}}>
-        <View style={styles.subContainer}>
+        style={{flex: 1}}> */}
+
+
+        {/* <View style={styles.subContainer}>
           <TouchableOpacity
             style={[styles.previousButton, styles.outlinedButton]}
             onPress={() => props.onBack()}>
@@ -65,8 +89,8 @@ const ContractFooter = (props: Props) => {
               </Text>
             )}
           </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+        </View> */}
+      {/* </KeyboardAvoidingView> */}
     </View>
   );
 };
@@ -75,15 +99,20 @@ export default ContractFooter;
 
 const styles = StyleSheet.create({
   containerBtn: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#F5FCFF',
-    shadowColor: 'black',
-    shadowOffset: {width: 1, height: 2},
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    padding: 20,
-    bottom: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center', 
+    backgroundColor: '#FFFFFF',
+    width: '90%',
+    paddingBottom: 30,
+    shadowColor: '#000', // สีเงา
+    shadowOffset: {
+      width: 0, // ตำแหน่งแนวนอนของเงา
+      height: 10, // ตำแหน่งแนวตั้งของเงา
+    },
+    shadowOpacity: 0.10, // ความโปร่งใสของเงา
+    shadowRadius: 20, // รัศมีของเงา
+    elevation: 5, // สำหรับ Android เพื่อให้มีเงา
   },
   subContainer: {
     flexDirection: 'row',
@@ -124,11 +153,15 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   submitedButton: {
-    backgroundColor: '#0073BA',
-    paddingVertical: 12.5,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+    width: '100%',
     height: 50,
+    top: '30%',
+    backgroundColor: '#0073BA',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center', // Aligns content of the button to the right
+
+
   },
   disabledButton: {
     width: '90%',

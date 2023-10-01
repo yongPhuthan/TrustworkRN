@@ -2,6 +2,18 @@ import {View, Text, TouchableOpacity, Image, StyleSheet} from 'react-native';
 import React, {useState, useContext, useEffect, useRef} from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import CardProject from './CardProject';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faBell,
+  faCog,
+  faCogs,
+  faPlugCirclePlus,
+  faPlus,
+  faPlusCircle,
+  faPlusMinus,
+  faSheetPlastic,
+  faUserCog,
+} from '@fortawesome/free-solid-svg-icons';
 import {Store} from '../redux/store';
 type Props = {
   handleAddProductFrom: Function;
@@ -14,16 +26,13 @@ const AddServices = (props: Props) => {
   }: any = useContext(Store);
   return (
     <View style={styles.container}>
-
-
       <TouchableOpacity
         onPress={() => props.handleAddProductFrom()}
         style={styles.button}>
-        <Image
-          source={require('../assets/images/baseline_add_circle_outline_black_24dp.png')}
-          style={styles.icon}
-        />
-        <Text style={styles.label}>เพิ่มบริการ-สินค้า</Text>
+        <View style={styles.containerButton}>
+          <FontAwesomeIcon icon={faPlusCircle} color="#0073BA" size={18} />
+          <Text style={styles.labelButton}>เพิ่มบริการ-สินค้า</Text>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -32,6 +41,11 @@ const AddServices = (props: Props) => {
 const styles = StyleSheet.create({
   container: {
     marginTop: 10,
+  },
+  containerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   button: {
     flexDirection: 'row',
@@ -43,6 +57,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderWidth: 1,
     borderStyle: 'dashed',
+    borderColor: '#0073BA',
 
     // borderColor: '#19232e',
   },
@@ -60,6 +75,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     color: '#19232e',
+    fontFamily: 'Sukhumvit set Bold',
+  },
+  labelButton: {
+    fontSize: 16,
+    color: '#0073BA',
+    fontFamily: 'Sukhumvit set',
+    marginLeft: 10,
   },
 });
 

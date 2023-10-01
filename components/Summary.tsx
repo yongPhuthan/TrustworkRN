@@ -139,7 +139,7 @@ const Summary = (props: Props) => {
         </View>
       )}
 
-      <SmallDivider />
+      {/* <SmallDivider /> */}
 
       <View style={styles.summary}>
         <Text style={[styles.summaryTaxVat]}>ภาษีมูลค่าเพิ่ม </Text>
@@ -180,7 +180,7 @@ const Summary = (props: Props) => {
           </Text>
         </View>
       )}
-      <SmallDivider />
+      {/* <SmallDivider /> */}
       <View style={styles.summaryTotal}>
         <Text style={styles.totalSummary}>รวมทั้งสิ้น</Text>
         <Text style={styles.totalSummary}>
@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 16,
     marginVertical: 10,
+
   },
   summaryTaxVat: {
     fontSize: 16,
