@@ -367,9 +367,9 @@ console.log('serviceList', serviceList)
           </View>
           {serviceList.map((item: any, index: number) => (
             <CardProject
-            handleModalClose={handleModalClose}
-            visibleModalIndex={visibleModalIndex === index}
-            setVisibleModalIndex={()=>setVisibleModalIndex(index)}
+              handleModalClose={handleModalClose}
+              visibleModalIndex={visibleModalIndex === index}
+              setVisibleModalIndex={()=>setVisibleModalIndex(index)}
               index={index}
               handleRemoveService={() => handleRemoveService(index)}
               handleEditService={() => handleEditService(index)}

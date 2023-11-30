@@ -22,7 +22,9 @@ import {
   faEdit,
   faPlus,
   faImages,
+  faPlusCircle,
   faClose,
+  faCamera,
 } from '@fortawesome/free-solid-svg-icons';
 import {CheckBox} from '@rneui/themed';
 import {
@@ -31,6 +33,7 @@ import {
   ImageLibraryOptions,
   ImagePickerResponse,
 } from 'react-native-image-picker';
+
 import {
   HOST_URL,
   CLOUDFLARE_WORKER_DEV,
@@ -304,82 +307,99 @@ const GalleryScreen = ({
       </View>
     );
   }
+  console.log('code',code)
 
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
-      {isImageUpload ?  (<View style={styles.loadingContainer}>
-     <ActivityIndicator />
-    </View>):(
-            <View style={styles.container}>
-            <View style={styles.header}>
-              <TouchableOpacity style={styles.onCloseButton} onPress={onClose}>
-                <FontAwesomeIcon icon={faClose} size={32} color="gray" />
-              </TouchableOpacity>
-            </View>
-            
-            <FlatList
-              data={galleryImages}
-              numColumns={3}
-              renderItem={({item}) => (
-                <View
-                  style={[
-                    styles.imageContainer,
-                    item.defaultChecked && styles.selected,
-                  ]}>
-                  <Image source={{uri: item.url}} style={styles.image} />
-                  <View style={styles.checkboxContainer}>
-                    <CustomCheckbox
-                      checked={item.defaultChecked}
-                      onPress={() => handleCheckbox(item.id)}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={styles.expandButton}
-                    onPress={() => {
-                      setSelectedImage(item.url);
-                      setModalVisible(true);
-                    }}>
-                    <FontAwesomeIcon
-                      icon={faExpand}
-                      style={{marginVertical: 5}}
-                      color="white"
-                    />
-                  </TouchableOpacity>
-                </View>
-              )}
-              keyExtractor={item => item?.id?.toString()}
-            />
-            {data && data.length > 0 && (
+      {isImageUpload ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator />
+        </View>
+      ) : (
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.onCloseButton} onPress={onClose}>
+              <FontAwesomeIcon icon={faClose} size={32} color="gray" />
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={galleryImages}
+            numColumns={3}
+            ListEmptyComponent={
               <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={[styles.uploadButton, styles.uploadMoreButton]}
-                  onPress={handleUploadMoreImages}>
-                  <Text style={styles.uploadButtonText}>เพิ่มรูปภาพ</Text>
+                <TouchableOpacity onPress={handleUploadMoreImages} style={styles.selectButton}>
+                  <View style={styles.containerButton}>
+                    <FontAwesomeIcon
+                      icon={faCamera}
+                      color="#0073BA"
+                      size={14}
+                    />
+
+                    <Text style={styles.selectButtonText}>เลือกจากอัลบั้ม</Text>
+                  </View>
                 </TouchableOpacity>
-    
+              </View>
+            }
+            renderItem={({item}) => (
+              <View
+                style={[
+                  styles.imageContainer,
+                  item.defaultChecked && styles.selected,
+                ]}>
+                <Image source={{uri: item.url}} style={styles.image} />
+                <View style={styles.checkboxContainer}>
+                  <CustomCheckbox
+                    checked={item.defaultChecked}
+                    onPress={() => handleCheckbox(item.id)}
+                  />
+                </View>
                 <TouchableOpacity
-                  style={[styles.uploadButton, styles.saveButton]}
-                  onPress={() => onClose()}>
-                  <Text style={styles.uploadButtonText}>บันทึก</Text>
+                  style={styles.expandButton}
+                  onPress={() => {
+                    setSelectedImage(item.url);
+                    setModalVisible(true);
+                  }}>
+                  <FontAwesomeIcon
+                    icon={faExpand}
+                    style={{marginVertical: 5}}
+                    color="white"
+                  />
                 </TouchableOpacity>
               </View>
             )}
-    
-            <Modal
-              isVisible={modalVisible}
-              onBackdropPress={() => setModalVisible(false)}>
-              <View style={styles.modalContainer}>
-                <Image source={{uri: selectedImage}} style={styles.modalImage} />
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setModalVisible(false)}>
-                  <Text>Close</Text>
-                </TouchableOpacity>
-              </View>
-            </Modal>
-          </View>
-    )}
+            keyExtractor={item => item?.id?.toString()}
+          />
+          {data && data.length > 0 && (
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.uploadButton, styles.uploadMoreButton]}
+                onPress={handleUploadMoreImages}>
+                <Text style={styles.uploadButtonText}>เพิ่มรูปภาพ</Text>
+              </TouchableOpacity>
 
+              <TouchableOpacity
+                style={[styles.uploadButton, styles.saveButton]}
+                onPress={() => onClose()}>
+                <Text style={styles.uploadButtonText}>บันทึก</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <Modal
+            isVisible={modalVisible}
+            onBackdropPress={() => setModalVisible(false)}>
+            <View style={styles.modalContainer}>
+              <Image source={{uri: selectedImage}} style={styles.modalImage} />
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setModalVisible(false)}>
+                <Text>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </Modal>
+        </View>
+      )}
     </Modal>
   );
 };
@@ -440,6 +460,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 40,
     right: 20,
+    // backgroundColor: 'white',
+
     backgroundColor: 'rgba(255,255,255,0.7)',
     borderRadius: 15,
     padding: 5,
@@ -453,9 +475,20 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
+
+    paddingHorizontal: 20,
+    paddingVertical: 5,
+    alignItems: 'center',
     justifyContent: 'space-between',
+    height: 90,
+  },
+  buttonContainerEmpty: {
+    flexDirection: 'column',
+
     paddingHorizontal: 20,
     paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     height: 90,
   },
 
@@ -514,6 +547,17 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
+  addButtonContainer: {
+    width: 100,
+    margin: 5,
+    height: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: '#0073BA',
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderRadius: 4, // Optional, for rounded edges
+  },
   onCloseButton: {
     paddingVertical: 10,
   },
@@ -521,7 +565,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     paddingVertical: 10,
+    backgroundColor: 'white',
+    // backgroundColor: '#f5f5f5',
+  },
+  selectButtonText: {
+    fontSize: 16,
+    color: '#0073BA',
+    fontFamily: 'Sukhumvit set',
+    marginLeft: 10,
+  },
 
-    backgroundColor: '#f5f5f5',
+  containerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectButton: {
+    // backgroundColor: '#0073BA',
+    backgroundColor: 'white',
+    borderColor: '#0073BA',
+    borderWidth: 1,
+    borderStyle: 'dotted',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 5,
+    marginTop: 20,
   },
 });

@@ -1,17 +1,50 @@
 // LoginScreen.tsx
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, Button, Text, StyleSheet,Pressable, Alert,TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {ParamListBase} from '../../types/navigationType';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect } from 'react';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; 
+import {
+    faAlignLeft,
+    faArrowCircleLeft,
+    faArrowLeft,
+    faArrowLeftLong,
+    faArrowRotateBack,
+   faBackward,
+   faClose,
+   faLeftLong,
+   faLeftRight,
+   faTentArrowTurnLeft
+  } from '@fortawesome/free-solid-svg-icons';
 interface Props {
     navigation: StackNavigationProp<ParamListBase, 'LoginScreen'>;
   }
 const LoginScreen = ({navigation}: Props) => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
+    useEffect(() => {
+        // Set up a background task or a timer to refresh the token every hour
+        const interval = setInterval(async () => {
+            const user = auth().currentUser;
+            if (user) {
+                const newToken = await user.getIdToken(true);
+                await AsyncStorage.setItem('userToken', newToken);
+            }
+        }, 3600000); 
+
+        return () => clearInterval(interval);
+    }, []);
+    const isEmailValid = (email) => {
+        const emailRegex = /\S+@\S+\.\S+/;
+        return emailRegex.test(email);
+    };
+
+    const isFormValid = isEmailValid(email) && password.length > 0;
     const handleLogin = async () => {
         try {
             const userCredential = await auth().signInWithEmailAndPassword(email, password);
@@ -30,12 +63,21 @@ const LoginScreen = ({navigation}: Props) => {
     };
     
     
-
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Login</Text>
+            {/* Back Arrow Button */}
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <FontAwesomeIcon
+                          icon={faClose}
+                          size={26}
+                          color="#5C5F62"
+                        />
+                {/* <Icon name="arrow-back" size={24} color="#5C5F62" /> */}
+            </TouchableOpacity>
+
+            <Text style={styles.title}>Salestrust</Text>
             <TextInput
-                placeholder="Email"
+                placeholder="อีเมล"
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
@@ -43,13 +85,17 @@ const LoginScreen = ({navigation}: Props) => {
                 autoCapitalize="none"
             />
             <TextInput
-                placeholder="Password"
+                placeholder="รหัสผ่าน"
                 style={styles.input}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
             />
-            <Button title="Login" onPress={handleLogin} />
+            {/* Updated Button */}
+            <Pressable      disabled={!isFormValid}             style={[styles.button, !isFormValid && styles.buttonDisabled]} onPress={handleLogin}>
+            <Text style={[styles.buttonText, !isFormValid && styles.buttonTextDisabled]}>เข้าสู่ระบบ</Text>
+
+            </Pressable>
         </View>
     );
 };
@@ -62,12 +108,25 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         padding: 16,
     },
+    backButton: {
+        position: 'absolute',
+        top: 30,
+        left: 16,
+    },
+    buttonDisabled: {
+        backgroundColor: '#cacaca', 
+    },
+    buttonTextDisabled: {
+        color: 'white',
+    },
     title: {
         fontSize: 24,
-        marginBottom: 16,
+        color: 'black',
+        fontWeight: 'bold',
+        marginBottom: 32,
     },
     input: {
-        width: '100%',
+        width: '90%',
         padding: 12,
         borderWidth: 1,
         borderColor: '#e0e0e0',
@@ -75,6 +134,21 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         backgroundColor: '#f9f9f9',
     },
+    button: {
+        width: '90%',
+        paddingVertical: 12,
+        borderRadius: 4,
+        backgroundColor: '#012b20', // Shopify button color
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 12,
+    },
+    buttonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
 });
+
 
 export default LoginScreen;

@@ -18,7 +18,6 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import CardProject from '../../components/CardProject';
 import CardClient from '../../components/CardClient';
 import{ParamListBase} from '../../types/navigationType'
-
 import DatePickerButton from '../../components/styles/DatePicker';
 import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
@@ -40,6 +39,7 @@ import type { RouteProp } from '@react-navigation/native';
 
 import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
 import {useFetchDocument} from '../../hooks/quotation/useFetchDocument'; 
+import FooterBtn from '../../components/styles/FooterBtn';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'EditQuotation'>;
   route: RouteProp<ParamListBase, 'EditQuotation'>;
@@ -109,49 +109,29 @@ const EditQuotation = ({navigation}: Props) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [token, setToken] = useState<FirebaseAuthTypes.User | null>(null);
   const quotationId = quotation.id;
+  const [showEditServiceModal, setShowEditServiceModal] = useState(false);
   const { fetchDocument} = useFetchDocument();
   const [discount, setDiscount] = useState(quotation.discountValue  || 0);
   const [vat7, setVat7] = useState(Boolean(quotation.vat7))
+  const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(null);
+  const isDisabled = !client_name || serviceList.length === 0;
+  const [signature, setSignature] = useState('');
+
   const {mutate} = useMutation(updateQuotation, {
     onSuccess: data => {
       navigation.navigate('WebViewScreen', {id: quotationId});
+
+      // navigation.navigate('WebViewScreen', {id: quotationId});
     },
     onError: (error: MyError) => {
       console.error('There was a problem calling the function:', error);
       console.log(error.response);
     },
   });
+  const handleModalClose = () => {
+    setVisibleModalIndex(null);
+  };
 
-  // const {data, isLoading, isError} = useQuery(
-  //   ['Quotation', id],
-  //   () => fetchDocument({id, isEmulator}).then(res => res),
-  //   {
-  //     onSuccess: data => {
-  //       if (!Array.isArray(data)) {
-  //         console.error('Expected data to be an array but got:', data);
-  //         return;
-  //       }
-  //       dispatch(stateAction.reset_service_list());
-  //       const newArray = [];
-  //       for (let i = 0; i < data[0].services.length; i++) {
-  //         newArray.push(data[0].services[i]);
-  //         dispatch(stateAction.service_list(data[0].services[i]));
-  //       }
-  //       setQuotation(data[1]);
-  //       setCompanyUser(data[2]);
-  //       dispatch(stateAction.client_name(data[3].name));
-  //       dispatch(stateAction.client_address(data[3].address));
-  //       dispatch(stateAction.client_tel(data[3].mobilePhone));
-  //       dispatch(stateAction.client_tax(data[3].companyId));
-  //       dispatch(stateAction.selectedContract(data[4]));
-  //       setTotal(data[1].allTotal);
-  //       setDateOffer(data[1].dateOffer);
-  //       setDateEnd(data[1].dateEnd);
-  //       setDocnumber(data[1].docNumber);
-  //       setDiscount(data[1].discountValue);
-  //     },
-  //   },
-  // );
   const handleValuesChange = (
     total: number,
     discountValue: number,
@@ -187,6 +167,10 @@ const EditQuotation = ({navigation}: Props) => {
     navigation.navigate('AddProduct');
   };
   const handleEditService = (index: number) => {
+    handleModalClose()
+    // setShowEditServiceModal(false);
+    // navigation.navigate('EditProductForm', {item: serviceList[index]});
+
     navigation.navigate('EditProductForm', {item: serviceList[index]});
   };
   const handleCustomerAddressChange = (value: string) => {
@@ -195,7 +179,7 @@ const EditQuotation = ({navigation}: Props) => {
 
   const handlewWebView = () => {
     console.log('id quotation', quotationId);
-    navigation.navigate('WebViewScreen', {id});
+    navigation.navigate('WebViewScreen', {id });
   };
 
   const handleButtonPress = async () => {
@@ -230,16 +214,18 @@ const EditQuotation = ({navigation}: Props) => {
           discountName: 'percent',
           dateOffer,
           docNumber,
+          
           summaryAfterDiscount,
           allTotal: totalPrice,
-          sellerSignature: '',
+          sellerSignature: signature? signature : '',
           offerContract: idContractList,
           conditions: [],
           userId: companyUser?.id,
         },
       };
-      await mutate(apiData);
-      setIsLoadingMutation(false);
+      console.log('apiData', JSON.stringify(apiData.data.services));
+      // await mutate(apiData);
+      // setIsLoadingMutation(false);
     } catch (error: Error | AxiosError | any) {
       console.error('There was a problem calling the function:', error);
       console.log(error.response);
@@ -277,13 +263,15 @@ const EditQuotation = ({navigation}: Props) => {
     return unsubscribe;
   }, [serviceList, navigation]);
 
-
+  const handleRemoveService = (index: number) => {
+    setVisibleModalIndex(null);
+    dispatch(stateAction.remove_serviceList(index));
+  };
 
   const idContractList = selectedContract.map((obj: IdContractList) => obj.id);
 
   const handleEditClient = () => {
     navigation.navigate('EditClientForm');
-    console.log('edit');
   };
   return (
     <View style={{flex: 1}}>
@@ -324,10 +312,18 @@ const EditQuotation = ({navigation}: Props) => {
           </View>
           {serviceList.map((item: any, index: number) => (
             <CardProject
+            handleModalClose={handleModalClose}
+            visibleModalIndex={visibleModalIndex === index}
+            setVisibleModalIndex={()=>setVisibleModalIndex(index)}
               index={index}
+              handleRemoveService={() => handleRemoveService(index)}
               handleEditService={() => handleEditService(index)}
               serviceList={item}
               key={index}
+              // index={index}
+              // handleEditService={() => handleEditService(index)}
+              // serviceList={item}
+              // key={index}
             />
           ))}
 
@@ -343,7 +339,8 @@ const EditQuotation = ({navigation}: Props) => {
       </ScrollView>
 
       <View>
-        <FooterBtnEdit onPress={handleButtonPress} WebView={handlewWebView} />
+      <FooterBtn btnText='ดำเนินการต่อ' disabled={isDisabled} onPress={handleButtonPress} />
+        {/* <FooterBtnEdit onPress={handleButtonPress} WebView={handlewWebView} /> */}
       </View>
     </View>
   );

@@ -57,11 +57,6 @@ type Props = {
     };
   };
 };
-type ImageData = {
-  id: number;
-  url: string;
-  defaultChecked: boolean;
-};
 
 interface ImageForm {
   image: FileList;
@@ -102,7 +97,6 @@ const AddProductForm = ({navigation, route}: Props) => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedAudits, setSelectedAudits] = useState<Audit[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<any[]>([]);
-
   const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
   const [audits, setAudits] = useState<Audit[] | null>(null);
   const [selectedMaterialArray, setSelectedMaterialArray] = useState<any[]>([]);
@@ -218,7 +212,11 @@ const AddProductForm = ({navigation, route}: Props) => {
                           setModalImagesVisible(true);
                           // navigation.navigate('GalleryScreen', {code});
                         }}>
-                        <FontAwesomeIcon icon={faPlus} size={32} color="#0073BA" />
+                        <FontAwesomeIcon
+                          icon={faPlus}
+                          size={32}
+                          color="#0073BA"
+                        />
                       </TouchableOpacity>
                     ) : null
                   }
@@ -249,7 +247,12 @@ const AddProductForm = ({navigation, route}: Props) => {
                           size={32}
                           color="#0073BA"
                         />
-                        <Text style={{textAlign: 'center', color: '#0073BA',    fontFamily: 'Sukhumvit set',}}>
+                        <Text
+                          style={{
+                            textAlign: 'center',
+                            color: '#0073BA',
+                            fontFamily: 'Sukhumvit set',
+                          }}>
                           เลือกภาพตัวอย่างผลงาน
                         </Text>
                       </TouchableOpacity>
@@ -272,7 +275,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                 />
               )}
             />
-                        <Text style={styles.priceTitle}>รายละเอียด</Text>
+            <Text style={styles.priceTitle}>รายละเอียด</Text>
 
             <Controller
               control={control}
@@ -441,7 +444,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                       fontFamily: 'Sukhumvit Set Bold',
 
                       fontSize: 16,
-               
+
                       color: '#333',
                     }}>
                     มาตรฐานของบริการนี้:
@@ -467,13 +470,16 @@ const AddProductForm = ({navigation, route}: Props) => {
 
                       // onPress={handleSubmit(handleSelectAudit)}
                     >
-                       <View style={styles.containerButton}>
-                       <FontAwesomeIcon icon={faPlusCircle} color="#0073BA" size={14} />
-                       <Text style={styles.selectButtonText}>
-                        เลือกมาตรฐานการทำงาน
-                      </Text>
-                       </View>
-
+                      <View style={styles.containerButton}>
+                        <FontAwesomeIcon
+                          icon={faPlusCircle}
+                          color="#0073BA"
+                          size={14}
+                        />
+                        <Text style={styles.selectButtonText}>
+                          เลือกมาตรฐานการทำงาน
+                        </Text>
+                      </View>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -528,14 +534,17 @@ const AddProductForm = ({navigation, route}: Props) => {
                       //   navigation.navigate('ExistingMaterials', {id: serviceID})
                       // }
                     >
-                             <View style={styles.containerButton}>
-                             <FontAwesomeIcon  icon={faPlusCircle} color="#0073BA" size={14} />
+                      <View style={styles.containerButton}>
+                        <FontAwesomeIcon
+                          icon={faPlusCircle}
+                          color="#0073BA"
+                          size={14}
+                        />
 
-                             <Text style={styles.selectButtonText}>
-                        เลือกวัสดุอุปกรณ์
-                      </Text>
-                             </View>
-
+                        <Text style={styles.selectButtonText}>
+                          เลือกวัสดุอุปกรณ์
+                        </Text>
+                      </View>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -725,33 +734,28 @@ const styles = StyleSheet.create({
     color: 'black',
     fontWeight: 'bold',
     fontFamily: 'Sukhumvit Set Bold',
-
   },
   price: {
     fontSize: 16,
     color: 'black',
     fontFamily: 'Sukhumvit Set Bold',
-
   },
   priceSum: {
     fontSize: 18,
     color: 'black',
     fontFamily: 'Sukhumvit Set Bold',
-
   },
   priceHead: {
     fontSize: 16,
     color: 'black',
     marginTop: 10,
     fontFamily: 'Sukhumvit Set Bold',
-
   },
   priceTitle: {
     fontSize: 16,
     color: 'black',
     marginTop: 5,
     fontFamily: 'Sukhumvit Set Bold',
-
   },
   counter: {
     fontSize: 16,

@@ -93,7 +93,7 @@ const CardProject = (props: Props) => {
           backdropOpacity={0.1}
           backdropTransitionOutTiming={100}
           style={styles.modalContainer}
-          isVisible={showEditServiceModal}
+          isVisible={visibleModalIndex}
           onBackdropPress={handleModalClose}>
           <Pressable onPress={handleEditService}>
             <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>

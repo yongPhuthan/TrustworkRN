@@ -5,6 +5,7 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
   Dimensions
 } from 'react-native';
 import {
@@ -82,7 +83,6 @@ const SelectAudit = ({
   const [showCards, setShowCards] = useState(true);
   const [headerText, setHeaderText] = useState('');
   const [audits, setAudits] = useState<Audit[] | null>(null);
-
   //   const { title, description, onPress = () => {} }: ComponentProps = route.params;
 
   const {
@@ -95,6 +95,7 @@ const SelectAudit = ({
     {
       onSuccess: data => {
         setAudits(data);
+        
         console.log('audit data', JSON.stringify(data));
       },
     },
@@ -121,23 +122,29 @@ const SelectAudit = ({
      onClose();
     }
   };
+  const transformedData = selectedAudits.map(item => item.AuditData);
+
+  const auditsWithChecked =
+  audits?.map(audit => ({
+    ...audit,
+    defaultChecked: transformedData.some(a => a?.image === audit?.image),
+  })) || [];
 
   useEffect(() => {
     if (selectedAudit.length > 0) {
       setSelectedAudits(selectedAudit);
+    }
+    if(auditsWithChecked ){
+      setShowCards(false)
+  
     }
   }, [selectedAudit]);
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Lottie
-          style={{width: '25%'}}
-          source={require('../../assets/animation/lf20_rwq6ciql.json')}
-          autoPlay
-          loop
-        />
-      </View>
+      <ActivityIndicator />
+    </View>
     );
   }
   if (isError) {
@@ -147,11 +154,6 @@ const SelectAudit = ({
       </View>
     );
   }
-  const auditsWithChecked =
-    audits?.map(audit => ({
-      ...audit,
-      defaultChecked: selectedAudits.some(a => a.id === audit.id),
-    })) || [];
 
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
@@ -189,7 +191,7 @@ const SelectAudit = ({
               </View>
             ) : (
               <View style={styles.auditListContainer}>
-                {auditsWithChecked.map((audit: any, index: number) => (
+                {auditsWithChecked?.map((audit: any, index: number) => (
                   <CardAudit
                     key={index}
                     title={audit.auditShowTitle}

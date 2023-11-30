@@ -38,13 +38,15 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(false);
   const {width, height} = Dimensions.get('window');
   const [email, setEmail] = useState<String>('');
+  const [isLoadingAction, setIsLoadingAction] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null) as any;
   const [originalQuotationData, setOriginalQuotationData] = useState<
     Quotation[] | null
   >(null);
 
   const {
-    state: {isEmulator},
+    state: {isEmulator, client_name, client_address, client_tax, client_tel},
     dispatch,
   }: any = useContext(Store);
 
@@ -52,17 +54,17 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
   const slideAnim = useState(new Animated.Value(-100))[0];
   const [filters, setFilters] = useState([
-    'ALL',
-    'PENDING',
-    'APPROVED',
-    'CONTRACT',
-    'ONPROCESS',
+    'ทั้งหมด',
+    'รออนุมัติ',
+    'อนุมัติแล้ว',
+    'สัญญา',
+    'กำลังทำงาน',
   ]);
-  const [activeFilter, setActiveFilter] = useState('ALL');
+  const [activeFilter, setActiveFilter] = useState('ทั้งหมด');
   const filteredQuotationData = useMemo(() => {
     if (!originalQuotationData) return null;
 
-    if (activeFilter === 'ALL') return originalQuotationData;
+    if (activeFilter === 'ทั้งหมด') return originalQuotationData;
 
     return originalQuotationData.filter(q => q.status === activeFilter);
   }, [originalQuotationData, activeFilter]);
@@ -174,16 +176,19 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const handleModalClose = () => {
     setShowModal(false);
   };
+
+  const handleModalOpen = item => {
+    setSelectedItem(item);
+    setShowModal(true);
+  };
+
   const handleFilterClick = filter => {
     setActiveFilter(filter);
   };
+// versionแรก ยังไม่มีการแก้ไข
 
   const editQuotation = async (services, customer, quotation) => {
-    const allAuditData = services.reduce((acc, service) => {
-      const auditDataForService = service.audits.map(audit => audit.AuditData);
-      return acc.concat(auditDataForService);
-    }, []);
-    console.log('SERVICE0', services[0]);
+    setIsLoadingAction(true);
     await dispatch(stateAction.reset_service_list());
     await dispatch(stateAction.reset_contract());
     await dispatch(stateAction.reset_audit());
@@ -191,16 +196,16 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     await dispatch(stateAction.client_address(''));
     await dispatch(stateAction.client_tel(''));
     await dispatch(stateAction.client_tax(''));
-
     await dispatch(stateAction.client_name(customer.name));
     await dispatch(stateAction.client_address(customer.address));
-    await dispatch(stateAction.client_tel(customer.tel));
-    await dispatch(stateAction.client_tax(customer.tax));
+    await dispatch(stateAction.client_tel(customer.mobilePhone));
+    await dispatch(stateAction.client_tax(customer.companyId));
     await dispatch(stateAction.service_list(services[0]));
-    await dispatch(stateAction.existing_audit_array(allAuditData));
+    dispatch(stateAction.get_companyID(data[0].id));
+    setIsLoadingAction(false);
+
     navigation.navigate('EditQuotation', {quotation, company: data[0]});
   };
-
 
   const FilterButton = ({filter, isActive, onPress}) => {
     return (
@@ -213,7 +218,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
   const renderItem = ({item}) => (
     <>
-      <View style={{marginTop:10}}>
+      <View style={{marginTop: 10}}>
         <CardDashBoard
           status={item.status}
           date={item.dateOffer}
@@ -222,7 +227,8 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           customerName={item.customer?.name as string}
           description={'quotation.'}
           unit={'quotation.'}
-          onCardPress={handleModal}
+          // onCardPress={handleModal}
+          onCardPress={() => handleModalOpen(item)}
         />
       </View>
 
@@ -233,7 +239,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           style={styles.modalContainer}
           isVisible={showModal}
           onBackdropPress={handleModalClose}>
-          <Pressable
+          {/* <Pressable
             onPress={() => {
               setShowModal(false);
               editQuotation(item.services, item.customer, item);
@@ -246,7 +252,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               alignSelf: 'center',
               borderBottomWidth: 1,
               borderBottomColor: '#cccccc',
-            }}></View>
+            }}></View> */}
           <Pressable
             onPress={() => {
               setShowModal(false);
@@ -280,11 +286,18 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           backdropTransitionOutTiming={100}
           style={styles.modalContainer}
           isVisible={showModal}
-          onBackdropPress={handleModalClose}>
-          <TouchableOpacity
+          onBackdropPress={() => setShowModal(false)}
+
+          // onBackdropPress={handleModalClose}
+        >
+          {/* <TouchableOpacity
             onPress={() => {
               setShowModal(false);
-              editQuotation(item.services, item.customer, item);
+              editQuotation(
+                selectedItem?.services,
+                selectedItem?.customer,
+                selectedItem,
+              );
             }}>
             <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
           </TouchableOpacity>
@@ -294,7 +307,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               alignSelf: 'center',
               borderBottomWidth: 1,
               borderBottomColor: '#cccccc',
-            }}></View>
+            }}></View> */}
           <TouchableOpacity
             onPress={() => {
               setShowModal(false);
@@ -339,9 +352,9 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     navigation.navigate('CreateQuotation');
   };
 
-  console.log('status', quotationData);
+console.log('filteredQuotationData',filteredQuotationData)
 
-  return (
+return (
     <>
       <View>
         <HeaderRNE
@@ -352,13 +365,13 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           leftComponent={
             <Text
               style={{
-                color: '#042d60',
+                color: '#000000',
                 fontSize: 18,
                 fontWeight: 'bold',
                 width: 100,
               }}
               onPress={() => {}}>
-              Trustwork
+              Salestrust
             </Text>
           }
           rightComponent={
@@ -389,40 +402,49 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         />
         {/* <View style={{height: 0.5, backgroundColor: 'gray', width: '100%'}} /> */}
       </View>
-
-      {companyData && quotationData && (
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#f5f5f5',
-          }}>
-          <FlatList
-            data={filteredQuotationData}
-            renderItem={renderItem}
-            keyExtractor={item => item.id}
-            ListEmptyComponent={
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: 'center',
-                  height: height * 0.5,
-
-                  alignItems: 'center',
-                }}>
-                <Text style={{marginTop: 10}}>
-                  กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
-                </Text>
-              </View>
-            }
-            contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
-          />
+      {isLoadingAction ? (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          {/* Replace this with your preferred loading indicator */}
+          <ActivityIndicator size="large" />
         </View>
+      ) : (
+        companyData &&
+        quotationData && (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: '#f5f5f5',
+            }}>
+            <FlatList
+              data={filteredQuotationData}
+              renderItem={renderItem}
+              keyExtractor={item => item.id}
+              ListEmptyComponent={
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    height: height * 0.5,
+
+                    alignItems: 'center',
+                  }}>
+                  <Text style={{marginTop: 10}}>
+                    กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
+                  </Text>
+                </View>
+              }
+              contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
+            />
+          </View>
+        )
       )}
+
       <FAB
         icon={{name: 'add', color: 'white'}}
-        color="#0073BA"
+        color='#012b20'
+        // color="#0073BA"
         style={{
           backgroundColor: '#1f303cff',
           position: 'absolute',
@@ -452,7 +474,7 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 10,
-    backgroundColor: '#591dc4ff',
+    backgroundColor: '#012b20',
     borderRadius: 28,
     height: 56,
     width: 56,
@@ -516,7 +538,9 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 10,
-    backgroundColor: '#0050f0',
+    // backgroundColor: '#0050f0',
+    backgroundColor: '#012b20',
+
     borderRadius: 28,
     height: 56,
     width: 56,
@@ -541,3 +565,4 @@ const styles = StyleSheet.create({
     color: 'white',
   },
 });
+

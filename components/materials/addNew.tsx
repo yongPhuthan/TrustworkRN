@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  ActivityIndicator,
   Image,
   StyleSheet,
   Dimensions,
@@ -47,7 +48,6 @@ import firebase, {
   testFunctionsConnection,
 } from '../../firebase';
 import {StackNavigationProp} from '@react-navigation/stack';
-
 
 interface AddMaterialModalProps {
   isVisible: boolean;
@@ -181,7 +181,7 @@ const AddNewMaterial = ({isVisible, onClose}: AddMaterialModalProps) => {
         console.error('Failed to upload file to R2');
       }
       console.log('Upload to R2 success');
-      return `${CLOUDFLARE_R2_PUBLIC_URL}${filename}`;
+      return `${CLOUDFLARE_R2_PUBLIC_URL}${code}/materials/${filename}`;
     } catch (error) {
       console.error('There was a problem with the fetch operation:', error);
     }
@@ -191,56 +191,122 @@ const AddNewMaterial = ({isVisible, onClose}: AddMaterialModalProps) => {
     if (!title || !description || !image) {
       return;
     }
-    setIsImageUpload(true);
-    const imageUrl = await uploadImageToCloudflare(image);
-    setIsImageUpload(false);
-    const data = {
-      id: uuidv4(),
-      name: title,
-      description,
-      image: imageUrl,
-      code,
-    };
-    await createMaterial(data);
-    queryClient.invalidateQueries(['existingProduct', code]);
 
-    onClose();
+    try {
+      setIsImageUpload(true);
+
+      // Try block for uploading the image
+      const imageUrl = await uploadImageToCloudflare(image);
+
+      const data = {
+        id: uuidv4(),
+        name: title,
+        description,
+        image: imageUrl,
+        code,
+      };
+
+      // Try block for creating the material
+      try {
+        await createMaterial(data);
+        queryClient.invalidateQueries(['existingMaterials', code]);
+      } catch (error) {
+        console.error('Error creating material:', error);
+        setIsImageUpload(false);
+
+        // Handle material creation error
+        // You can also set some state here to show an error message to the user
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setIsImageUpload(false);
+    } finally {
+      setTitle('');
+      setDescription('');
+      setImage(null);
+      onClose();
+      setIsImageUpload(false);
+    }
   }, [title, description, image, code, onClose]);
+  const isFormValid = title && description && image;
+
+  // const handleSave2 = useCallback(async () => {
+  //   if (!title || !description || !image) {
+  //     return;
+  //   }
+  //   setIsImageUpload(true);
+  //   const imageUrl = await uploadImageToCloudflare(image);
+  //   console.log('imageUrl', imageUrl);
+
+  //   const data = {
+  //     id: uuidv4(),
+  //     name: title,
+  //     description,
+  //     image: imageUrl,
+  //     code,
+  //   };
+  //   await createMaterial(data);
+  //   queryClient.invalidateQueries(['existingMaterials', code]);
+  //   setTitle('');
+  //   setDescription('');
+  //   setImage(null);
+  //   onClose();
+  //   setIsImageUpload(false);
+  // }, [title, description, image, code, onClose]);
+  const onStepClose = () => {
+    setImage(null);
+    onClose();
+  };
 
   return (
-    <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
-      <View style={styles.container}>
-
-        <View style={styles.header}>
-  
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <FontAwesomeIcon icon={faClose} size={32} color="gray" />
+    <Modal
+      isVisible={isVisible}
+      style={styles.modal}
+      onBackdropPress={onStepClose}>
+      {isImageUpload ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator />
+        </View>
+      ) : (
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.closeButton} onPress={onStepClose}>
+              <FontAwesomeIcon icon={faClose} size={32} color="gray" />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity onPress={pickImage} style={styles.imageUploader}>
+            {image ? (
+              <Image source={{uri: image}} style={styles.image} />
+            ) : (
+              <FontAwesomeIcon icon={faCamera} size={40} color="gray" />
+            )}
+          </TouchableOpacity>
+          <TextInput
+            placeholder="ชื่อวัสดุ-อุปกรณ์"
+            value={title}
+            onChangeText={setTitle}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="รายละเอียด"
+            value={description}
+            onChangeText={setDescription}
+            style={styles.input}
+          />
+          <TouchableOpacity
+            disabled={!isFormValid}
+            onPress={() => handleSave()}
+            style={[styles.button, !isFormValid && styles.buttonDisabled]}>
+            <Text
+              style={[
+                styles.buttonText,
+                !isFormValid && styles.buttonTextDisabled,
+              ]}>
+              บันทึก
+            </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={pickImage} style={styles.imageUploader}>
-          {image ? (
-            <Image source={{uri: image}} style={styles.image} />
-          ) : (
-            <FontAwesomeIcon icon={faCamera} size={40} color="gray" />
-          )}
-        </TouchableOpacity>
-        <TextInput
-          placeholder="Title"
-          value={title}
-          onChangeText={setTitle}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
-          style={styles.input}
-          multiline
-        />
-        <TouchableOpacity style={styles.addButton} onPress={() => handleSave()}>
-          <Text style={styles.addButtonText}>บันทึก</Text>
-        </TouchableOpacity>
-      </View>
+      )}
     </Modal>
   );
 };
@@ -252,6 +318,12 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
     width,
+  },
+  buttonDisabled: {
+    backgroundColor: '#cacaca',
+  },
+  buttonTextDisabled: {
+    color: 'white',
   },
   imageUploader: {
     alignItems: 'center',
@@ -270,6 +342,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 16,
     paddingHorizontal: 8,
+    borderRadius: 5,
   },
   addButton: {
     backgroundColor: 'blue',
@@ -294,8 +367,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
 
-
     backgroundColor: '#ffffff',
+  },
+  button: {
+    padding: 14,
+    marginTop: 40,
+    borderRadius: 8,
+    backgroundColor: '#012b20',
+
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emptyListText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    // fontWeight: 'bold',
+    fontFamily: 'Sukhumvit Set Bold',
+    marginLeft: 10,
   },
 });
 

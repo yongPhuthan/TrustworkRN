@@ -479,16 +479,7 @@ const [code, setCode] = useState<string | null>(null);
                 </View>
               )}
             </TouchableOpacity>
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <TouchableOpacity onPress={handlePress} style={{ padding: 20, backgroundColor: 'blue' }}>
-      <Text style={{ color: 'white' }}>Fetch Images</Text>
-    </TouchableOpacity>
-    {responseLog && (
-      <Text style={{ marginTop: 20 }}>
-        Response: {responseLog}
-      </Text>
-    )}
-  </View>
+
             <Text>ชื่อธุรกิจ - บริษัท</Text>
 
             <TextInput

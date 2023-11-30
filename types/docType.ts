@@ -112,6 +112,13 @@ export type Service = {
   audits: Audit[]; 
   materials: SelectedMaterialData[]; 
 };
+export type Material = {
+  id: string;
+  title: string;
+  description: string;
+  name: string
+image:string
+};
 
 export type SelectedAuditData = {
   id: number;

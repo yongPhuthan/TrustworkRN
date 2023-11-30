@@ -86,14 +86,16 @@ const ExistingProducts = ({navigation}: Props) => {
   const handleAddNewProduct = () => {
     navigation.navigate('AddProduct');
   };
+  console.log('PRODUCT',products)
 
   return (
     <View style={styles.container}>
       {/* {products.length > 0 && (
         <Text style={styles.titleText}>เลือกจากรายการเดิม</Text>
       )} */}
+
       <FlatList
-        data={products.slice(-5)}
+        data={products}
         renderItem={({item}) => (
           <>
             <TouchableOpacity
@@ -141,12 +143,12 @@ const ExistingProducts = ({navigation}: Props) => {
           style={styles.emptyListButton}>
                    <View style={styles.header}>
                                 <FontAwesomeIcon style={styles.icon} icon={faPlus} size={20} color="white" />
-
                    <Text style={styles.emptyListText}>เพิ่มรายการใหม่</Text>
                    </View>
 
         </TouchableOpacity>
       )}
+
     </View>
   );
 };
@@ -185,18 +187,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   productTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: 'Sukhumvit Set Bold',
   },
   description: {
     marginTop: 8,
     fontSize: 14,
     color: 'gray',
+    fontFamily: 'Sukhumvit set',
+
   },
   emptyListButton: {
     padding: 14,
     borderRadius: 8,
-    backgroundColor: '#0073BA',
+    backgroundColor:'#012b20',
+    // backgroundColor: '#0073BA',
     alignItems: 'center',
     justifyContent: 'center',
 

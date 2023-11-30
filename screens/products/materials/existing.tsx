@@ -90,7 +90,7 @@ const ExistingMaterials = ({navigation}: Props) => {
     }
   };
     useEffect(() => {
-    if (selectedMaterials.length > 0) {
+    if (selectedMaterials?.length > 0) {
       setSelectedMaterialArray(selectedMaterials);
     }
   }, [selectedMaterials]);
@@ -102,7 +102,7 @@ const ExistingMaterials = ({navigation}: Props) => {
     );
   }
   const handleDonePress = () => {
-    if (selectedMaterialArray.length > 0) {
+    if (selectedMaterialArray?.length > 0) {
       // dispatch here
       navigation.goBack();
     }
@@ -110,7 +110,7 @@ const ExistingMaterials = ({navigation}: Props) => {
   const handleAddNewProduct = () => {
     navigation.navigate('AddNewMaterial');
   };
-
+console.log('route', route.params)
   return (
     <View style={styles.container}>
       {products.length > 0 && (
@@ -161,13 +161,13 @@ const ExistingMaterials = ({navigation}: Props) => {
           <Text style={styles.emptyListText}>+ เพิ่มรายการใหม่</Text>
         </TouchableOpacity>
       )}
-      {selectedMaterialArray.length > 0 && (
+      {selectedMaterialArray?.length > 0 && (
         <View style={styles.containerBtn}>
           <TouchableOpacity onPress={handleDonePress} style={styles.button}>
             <Text
               style={
                 styles.buttonText
-              }>{`บันทึก ${selectedMaterialArray.length} มาตรฐาน`}</Text>
+              }>{`บันทึก ${selectedMaterialArray?.length} มาตรฐาน`}</Text>
           </TouchableOpacity>
         </View>
       )}

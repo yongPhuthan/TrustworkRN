@@ -1,41 +1,21 @@
-{
-    "_bodyBlob": {
-        "_data": {
-            "__collector": [Object],
-            "blobId": "9633BB13-65E8-4744-A03C-39321F907729",
-            "name": "logo2-ecfc70e9-0a6a-407c-bcdd-7fa27973bfe5-png.txt",
-            "offset": 0,
-            "size": 0,
-            "type": "text/plain"
-        }
-    },
-    "_bodyInit": {
-        "_data": {
-            "__collector": [Object],
-            "blobId": "9633BB13-65E8-4744-A03C-39321F907729",
-            "name": "logo2-ecfc70e9-0a6a-407c-bcdd-7fa27973bfe5-png.txt",
-            "offset": 0,
-            "size": 0,
-            "type": "text/plain"
-        }
-    },
-    "bodyUsed": false,
-    "headers": {
-        "map": {
-            "cf-ray": "806121664cec45c4-BKK",
-            "connection": "keep-alive",
-            "content-length": "0",
-            "content-type": "text/plain;charset=UTF-8",
-            "date": "Wed, 13 Sep 2023 14:37:51 GMT",
-            "etag": "\"765143a182ba500ae7388af64ab0d546\"",
-            "server": "cloudflare",
-            "vary": "Accept-Encoding",
-            "x-amz-version-id": "7e757105e340249a5de492c62f961013"
-        }
-    },
-    "ok": true,
-    "status": 200,
-    "statusText": "",
-    "type": "default",
-    "url": "https://test.a61f30bb027ef64c9577c73f5981f073.r2.cloudflarestorage.com/logo2-ecfc70e9-0a6a-407c-bcdd-7fa27973bfe5-png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=2bae82f652a20b37bf9d07a7811d5be7%2F20230913%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20230913T143750Z&X-Amz-Expires=300&X-Amz-Signature=5b77c9e0d8616ccc90018761ec3ff871b2fc2c2af088460ad5a799d224b60c45&X-Amz-SignedHeaders=host&x-amz-acl=public-read&x-id=PutObject"
-}
+[{
+    "AuditData": {
+        "auditEffectDescription": "ผลกระทบที่เกิดจากการไม่การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน",
+        "auditEffectImage": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+        "auditShowTitle": "การันตีการตรวจเช็คการป้องกันน้ำ",
+        "category": "อลูมิเนียม",
+        "content": "การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน",
+        "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+        "title": "การันตีการตรวจเช็คการป้องกันน้ำ"
+    }
+}, {
+    "AuditData": {
+        "auditEffectDescription": "ผลกระทบที่เกิดจากการไม่ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน",
+        "auditEffectImage": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+        "auditShowTitle": "ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน",
+        "category": "อลูมิเนียม",
+        "content": "ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน",
+        "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+        "title": "ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน"
+    }
+}]

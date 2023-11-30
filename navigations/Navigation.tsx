@@ -25,6 +25,8 @@ import DocViewScreen from '../screens/quotation/webview';
 import DefaultContract from '../screens/contract/defaultContract';
 import ExistingProducts from '../screens/products/existingProducts';
 import EditProductForm from '../screens/products/editProduct';
+import EditCustomer from '../screens/customer/editCustomer';
+
 import AddExistProduct from '../screens/products/addExistProduct';
 import EditSetting from '../screens/setting/editSetting';
 import EditQuotation from '../screens/quotation/edit';
@@ -216,6 +218,20 @@ console.log('loadinguser', loadingUser)
             ...commonScreenOptions,
             headerShown: true,
             title: 'เพิ่มรายการ-สินค้า',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+          <Stack.Screen
+          name="EditClientForm"
+          component={EditCustomer}
+          options={{
+            ...commonScreenOptions,
+            headerShown: true,
+            title: 'แก้ไขลูกค้า',
             headerBackTitleVisible: false,
             headerStyle: {
               backgroundColor: '#ffffff',

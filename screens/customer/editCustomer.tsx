@@ -1,5 +1,12 @@
 import React, {useState, useContext, useEffect, useRef} from 'react';
-import {Text, View, TextInput, Button, StyleSheet} from 'react-native';
+import {
+  Text,
+  View,
+  TextInput,
+  Button,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 
 import {Store} from '../../redux/store';
@@ -7,9 +14,8 @@ import * as stateAction from '../../redux/actions';
 import {StackNavigationProp} from '@react-navigation/stack';
 
 import {RouteProp, ParamListBase} from '@react-navigation/native';
-import { ScrollView } from 'react-native-gesture-handler';
-import{ CustomerForm, ServiceList,CompanyUser} from '../../types/docType'
 
+import {CustomerForm, ServiceList, CompanyUser} from '../../types/docType';
 
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'EditCustomer'>;
@@ -18,7 +24,7 @@ interface Props {
 
 const EditCustomer = ({navigation, route}: Props) => {
   const {
-    state: {client_name,client_address,client_tel,client_tax},
+    state: {client_name, client_address, client_tel, client_tax},
     dispatch,
   }: any = useContext(Store);
   const {
@@ -58,7 +64,6 @@ const EditCustomer = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-     
         />
         {errors.name && <Text>This is required.</Text>}
 
@@ -96,7 +101,6 @@ const EditCustomer = ({navigation, route}: Props) => {
           )}
           name="phone"
         />
- 
 
         <Controller
           control={control}
