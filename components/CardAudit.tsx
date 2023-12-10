@@ -9,6 +9,7 @@ type CardProps = {
   imageUri: string;
   onPress: Function;
   defaultChecked: boolean;
+  content: string;
 };
 
 const CardAudit = ({
@@ -16,6 +17,7 @@ const CardAudit = ({
   description,
   number,
   imageUri,
+  content,
   onPress,
   defaultChecked,
 }: CardProps) => {
@@ -31,40 +33,31 @@ const CardAudit = ({
   useEffect(() => {
     setChecked(defaultChecked);
   }, [defaultChecked]);
+  console.log('defaultChecked', defaultChecked)
   return (
     <View style={[styles.container, checked && styles.selected]}>
-      <View style={styles.checkboxContainer}>
-      <CheckBox
+      <View style={styles.titleContainer}>
+        <CheckBox
           checked={checked}
           onPress={handleCheckbox}
-          // checkBoxColor='gray' // iOS default blue color
+          checkedColor="#012b20"
         />
+        <Text style={styles.title}>{title}</Text>
       </View>
-
-      <View style={styles.textContainer}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>{title}</Text>
-          {/* <Text style={styles.title}>{defaultChecked.toString()}</Text> */}
-
-          {/* <Text style={styles.price}>{price}</Text> */}
-        </View>
-        <View style={styles.underline} />
-        <Image style={styles.image} source={{uri: imageUri}} />
-
-        <Text style={styles.description}>{description}</Text>
-      </View>
+      <View style={styles.underline} />
+      <Text style={styles.description}>{content}</Text>
+  
+      <Image style={styles.image} source={{uri: imageUri}} />
     </View>
   );
+  
 };
 export default CardAudit;
-
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     backgroundColor: 'white',
     borderRadius: 8,
     margin: 15,
-    padding: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -73,53 +66,37 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    padding: 10, 
   },
   selected: {
-    backgroundColor: '#F2F2F2',
-  },
-  checkboxContainer: {
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-    marginRight: 16,
-  },
-  imageContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  image: {
-    width: 230,
-    height: 250,
-  
-  },
-  textContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    borderColor: '#012b20',
   },
   titleContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 10, 
   },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  price: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FF6C00',
-    marginLeft: 8,
+    flex: 1, 
+    marginLeft: 10, // Add space between checkbox and title
   },
   description: {
     fontSize: 14,
-    marginTop:10
+    marginBottom: 10, // Add some space below the description
   },
   underline: {
     borderBottomWidth: 1,
     borderBottomColor: '#CCCCCC',
-    marginVertical: 8,
+    marginBottom: 10, // Adjust space below the line
+  },
+  image: {
+    width: '100%', // Adjust to take full width
+    height: 250,
+    resizeMode: 'contain', // Ensure the image fits within the dimensions
   },
 });
+

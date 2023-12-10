@@ -6,16 +6,16 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Dimensions
+  Dimensions,
 } from 'react-native';
 import {
-    faCloudUpload,
-    faEdit,
-    faPlus,
-    faImages,
-    faClose,
-  } from '@fortawesome/free-solid-svg-icons';
-  import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+  faCloudUpload,
+  faEdit,
+  faPlus,
+  faImages,
+  faClose,
+} from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import CardAudit from '../../components/CardAudit';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
@@ -23,12 +23,13 @@ import {useRoute} from '@react-navigation/native';
 import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
+import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import {useQuery} from '@tanstack/react-query';
 import Lottie from 'lottie-react-native';
 import {Audit, ServiceList, EditProductList} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 import Modal from 'react-native-modal';
+import {useUser} from '../../providers/UserContext';
 
 interface AuditModalProps {
   isVisible: boolean;
@@ -37,42 +38,15 @@ interface AuditModalProps {
   setSelectedAudits: React.Dispatch<React.SetStateAction<Audit[]>>;
   title?: string;
   description?: string;
+  serviceId: string;
   onPress?: () => void;
 }
-
-const fetchAudits = async (id: string, isEmulator: boolean) => {
-  const user = auth().currentUser;
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
-  const idToken = await user.getIdToken();
-  let url;
-  if (__DEV__) {
-    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appQueryAudits2`;
-  } else {
-    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appQueryAudits2`;
-  }
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-    body: JSON.stringify({id}),
-  });
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-
-  const data = await response.json();
-  return data;
-};
 
 const SelectAudit = ({
   isVisible,
   onClose,
   selectedAudits,
+  serviceId,
   setSelectedAudits,
   title,
   description,
@@ -82,20 +56,45 @@ const SelectAudit = ({
   const route = useRoute<RouteProp<ParamListBase, 'SelectAudit'>>();
   const [showCards, setShowCards] = useState(true);
   const [headerText, setHeaderText] = useState('');
+  const user = useUser();
   const [audits, setAudits] = useState<Audit[] | null>(null);
   //   const { title, description, onPress = () => {} }: ComponentProps = route.params;
 
   const {
-    state: {selectedAudit, companyID, isEmulator},
+    state: {selectedAudit, companyID, serviceList},
     dispatch,
   }: any = useContext(Store);
+  const fetchAudits = async () => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    } else {
+      const idToken = await user.getIdToken(true);
+      let url = `${BACK_END_SERVER_URL}/api/services/queryAudits?id=${encodeURIComponent(
+        companyID,
+      )}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      console.log('dataSetting', data);
+      return data;
+    }
+  };
   const {data, isLoading, isError} = useQuery(
     ['queryAudits', companyID],
-    () => fetchAudits(companyID, isEmulator).then(res => res),
+    () => fetchAudits().then(res => res),
     {
       onSuccess: data => {
         setAudits(data);
-        
+
         console.log('audit data', JSON.stringify(data));
       },
     },
@@ -112,39 +111,45 @@ const SelectAudit = ({
     } else {
       // if the audit is not selected, add it
       setSelectedAudits([...selectedAudits, audit]);
-      dispatch(stateAction.selected_audit(audit));
+      dispatch(stateAction.selected_audit(serviceId, audit));
+      console.log('serviceList Audits',serviceList)
+      console.log('serviceId Audits',serviceId)
+      console.log(' Audits',audit)
+
     }
   };
 
   const handleDonePress = () => {
     if (selectedAudits.length > 0) {
       // dispatch here
-     onClose();
+      onClose();
     }
   };
-  const transformedData = selectedAudits.map(item => item.AuditData);
+  const servicListIndex = serviceList.findIndex(service => service.id === serviceId);
+
 
   const auditsWithChecked =
-  audits?.map(audit => ({
-    ...audit,
-    defaultChecked: transformedData.some(a => a?.image === audit?.image),
-  })) || [];
+    audits?.map(audit => ({
+      ...audit,
+      defaultChecked: audits.some(a => a?.image === audit?.image),
+    })) || [];
 
   useEffect(() => {
     if (selectedAudit.length > 0) {
       setSelectedAudits(selectedAudit);
     }
-    if(auditsWithChecked ){
-      setShowCards(false)
-  
+    if (auditsWithChecked) {
+      setShowCards(false);
     }
+
+
   }, [selectedAudit]);
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-      <ActivityIndicator />
-    </View>
+        <ActivityIndicator />
+      </View>
     );
   }
   if (isError) {
@@ -154,27 +159,32 @@ const SelectAudit = ({
       </View>
     );
   }
+  console.log('serviceListIndex',serviceList[servicListIndex]?.audits)
+  console.log('selectedAudit',selectedAudit)
 
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <FontAwesomeIcon icon={faClose} size={32} color="gray" />            
+            <FontAwesomeIcon icon={faClose} size={24} color="gray" />
           </TouchableOpacity>
+          <View>
+            <Text style={styles.headerTitle}>
+              มาตรฐานงานติดตั้ง {headerText}
+            </Text>
+          </View>
+
+          <Text></Text>
+        </View>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.description}>{description}</Text>
         </View>
 
         <ScrollView style={styles.scrollView}>
           <View style={styles.contentContainer}>
-            <View style={styles.headerContainer}>
-              <Text style={styles.headerTitle}>
-                มาตรฐานงานติดตั้ง {headerText}
-              </Text>
-            </View>
-            <View style={styles.titleContainer}>
-              <Text style={styles.title}>{title}</Text>
-              <Text style={styles.description}>{description}</Text>
-            </View>
+    
 
             {showCards ? (
               <View style={styles.cardsContainer}>
@@ -191,14 +201,15 @@ const SelectAudit = ({
               </View>
             ) : (
               <View style={styles.auditListContainer}>
-                {auditsWithChecked?.map((audit: any, index: number) => (
+                {audits?.map((audit: any, index: number) => (
                   <CardAudit
                     key={index}
                     title={audit.auditShowTitle}
+                    content={audit.content}
                     description={audit.description}
                     number={audit.number}
-                    defaultChecked={audit.defaultChecked}
-                    imageUri={audit.image}
+                    defaultChecked={(serviceList[servicListIndex]?.audits || []).some(m => m.id === audit.id)}
+                    imageUri={audit.auditEffectImage}
                     onPress={() => handleSelectAudit(audit)}
                   />
                 ))}
@@ -245,12 +256,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#323232',
-
+    marginTop: 5,
     fontFamily: 'Sukhumvit set',
   },
   titleContainer: {
     flexDirection: 'column',
     paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
   },
   title: {
     fontSize: 18,
@@ -284,7 +299,7 @@ const styles = StyleSheet.create({
   containerBtn: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: 'transparent',
     shadowColor: 'black',
     shadowOffset: {width: 1, height: 2},
     shadowOpacity: 0.5,
@@ -298,7 +313,7 @@ const styles = StyleSheet.create({
     width: '90%',
     top: '30%',
     height: 50,
-    backgroundColor: '#0073BA',
+    backgroundColor: '#012b20',
     borderRadius: 5,
     justifyContent: 'center',
     alignItems: 'center',
@@ -346,8 +361,9 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    paddingVertical: 10,
+    justifyContent: 'space-between',
+
+    paddingHorizontal: 10,
     paddingTop: 30,
     backgroundColor: '#f5f5f5',
   },
@@ -355,11 +371,8 @@ const styles = StyleSheet.create({
     margin: 0,
     justifyContent: 'flex-start',
     alignItems: 'center',
-
-  
   },
   closeButton: {
     paddingVertical: 10,
-
   },
 });

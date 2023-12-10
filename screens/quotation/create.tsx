@@ -21,7 +21,12 @@ import Summary from '../../components/Summary';
 import Divider from '../../components/styles/Divider';
 import {NavigationContainer} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
+import {
+  HOST_URL,
+  PROJECT_FIREBASE,
+  PROD_API_URL,
+  BACK_END_SERVER_URL,
+} from '@env';
 import Modal from 'react-native-modal';
 import firebase from '../../firebase';
 import CardProject from '../../components/CardProject';
@@ -36,7 +41,7 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import Signature from 'react-native-signature-canvas';
 
 import axios, {AxiosResponse, AxiosError} from 'axios';
-
+import {useUser} from '../../providers/UserContext';
 import messaging from '@react-native-firebase/messaging';
 import Lottie from 'lottie-react-native';
 import {Audit, IdContractList, CompanyUser} from '../../types/docType';
@@ -45,7 +50,20 @@ import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
 import {useFetchCompanyUser} from '../../hooks/company/useFetchCompany';
 import SignatureComponent from '../../components/utils/signature';
 import SmallDivider from '../../components/styles/SmallDivider';
-
+import {
+  useForm,
+  FormProvider,
+  SubmitHandler,
+  useFormContext,
+  useFieldArray,
+} from 'react-hook-form';
+import {yupResolver} from '@hookform/resolvers/yup';
+import {
+  quotationsValidationSchema,
+  customersValidationSchema,
+  servicesValidationSchema,
+} from '../utils/validationSchema';
+import * as yup from 'yup';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
 }
@@ -77,8 +95,9 @@ const Quotation = ({navigation}: Props) => {
   const [vat7Amount, setVat7Amount] = useState(0);
   const [vat5Amount, setVat5Amount] = useState(0);
   const thaiDateFormatter = useThaiDateFormatter();
+  const user = useUser();
   const [vat3Amount, setVat3Amount] = useState(0);
-  const {fetchCompanyUser} = useFetchCompanyUser();
+  // const {fetchCompanyUser} = useFetchCompanyUser();
   const [productWarantyYear, setProductWarantyYear] = useState(0);
   const [skillWarantyYear, setSkillWarantyYear] = useState(0);
   const [customerName, setCustomerName] = useState('');
@@ -87,7 +106,6 @@ const Quotation = ({navigation}: Props) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [dateOffer, setDateOffer] = useState<String>('');
   const [dateEnd, setDateEnd] = useState<String>('');
-  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [token, setToken] = useState<FirebaseAuthTypes.User | null>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [singatureModal, setSignatureModal] = useState(false);
@@ -96,10 +114,39 @@ const Quotation = ({navigation}: Props) => {
   const [fcnToken, setFtmToken] = useState('');
   const [discount, setDiscount] = useState('0');
   const [showEditServiceModal, setShowEditServiceModal] = useState(false);
-  const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(null);
+  const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(
+    null,
+  );
 
   const dataSignature = {};
   const [vat7, setVat7] = useState(false);
+  const fetchCompanyUser = async () => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    } else {
+      const idToken = await user.getIdToken(true);
+      const {email} = user;
+      if (!email) {
+        throw new Error('Email not found');
+      }
+      let url = `${BACK_END_SERVER_URL}/api/company/getCompanySeller?email=${encodeURIComponent(
+        email,
+      )}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return data;
+    }
+  };
   const totalPrice = useMemo(() => {
     let total = 0;
     for (let i = 0; i < serviceList.length; i++) {
@@ -112,7 +159,7 @@ const Quotation = ({navigation}: Props) => {
 
   const {data, isLoading, isError} = useQuery(
     ['companyUser', email],
-    () => fetchCompanyUser({email, isEmulator}).then(res => res),
+    () => fetchCompanyUser().then(res => res),
     {
       onSuccess: data => {
         setCompanyUser(data);
@@ -147,9 +194,11 @@ const Quotation = ({navigation}: Props) => {
     }
   };
   const handleSignatureSuccess = () => {
-    setSignatureModal(false)
+    setSignatureModal(false);
   };
   const handleAddClientForm = () => {
+    // navigation.navigate('AddCustomer', { control, formState });
+
     navigation.navigate('AddCustomer');
   };
 
@@ -173,8 +222,8 @@ const Quotation = ({navigation}: Props) => {
   };
   const handleEditService = (index: number) => {
     setShowEditServiceModal(!showEditServiceModal);
+    handleModalClose();
     navigation.navigate('EditProductForm', {item: serviceList[index]});
-
   };
 
   const handleEditClient = () => {
@@ -239,7 +288,6 @@ const Quotation = ({navigation}: Props) => {
       // navigation.navigate('SelectContract', {data: apiData} as any);
       navigation.navigate('DefaultContract', {data: apiData} as any);
 
-
       setIsLoadingMutation(false);
     } catch (error: Error | AxiosError | any) {
       console.error('There was a problem calling the function:', error);
@@ -262,41 +310,6 @@ const Quotation = ({navigation}: Props) => {
   };
 
   useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged(newUser => {
-      if (newUser && newUser.email) {
-        console.log('User is authenticated:', newUser.email);
-        setUser(newUser);
-        setEmail(newUser.email);
-      } else {
-        console.log('User is not authenticated, navigating to login page...');
-        navigation.navigate('LoginScreen');
-      }
-    });
-    async function requestUserPermission() {
-      const authStatus = await messaging().requestPermission();
-      const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-      // if (enabled) {
-      //   console.log('Authorization status:', authStatus);
-      //   await messaging().registerDeviceForRemoteMessages(); // Register device for remote messages
-      //   getFCMToken();
-      // }
-    }
-
-    // async function getFCMToken() {
-    //   const fcmToken = await messaging().getToken();
-
-    //   if (fcmToken) {
-    //     console.log('Your Firebase Token  document:', fcmToken);
-    //     setFtmToken(fcmToken);
-    //   } else {
-    //     console.log('Failed to get Firebase Token');
-    //   }
-    // }
-    // requestUserPermission();
-
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -309,7 +322,6 @@ const Quotation = ({navigation}: Props) => {
     const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
     const endDay = String(endDate.getDate()).padStart(2, '0');
     setDateEnd(`${endDay}-${endMonth}-${endYear}`);
-    return unsubscribe;
   }, [serviceList, navigation]);
 
   if (isLoading) {
@@ -320,15 +332,13 @@ const Quotation = ({navigation}: Props) => {
     );
   }
   const idContractList = selectedContract.map((obj: IdContractList) => obj.id);
-  console.log('company', companyUser);
 
   const handleRemoveService = (index: number) => {
     setVisibleModalIndex(null);
     dispatch(stateAction.remove_serviceList(index));
   };
-  
 
-console.log('serviceList', serviceList)
+
   return (
     <View style={{flex: 1}}>
       <ScrollView style={styles.container}>
@@ -489,7 +499,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Sukhumvit set',
     paddingTop: 10,
   },
-
 
   date: {
     textAlign: 'right',

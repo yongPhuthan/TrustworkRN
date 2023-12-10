@@ -6,6 +6,10 @@ export const all_data = (payload: any) => ({
   type: contrains.ALL_DATA,
   payload,
 });
+export const initial_serviceId = (payload: string) => ({
+  type: contrains.INITIAL_SERVICEID,
+  payload,
+});
 export const remove_audits_in_service_list = (index) => ({
   type: contrains.REMOVE_AUDITS_IN_SERVICE_LIST,
   index,
@@ -175,9 +179,10 @@ export const reset_service_list = () => ({
 });
 
 
-export const selected_audit = (payload: object) => ({
+export const selected_audit = (serviceId : string, auditData : any) => ({
   type: contrains.SELECTED_AUDIT,
-  payload,
+  payload: { serviceId, auditData },
+
 });
 export const selected_materials = (payload: object) => ({
   type: contrains.SELECTED_MATERIALS,
@@ -234,6 +239,12 @@ export const get_companyID = (payload:string) => ({
 });
 
 // COMPONENTS  => ACTION
+
+export const initialServiceId = (payload: string) => {
+  return (dispatch: any) => {
+    dispatch(initial_serviceId(payload));
+  };
+}
 
 export const docCounter = (payload: number) => {
   return (dispatch: any) => {
@@ -412,11 +423,12 @@ export const startServiceList = (payload: object[]) => {
     dispatch(start_service_list(payload));
   };
 };
-export const selectedAudit = (payload: object) => {
+export const selectedAudit = (serviceId: string, auditData: any) => {
   return (dispatch: any) => {
-    dispatch(selected_audit(payload));
+    dispatch(selected_audit(serviceId, auditData));
   };
 };
+
 export const selectedMaterials = (payload: object) => {
   return (dispatch: any) => {
     dispatch(selected_materials(payload));
@@ -508,3 +520,4 @@ export const serviceImages = (payload: string[]) => {
     dispatch(service_images(payload));
   };
 };
+

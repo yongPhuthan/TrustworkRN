@@ -3,6 +3,8 @@ import { Platform } from 'react-native';
 import functions from '@react-native-firebase/functions';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
+import { getStorage, isAvailable } from '@react-native-firebase/storage';
+
 import auth from '@react-native-firebase/auth'
 const firebaseConfig = {
   apiKey: "AIzaSyAlFmHGPiZC-XXlfQN37zbz5gV6dYDAsrU",
@@ -48,6 +50,7 @@ export const testFirestoreWrite = async () => {
   }
 
   const db = firestore();
+  const storage = getStorage();
 
   const docRef = db.collection('testCollection').doc('testDoc');
   console.log('Document reference created.');
@@ -58,46 +61,6 @@ export const testFirestoreWrite = async () => {
     console.error('Error writing to Firestore: ', error);
   }
   
-};
-
-
-
-
-export const testFirestoreRead = async () => {
-  console.log('Inside testFirestoreRead');
-  try {
-    const docRef = firebase.firestore().collection('testCollection').doc('testDoc');
-    const doc = await docRef.get();
-    if (doc.exists) {
-      console.log('Document data:', doc.data());
-    } else {
-      console.log('No such document!');
-    }
-  } catch (error) {
-    console.error('Error reading from Firestore: ', error);
-  }
-};
-
-export const testFunctionsConnection = async () => {
-  console.log('Testing Cloud Functions connection...');
-
-  try {
-    const helloWorld = firebase.functions().httpsCallable('helloWorld');
-    const response = await helloWorld();
-    console.log('Cloud Functions response:', response.data);
-  } catch (error) {
-    console.error('Error calling Cloud Function:', error);
-  }
-};
-
-
-export const testFirebaseConnection = async () => {
-  try {
-    await testFirestoreWrite();
-    await testFirestoreRead();
-  } catch (error) {
-    console.error('Error during Firebase connection test: ', error);
-  }
 };
 
 

@@ -33,12 +33,12 @@ const FirstAppScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.logo}>Salestrust</Text>
+            <Text style={styles.logo}>Trustsify</Text>
             <Image
                 style={styles.image}
                 source={require('../../assets/images/Buildingpermit-bro.png')}
             />
-            <Text style={styles.heading}>Start selling online with SalesTrust</Text>
+            <Text style={styles.heading}>Start selling online with Trustsify</Text>
             <View style={styles.bulletPointContainer}>
                 <Icon name="storefront-outline" style={styles.icon} />
                 <Text style={styles.description}>Create your online store</Text>

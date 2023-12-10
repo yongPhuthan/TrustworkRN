@@ -18,6 +18,8 @@ declare module '@env' {
     export  const R2_ACCOUNT_ID:string
     export const R2_SECRET_KEY :string
     export const CLOUDFLARE_R2_PUBLIC_URL:string
+    export const BACK_END_SERVER_URL:string
+    export const FIREBASE_STORAGE_PUBLIC_URL:string
     // Add more environment variables if needed
   }
   

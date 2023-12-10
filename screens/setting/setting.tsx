@@ -12,7 +12,12 @@ import React, {useState, useEffect, useContext} from 'react';
 import {ParamListBase} from '../../types/navigationType';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
-import {HOST_URL, PROJECT_NAME, PROJECT_FIREBASE} from '@env';
+import {
+  HOST_URL,
+  PROJECT_NAME,
+  PROJECT_FIREBASE,
+  BACK_END_SERVER_URL,
+} from '@env';
 import Lottie from 'lottie-react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
@@ -38,48 +43,17 @@ import {
 import {useQuery} from '@tanstack/react-query';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Audit, CompanyUser, IdContractList, Service} from '../../types/docType';
+import {useUser} from '../../providers/UserContext';
+
 interface SettingScreenProps {
   navigation: StackNavigationProp<ParamListBase, 'TopUpScreen'>;
 }
-const fetchCompanyUser = async (isEmulator: boolean) => {
-  const user = await auth().currentUser;
-  if (!user) {
 
-    throw new Error('User not authenticated');
-
-  } else {
-    const idToken = await user.getIdToken();
-    const {email} = user;
-
-    let url;
-    if (isEmulator) {
-      console.log(HOST_URL);
-      url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/queryCompanySeller2`;
-    } else {
-      console.log('isEmulator Fetch', isEmulator);
-      url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/queryCompanySeller2`;
-    }
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify({email}),
-      credentials: 'include',
-    });
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-
-    return data;
-  }
-};
 const SettingsScreen = ({navigation}: SettingScreenProps) => {
   const [company, setCompany] = useState<CompanyUser>();
   const [credit, setCredit] = useState(0);
+  const user = useUser();
+
   const {
     state: {client_name, isEmulator, client_tel, client_tax},
     dispatch,
@@ -87,49 +61,67 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
   const [logo, setLogo] = useState<string | null>(null);
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
-  useEffect(() => {
-    const unsubscribe = firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-  handleLogout();
-        navigation.navigate('FirstAppScreen');
-      }
-    });
 
-    return () => unsubscribe();
-  }, [navigation]);
   const toggleLogoutModal = () => {
     setIsLogoutModalVisible(!isLogoutModalVisible);
   };
   const businessDetails = [
     {id: 2, title: 'Business Address', value: company?.address || ''},
   ];
+  const fetchCompanyUser = async () => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    } else {
+      const idToken = await user.getIdToken(true);
+      const {email} = user;
+      if (!email) {
+        throw new Error('Email not found');
+      }
+      let url = `${BACK_END_SERVER_URL}/api/company/getCompanySeller?email=${encodeURIComponent(
+        email,
+      )}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      console.log('dataSetting', data);
+      return data;
+    }
+  };
   const handleLogout = async () => {
     try {
       await firebase.auth().signOut();
+      navigation.navigate('FirstAppScreen');
 
       toggleLogoutModal();
     } catch (error) {
       console.error('Failed to sign out: ', error);
     }
   };
-  const {data, isLoading, error} = useQuery(
-    ['companySetting'],
-    () => fetchCompanyUser(isEmulator),
-    {
-      onSuccess: data => {
-        setCompany(data.user);
-        setLogo(data.user.logo);
-        setCredit(Number(data.balance));
-      },
+  const {data, isLoading, error} = useQuery({
+    queryKey: ['companySetting'],
+    queryFn: fetchCompanyUser,
+    onSuccess: data => {
+      console.log('data setting success', data);
+      setCompany(data.user);
+      setLogo(data.user.logo);
+      setCredit(Number(data.balance));
     },
-  );
+  });
   if (isLoading) {
     return <ActivityIndicator />;
   }
-
+  if (error) {
+    console.log(error);
+  }
 
   const handleLogoUpload = () => {
     const options = {
@@ -175,7 +167,7 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
                   source={{
                     uri: logo,
                   }}
-                  style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
+                  style={{width: 100, aspectRatio: 1, resizeMode: 'contain'}}
                 />
               ) : (
                 <View

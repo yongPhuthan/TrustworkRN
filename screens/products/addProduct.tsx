@@ -17,7 +17,8 @@ import {
 import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
 import {Header as HeaderRNE, HeaderProps} from '@rneui/themed';
 import Divider from '../../components/styles/Divider';
-import {useForm, Controller, set} from 'react-hook-form';
+import { useForm, FormProvider, useFormContext,Controller, set } from 'react-hook-form';
+
 import {Store} from '../../redux/store';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
@@ -61,33 +62,12 @@ type Props = {
 interface ImageForm {
   image: FileList;
 }
-const onValid = async ({image}: ImageForm) => {
-  if (image && image.length > 0) {
-    // Create a form data object with the image file.
-    const formData = new FormData();
-    formData.append('file', image[0]);
 
-    // Create a URL for the Direct Creator Upload API.
-    const url = `https://api.cloudflare.com/images/v1/creator/upload`;
-
-    // Make the request to the API.
-    const response = await fetch(url, {
-      method: 'POST',
-      body: formData,
-    });
-
-    // If the request is successful, get the image URL from the response.
-    if (response.ok) {
-      const imageUrl = await response.json();
-      console.log(imageUrl);
-    }
-  }
-};
 
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
 const AddProductForm = ({navigation, route}: Props) => {
-  const {control, handleSubmit} = useForm<FormData>();
+  const {control, handleSubmit,watch} = useForm<FormData>();
   const [count, setCount] = useState(0);
   const [discountPercent, setDiscountPercent] = useState(0);
   const [qty, setQuantity] = useState(1);
@@ -105,7 +85,7 @@ const AddProductForm = ({navigation, route}: Props) => {
   const [serviceImages, setServiceImages] = useState<string[]>([]);
   const [isModalImagesVisible, setModalImagesVisible] = useState(false);
   const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
-  const serviceID = uuidv4();
+  const [serviceID,setServiceID] = useState<string>('');
   const {
     state: {serviceList, selectedAudit, code},
     dispatch,
@@ -136,7 +116,6 @@ const AddProductForm = ({navigation, route}: Props) => {
     };
 
     dispatch(stateAction.service_list(newServiceItem as any));
-
     dispatch(stateAction.reset_audit());
     dispatch(stateAction.reset_service_images());
     dispatch(stateAction.reset_materials());
@@ -167,6 +146,16 @@ const AddProductForm = ({navigation, route}: Props) => {
     navigation.goBack();
   };
   useEffect(() => {
+    const newServiceID = uuidv4();
+    console.log('Generated serviceID:', newServiceID); // Add this line
+    setServiceID(newServiceID);
+  }, []);
+  
+  useEffect(() => {
+    if(serviceID){
+      console.log('got serviceID',serviceID)
+      dispatch(stateAction.initial_serviceId(serviceID));
+    }
     if (qty > 0) {
       const total = qty * unitPrice;
       // const discountedTotal = total - (total * discountPercent / 100);
@@ -174,17 +163,10 @@ const AddProductForm = ({navigation, route}: Props) => {
     } else {
       setTotalCost(0);
     }
-  }, [qty, unitPrice, discountPercent]);
-  console.log('selected materials', selectedMaterialArray);
+  }, [qty, unitPrice, serviceID,discountPercent]);
+  console.log('serviceListIDDD', JSON.stringify(serviceList));
   return (
     <>
-      {/* <HeaderRNEComponent
-     onLeftPress={ () => onGoback()}
-     onRightPress={handleSubmit(handleFormSubmit)}
-     title="เพิ่มรายการ-สินค้า"
-     rightText="บันทึก"
-    
-    /> */}
       <View style={{flex: 1}}>
         <ScrollView style={styles.container}>
           <View style={styles.subContainer}>
@@ -514,10 +496,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                     <TouchableOpacity
                       key={item.id}
                       style={styles.card}
-                      onPress={() => setIsModalMaterialsVisible(true)}
-                      // onPress={() =>
-                      //   navigation.navigate('ExistingMaterials', {id: serviceID})
-                      // }
+                      onPress={() => setIsModalMaterialsVisible(true)}             
                     >
                       <Text style={styles.cardTitle}>{item.name}</Text>
                       <Icon name="chevron-right" size={24} color="gray" />
@@ -575,11 +554,12 @@ const AddProductForm = ({navigation, route}: Props) => {
           </View>
           <SelectAudit
             isVisible={isModalVisible}
+            serviceId={serviceID}
             onClose={() => setModalVisible(false)}
             selectedAudits={selectedAudits}
             setSelectedAudits={setSelectedAudits}
-            title="Some Title"
-            description="Some Description"
+            title={watch('title')}
+            description={watch('description')}
             onPress={() => {
               /* Handle onPress here if needed */
             }}

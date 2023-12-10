@@ -82,6 +82,11 @@ const initialState: StateType = {
 
 function reducer(state: StateType, action: ActionType): StateType {
   switch (action.type) {
+
+
+
+
+
     case contrains.ALL_DATA:
       return {...state, allData: action.payload as string};
     case contrains.CODE:
@@ -129,11 +134,32 @@ function reducer(state: StateType, action: ActionType): StateType {
         periodPercent: action.payload as any,
       };
 
-    case contrains.SELECTED_AUDIT:
-      return {
-        ...state,
-        selectedAudit: [...state.selectedAudit, action.payload] as any,
-      };
+      case contrains.SELECTED_AUDIT:
+        const { serviceId, auditData } = action.payload;
+        const updatedServiceList = state.serviceList.map(service => {
+          if (service.id === serviceId) {
+            const newAudits = service.audits ? [...service.audits, auditData] : [auditData];
+            return {
+              ...service,
+              audits: newAudits,
+            };
+          }
+          return service;
+        });
+        return {
+          ...state,
+          serviceList: updatedServiceList,
+        };
+      
+      case contrains.INITIAL_SERVICEID:
+        if (state.serviceList.some(service => service.id === action.payload)) {
+          return state;
+        }
+  
+        return {
+          ...state,
+          serviceList: [...state.serviceList, { id: action.payload }] as any,
+        };
 
     case contrains.EXISTING_ARRAY_AUDIT:
       return {

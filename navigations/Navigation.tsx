@@ -1,12 +1,20 @@
 import React, {useState, useEffect} from 'react';
-import {StyleSheet, ActivityIndicator, View,TouchableOpacity,Text} from 'react-native';
+import {
+  StyleSheet,
+  ActivityIndicator,
+  View,
+  TouchableOpacity,
+  Text,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import RegisterScreen from '../screens/register/registerScreen';
-import { useNavigation } from '@react-navigation/native';
-
+import CreateCompanyScreen from '../screens/register/createcompanyScreen';
+import {useNavigation} from '@react-navigation/native';
+import {useUser} from '../providers/UserContext';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {HeaderBackButton} from '@react-navigation/elements';
 import firebase from '../firebase';
 import {
   Audit,
@@ -45,6 +53,8 @@ import ExistingMaterials from '../screens/products/materials/existing';
 import ExistingWorkers from '../screens/workers/existing';
 import AddNewWorker from '../screens/workers/addNew';
 import AddNewMaterial from '../screens/products/materials/addNew';
+import RegisterScreen from '../screens/register/registerScreen';
+
 
 const Theme = {
   ...DefaultTheme,
@@ -54,58 +64,18 @@ const Theme = {
   },
 };
 
-const Navigation = () => {
+const Navigation = ({initialRouteName}) => {
   const Stack = createNativeStackNavigator<ParamListBase>();
-  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
-  const [loadingUser, setLoadingUser] = useState(true);
+  const user = useUser();
 
   const screens: ScreenItem[] = [
-    {name: 'RegisterScreen', component: RegisterScreen},
-    // {name: 'HomeScreen',  component: HomeScreen},
+    {name: 'CreateCompanyScreen', component: CreateCompanyScreen},
+    {name: 'RegisterScreen', component: RegisterScreen}, // {name: 'HomeScreen',  component: HomeScreen},
     {name: 'DocViewScreen', component: DocViewScreen},
     {name: 'FirstAppScreen', component: FirstAppScreen},
     {name: 'LoginScreen', component: LoginScreen},
     {name: 'DashboardQuotation', component: Dashboard},
   ];
-
-  useEffect(() => {
-    const bootstrapAsync = async () => {
-      let userToken;
-      try {
-        userToken = await AsyncStorage.getItem('userToken');
-      } catch (e) {
-        console.error('Error loading user token', e);
-      }
-
-      if (userToken) {
-        console.log('get token');
-        setUser(userToken);
-
-        
-      } else {
-        // setUser(null);
-        console.log('not get token');
-        console.log('userToken', userToken);
-        firebase.auth().signOut();
-      }
-      setLoadingUser(false);
-    };
-
-    bootstrapAsync();
-
-    const unsubscribe = firebase.auth().onAuthStateChanged(user => {
-      try {
-        setUser(user);
-
-      } catch (error) {
-        console.error('Error in onAuthStateChanged:', error);
-      }
-    });
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, []);
 
   const commonScreenOptions = {
     headerTitleStyle: {
@@ -116,19 +86,18 @@ const Navigation = () => {
     },
     headerTintColor: 'black',
   };
-  if (loadingUser) {
+  if (!initialRouteName) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large"  />
+        <ActivityIndicator size="large" />
       </View>
     );
   }
-console.log('user', user)
-console.log('loadinguser', loadingUser)
+
   return (
     <NavigationContainer theme={Theme}>
       <Stack.Navigator
-        initialRouteName={user ? 'DashboardQuotation' : 'FirstAppScreen'}
+        initialRouteName={initialRouteName}
         screenOptions={{
           ...commonScreenOptions,
           headerShown: false,
@@ -164,9 +133,7 @@ console.log('loadinguser', loadingUser)
               backgroundColor: '#ffffff',
             },
             headerTintColor: 'black',
-          
           }}
-          
         />
         <Stack.Screen
           name="Signature"
@@ -225,7 +192,7 @@ console.log('loadinguser', loadingUser)
             headerTintColor: 'black',
           }}
         />
-          <Stack.Screen
+        <Stack.Screen
           name="EditClientForm"
           component={EditCustomer}
           options={{
@@ -373,7 +340,6 @@ console.log('loadinguser', loadingUser)
             headerShown: true,
             title: 'เพิ่มลูกค้า',
             headerBackTitleVisible: false,
-
             headerStyle: {
               backgroundColor: '#ffffff',
             },

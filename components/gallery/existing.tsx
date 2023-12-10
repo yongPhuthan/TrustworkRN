@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useContext} from 'react';
+import React, {useState, useCallback, useContext, useEffect} from 'react';
 import {
   View,
   Image,
@@ -9,6 +9,8 @@ import {
   StyleSheet,
   Text,
 } from 'react-native';
+import {useUser} from '../../providers/UserContext';
+
 import {StackNavigationProp} from '@react-navigation/stack';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
 import {useQuery, useQueryClient, useMutation} from '@tanstack/react-query';
@@ -25,6 +27,7 @@ import {
   faPlusCircle,
   faClose,
   faCamera,
+  faArrowLeft,
 } from '@fortawesome/free-solid-svg-icons';
 import {CheckBox} from '@rneui/themed';
 import {
@@ -33,6 +36,7 @@ import {
   ImageLibraryOptions,
   ImagePickerResponse,
 } from 'react-native-image-picker';
+import storage from '@react-native-firebase/storage';
 
 import {
   HOST_URL,
@@ -40,7 +44,7 @@ import {
   PROJECT_FIREBASE,
   CLOUDFLARE_WORKER,
   CLOUDFLARE_R2_BUCKET_BASE_URL,
-  CLOUDFLARE_DIRECT_UPLOAD_URL,
+  BACK_END_SERVER_URL,
   CLOUDFLARE_R2_PUBLIC_URL,
 } from '@env';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -50,6 +54,7 @@ import useImagesQuery from '../../hooks/utils/image/useImageQuery';
 import {useSlugify} from '../../hooks/utils/useSlugify';
 import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
 import Modal from 'react-native-modal';
+import getStorage from '@react-native-firebase/storage';
 
 type ImageData = {
   id: number;
@@ -71,31 +76,31 @@ type Props = {
 };
 const CLOUDFLARE_ENDPOINT = __DEV__ ? CLOUDFLARE_WORKER_DEV : CLOUDFLARE_WORKER;
 
-const getGallery = async code => {
-  try {
-    const response = await fetch(`${CLOUDFLARE_ENDPOINT}gallery`, {
-      headers: {
-        code: code,
-      },
-    });
-    console.log('response', response);
+// const getGallery = async code => {
+//   try {
+//     const response = await fetch(`${CLOUDFLARE_ENDPOINT}gallery`, {
+//       headers: {
+//         code: code,
+//       },
+//     });
+//     console.log('response', response);
 
-    if (!response.ok) {
-      throw new Error('Server responded with status: ' + response.status);
-    }
+//     if (!response.ok) {
+//       throw new Error('Server responded with status: ' + response.status);
+//     }
 
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.indexOf('application/json') !== -1) {
-      const data = await response.json();
-      return data;
-    } else {
-      throw new Error('Received non-JSON response');
-    }
-  } catch (error) {
-    console.error('Error fetching images:', error);
-    return {};
-  }
-};
+//     const contentType = response.headers.get('content-type');
+//     if (contentType && contentType.indexOf('application/json') !== -1) {
+//       const data = await response.json();
+//       return data;
+//     } else {
+//       throw new Error('Received non-JSON response');
+//     }
+//   } catch (error) {
+//     console.error('Error fetching images:', error);
+//     return {};
+//   }
+// };
 
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
@@ -116,6 +121,9 @@ const GalleryScreen = ({
   setServiceImages,
 }: ImageModalProps) => {
   const [isImageUpload, setIsImageUpload] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const user = useUser();
+  const [loading, setLoading] = useState(true);
   const [galleryImages, setGalleryImages] = useState<ImageData[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>('');
@@ -143,34 +151,59 @@ const GalleryScreen = ({
     setServiceImages(urls);
     // dispatch(stateAction.service_images(urls));
   };
+  const getGallery = async () => {
+    console.log('GETAPI');
+    if (!user) {
+      throw new Error('User not authenticated');
+    } else {
+      const idToken = await user.getIdToken(true);
+
+      try {
+        let url = `${BACK_END_SERVER_URL}/api/services/getGallery?code=${encodeURIComponent(
+          code,
+        )}`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Server responded with status: ' + response.status);
+        }
+
+        const imageUrls = await response.json();
+        return imageUrls;
+      } catch (error) {
+        console.error('Error fetching images:', error);
+        return [];
+      }
+    }
+  };
+
   const {data, isLoading, error} = useQuery({
-    queryKey: ['gallery', code],
+    queryKey: ['gallery'],
     queryFn: () => {
       if (code && code !== 'undefined') {
-        return getGallery(code);
+        return getGallery();
       } else {
         console.error('The id is undefined. Skipping the API call.');
         return Promise.resolve({});
       }
     },
-    onSuccess: (data: any) => {
-      if (data) {
-        console.log('data key', data);
-        const transformedData = data.map((item: string, index: number) => {
-          const completeURL = `${CLOUDFLARE_R2_PUBLIC_URL}${item}`;
-
-          const isMatchedInServiceImages = serviceImages.includes(completeURL);
-
-          return {
-            id: index + 1,
-            url: completeURL,
-            defaultChecked: isMatchedInServiceImages,
-          };
-        });
-
-        setGalleryImages(transformedData);
+    onSuccess: data => {
+      if (data && Array.isArray(data)) {
+        // Transforming the data to ImageData format
+        const imageData = data.map((url, index) => ({
+          id: index + 1, // Assuming id starts from 1 and increments for each image
+          url: url,
+          defaultChecked: false, // Set to true or false based on your requirement
+        }));
+        setGalleryImages(imageData);
       } else {
-        console.warn('Data is undefined');
+        console.warn('Data is undefined or not in expected format');
       }
     },
   });
@@ -180,19 +213,16 @@ const GalleryScreen = ({
     const options: ImageLibraryOptions = {
       mediaType: 'photo' as MediaType,
     };
-    const uploadImageToCloudflare = async (imagePath: string) => {
+
+    const uploadImageToFbStorage = async (imagePath: string) => {
       if (!imagePath) {
         console.log('No image path provided');
         return;
       }
+
       const name = imagePath.substring(imagePath.lastIndexOf('/') + 1);
       const fileType = imagePath.substring(imagePath.lastIndexOf('.') + 1);
       const filename = slugify(name);
-
-      const blob = (await uriToBlobFunction(imagePath)) as Blob;
-      const CLOUDFLARE_ENDPOINT = __DEV__
-        ? CLOUDFLARE_WORKER_DEV
-        : CLOUDFLARE_WORKER;
 
       let contentType = '';
       switch (fileType.toLowerCase()) {
@@ -208,18 +238,23 @@ const GalleryScreen = ({
           return;
       }
 
+      const blob = (await uriToBlobFunction(imagePath)) as Blob;
+
       try {
-        const response = await fetch(`${CLOUDFLARE_ENDPOINT}${filename}`, {
-          method: 'POST',
-          headers: {
-            gallery: 'true',
+        const response = await fetch(
+          `${BACK_END_SERVER_URL}/api/upload/postGallery`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              fileName: filename,
+              contentType: contentType,
+              code,
+            }),
           },
-          body: JSON.stringify({
-            fileName: name,
-            fileType: contentType,
-            code,
-          }),
-        });
+        );
 
         if (!response.ok) {
           const text = await response.text();
@@ -227,9 +262,9 @@ const GalleryScreen = ({
           throw new Error('Server error');
         }
 
-        const {presignedUrl} = await response.json();
+        const {signedUrl, publicUrl} = await response.json();
 
-        const uploadToR2Response = await fetch(presignedUrl, {
+        const uploadResponse = await fetch(signedUrl, {
           method: 'PUT',
           headers: {
             'Content-Type': contentType,
@@ -237,12 +272,14 @@ const GalleryScreen = ({
           body: blob,
         });
 
-        if (!uploadToR2Response.ok) {
-          console.error('Failed to upload file to R2');
+        if (!uploadResponse.ok) {
+          console.error('Failed to upload file to Firebase Storage');
+          return;
         }
-        console.log('Upload to R2 success');
-        const url = `${CLOUDFLARE_R2_PUBLIC_URL}${code}/gallery/${filename}`;
-        return url;
+        console.log('Upload to Firebase Storage success');
+
+        // publicUrl is the URL of the uploaded image
+        return publicUrl;
       } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
       }
@@ -258,15 +295,17 @@ const GalleryScreen = ({
       } else if (response.assets && response.assets.length > 0) {
         const source = {uri: response.assets[0].uri ?? null};
         console.log('Image source:', source);
-
         if (source.uri) {
           try {
-            const cloudflareUrl: string | undefined =
-              await uploadImageToCloudflare(source.uri);
-            queryClient.invalidateQueries(['gallery', code]);
+            const uploadedImageUrl = await uploadImageToFbStorage(source.uri);
+            if (uploadedImageUrl) {
+              console.log('Image uploaded successfully:', uploadedImageUrl);
+              // Here you can invalidate queries or update your state with the new image URL
+              queryClient.invalidateQueries(['gallery', code]);
+            }
             setIsImageUpload(false);
           } catch (error) {
-            console.error('Error uploading image to Cloudflare:', error);
+            console.error('Error uploading image:', error);
             setIsImageUpload(false);
           }
         }
@@ -276,10 +315,8 @@ const GalleryScreen = ({
     setIsImageUpload,
     slugify,
     uriToBlobFunction,
-    CLOUDFLARE_WORKER_DEV,
-    CLOUDFLARE_WORKER,
+    BACK_END_SERVER_URL,
     code,
-    CLOUDFLARE_R2_PUBLIC_URL,
     launchImageLibrary,
   ]);
 
@@ -307,8 +344,13 @@ const GalleryScreen = ({
       </View>
     );
   }
-  console.log('code',code)
-
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       {isImageUpload ? (
@@ -319,7 +361,12 @@ const GalleryScreen = ({
         <View style={styles.container}>
           <View style={styles.header}>
             <TouchableOpacity style={styles.onCloseButton} onPress={onClose}>
-              <FontAwesomeIcon icon={faClose} size={32} color="gray" />
+              <FontAwesomeIcon icon={faArrowLeft} size={24} color="gray" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.onPlusButton}
+              onPress={handleUploadMoreImages}>
+              <FontAwesomeIcon icon={faPlus} size={24} color="gray" />
             </TouchableOpacity>
           </View>
 
@@ -328,7 +375,9 @@ const GalleryScreen = ({
             numColumns={3}
             ListEmptyComponent={
               <View style={styles.buttonContainer}>
-                <TouchableOpacity onPress={handleUploadMoreImages} style={styles.selectButton}>
+                <TouchableOpacity
+                  onPress={handleUploadMoreImages}
+                  style={styles.selectButton}>
                   <View style={styles.containerButton}>
                     <FontAwesomeIcon
                       icon={faCamera}
@@ -373,14 +422,17 @@ const GalleryScreen = ({
           {data && data.length > 0 && (
             <View style={styles.buttonContainer}>
               <TouchableOpacity
-                style={[styles.uploadButton, styles.uploadMoreButton]}
-                onPress={handleUploadMoreImages}>
-                <Text style={styles.uploadButtonText}>เพิ่มรูปภาพ</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.uploadButton, styles.saveButton]}
-                onPress={() => onClose()}>
+                style={[
+                  styles.uploadButton,
+                  styles.saveButton,
+                  !serviceImages || serviceImages.length === 0
+                    ? styles.disabledButton
+                    : null,
+                ]}
+                onPress={() => {
+                  if (serviceImages) onClose();
+                }}
+                disabled={!serviceImages || serviceImages.length === 0}>
                 <Text style={styles.uploadButtonText}>บันทึก</Text>
               </TouchableOpacity>
             </View>
@@ -442,6 +494,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+
     backgroundColor: 'rgba(0,0,0,0.9)',
   },
   ViewButton: {
@@ -527,6 +580,7 @@ const styles = StyleSheet.create({
   },
 
   saveButton: {
+    height: 50,
     backgroundColor: '#1f303cff',
   },
 
@@ -563,11 +617,12 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     paddingVertical: 10,
     backgroundColor: 'white',
     // backgroundColor: '#f5f5f5',
   },
+
   selectButtonText: {
     fontSize: 16,
     color: '#0073BA',
@@ -590,5 +645,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 5,
     marginTop: 20,
+  },
+  onPlusButton: {
+    paddingVertical: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#cccccc', // Example: gray color for disabled state
+    // Other styles for disabled state, if necessary
   },
 });

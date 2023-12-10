@@ -8,8 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   FlatList,
-  Pressable
-  
+  Pressable,
 } from 'react-native';
 import {CheckBox} from '@rneui/themed';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -20,20 +19,19 @@ import {
   faPlus,
   faImages,
   faClose,
-  
 } from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {RouteProp} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
-import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
+import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {CompanyUser, Service,Material} from '../../types/docType';
+import {CompanyUser, Service, Material} from '../../types/docType';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
 import * as stateAction from '../../redux/actions';
 import Modal from 'react-native-modal';
 import CustomCheckbox from '../../components/CustomCheckbox';
-
+import {useUser} from '../../providers/UserContext';
 import {Store} from '../../redux/store';
 import AddNewMaterial from './addNew';
 type Props = {
@@ -48,33 +46,7 @@ interface ExistingModalProps {
   setSelectedMaterialArray: React.Dispatch<React.SetStateAction<any[]>>;
   onPress?: () => void;
 }
-const fetchExistingMaterials = async (code: CompanyUser) => {
-  const user = auth().currentUser;
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
 
-  const idToken = await user.getIdToken();
-  const url = __DEV__
-    ? `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appQueryExistingMaterials`
-    : `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appQueryExistingMaterials`;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-
-    body: JSON.stringify({code}),
-  });
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-  const data = await response.json();
-  return data;
-};
 const numColumns = 2;
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
@@ -86,17 +58,43 @@ const ExistingMaterials = ({
   onPress,
 }: ExistingModalProps) => {
   const [materials, setMaterials] = useState<Material[]>([]);
-const [isOpenModal, setIsOpenModal] = useState(false);
+  const [isOpenModal, setIsOpenModal] = useState(false);
   const route = useRoute();
- 
+  const user = useUser();
+
   const companyID = route.params;
   const {
     state: {serviceList, selectedMaterials, code, serviceImages},
     dispatch,
   }: any = useContext(Store);
+  const fetchExistingMaterials = async () => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    } else {
+      const idToken = await user.getIdToken(true);
+      let url = `${BACK_END_SERVER_URL}/api/services/queryMaterials?code=${encodeURIComponent(
+        code,
+      )}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      console.log('dataSetting', data);
+      return data;
+    }
+  };
+
   const {data, isLoading, isError} = useQuery(
-    ['existingMaterials', code],
-    () => fetchExistingMaterials(code).then(res => res),
+    ['existingMaterials'],
+    () => fetchExistingMaterials().then(res => res),
     {
       onSuccess: data => {
         setMaterials(data);
@@ -106,32 +104,33 @@ const [isOpenModal, setIsOpenModal] = useState(false);
   );
   const handleSelectAudit = (material: any) => {
     const existingIndex = selectedMaterialArray.findIndex(
-      a => a.title === material.title,
+      m => m.id === material.id, // Use id instead of title
     );
     if (existingIndex !== -1) {
-      // if the audit is already selected, remove it
+      // Remove the item if it's already selected
       setSelectedMaterialArray(
-        selectedMaterialArray.filter(a => a.title !== material.title),
+        selectedMaterialArray.filter(m => m.id !== material.id),
       );
     } else {
-      // if the audit is not selected, add it
+      // Add the item if it's not selected
       setSelectedMaterialArray([...selectedMaterialArray, material]);
     }
   };
-  //   const handleSelectAudit = (material: any) => {
-  //     const existingIndex = selectedMaterials.findIndex(
-  //       a => a.name === material.name,
+
+  // const handleSelectAudit = (material: any) => {
+  //   const existingIndex = selectedMaterials.findIndex(
+  //     a => a.name === material.name,
+  //   );
+  //   if (existingIndex !== -1) {
+  //     setSelectedMaterialArray(
+  //       selectedMaterialArray.filter(a => a.name !== material.name),
   //     );
-  //     if (existingIndex !== -1) {
-  //       setSelectedMaterialArray(
-  //         selectedMaterialArray.filter(a => a.name !== material.name),
-  //       );
-  //       dispatch(stateAction.remove_selected_materials(material));
-  //     } else {
-  //       setSelectedMaterialArray([...selectedMaterialArray, material]);
-  //       dispatch(stateAction.selected_materials(material));
-  //     }
-  //   };
+  //     dispatch(stateAction.remove_selected_materials(material));
+  //   } else {
+  //     setSelectedMaterialArray([...selectedMaterialArray, material]);
+  //     dispatch(stateAction.selected_materials(material));
+  //   }
+  // };
   useEffect(() => {
     if (selectedMaterials.length > 0) {
       setSelectedMaterialArray(selectedMaterials);
@@ -151,93 +150,75 @@ const [isOpenModal, setIsOpenModal] = useState(false);
     }
   };
   const handleAddNewProduct = () => {
-    setIsOpenModal(true)
+    setIsOpenModal(true);
   };
-console.log('materials',materials)
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
-          <View style={styles.container}>
-          <View style={styles.header}>
+      <View style={styles.container}>
+        <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <FontAwesomeIcon icon={faClose} size={32} color="gray" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.addNewButton} onPress={handleAddNewProduct}>
-          <FontAwesomeIcon style={styles.icon} icon={faPlus} size={16} color="#012b20" />
-          <Text style={styles.addNewText}> เพิ่มใหม่</Text>
-
-          </TouchableOpacity>
         </View>
-      {/* {materials.length > 0 && (
-        <Text style={styles.titleText}>เลือกจากรายการเดิม</Text>
-      )} */}
-      <FlatList
-        data={materials}
-        renderItem={({item,index}) => (
-          <>
-<TouchableOpacity
-    style={[styles.card, selectedMaterialArray[index] && styles.cardChecked]}
 
-    onPress={() => handleSelectAudit(item)}>
-    <CheckBox
-      center
-      checked={selectedMaterialArray[index]}
-      onPress={() => handleSelectAudit(item)}     
-       containerStyle={styles.checkboxContainer}
-      checkedColor="#012b20"
-    />
-    <View style={styles.textContainer}>
-      <Text style={styles.productTitle}>{item.name}</Text>
-      <Text style={styles.description}>{item.description}</Text>
-    </View>
-    <Image
-      source={{ uri: item.image }}
-      style={styles.productImage}
-    />
-  </TouchableOpacity>
-          </>
-        )}
-        ListEmptyComponent={
-          <View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              height: height * 0.5,
-
-              alignItems: 'center',
-            }}>
-            <TouchableOpacity
-              onPress={handleAddNewProduct}
-              style={styles.emptyListButton}>
-              <Text style={styles.emptyListText}>+ เพิ่มรายการใหม่</Text>
-            </TouchableOpacity>
-          </View>
-        }
-        keyExtractor={item => item.id}
-      />
-
-      {selectedMaterialArray?.length > 0 && (
-                <TouchableOpacity
-                onPress={handleDonePress}
-                style={styles.saveButton}>
-                                                 <Text style={styles.saveText}>{`บันทึก ${selectedMaterialArray?.length} รายการ`} </Text>
-
-      
+        <FlatList
+          data={materials}
+          renderItem={({item, index}) => (
+            <>
+              <TouchableOpacity
+                style={[
+                  styles.card,
+                  selectedMaterialArray.some(m => m.id === item.id)
+                    ? styles.cardChecked
+                    : null,
+                ]}
+                onPress={() => handleSelectAudit(item)}>
+                <CheckBox
+                  center
+                  checked={selectedMaterialArray.some(m => m.id === item.id)}
+                  onPress={() => handleSelectAudit(item)}
+                  containerStyle={styles.checkboxContainer}
+                  checkedColor="#012b20"
+                />
+                <View style={styles.textContainer}>
+                  <Text style={styles.productTitle}>{item.name}</Text>
+                  <Text style={styles.description}>{item.description}</Text>
+                </View>
+                <Image source={{uri: item.image}} style={styles.productImage} />
               </TouchableOpacity>
-          // <View style={styles.containerBtn}>
-            
-          //   <TouchableOpacity onPress={handleDonePress} style={styles.button}>
-          //     <Text
-          //       style={
-          //         styles.buttonText
-          //       }>{`บันทึก ${selectedMaterialArray?.length} มาตรฐาน`}</Text>
-          //   </TouchableOpacity>
-          // </View>
-      )}
-    </View>
- 
-      <AddNewMaterial 
-      isVisible={isOpenModal}
-      onClose={()=>setIsOpenModal(false)}
+            </>
+          )}
+          ListEmptyComponent={
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                height: height * 0.5,
+
+                alignItems: 'center',
+              }}>
+              <TouchableOpacity
+                onPress={handleAddNewProduct}
+                style={styles.emptyListButton}>
+                <Text style={styles.emptyListText}>+ เพิ่มรายการใหม่</Text>
+              </TouchableOpacity>
+            </View>
+          }
+          keyExtractor={item => item.id}
+        />
+
+        {selectedMaterialArray?.length > 0 && (
+          <TouchableOpacity onPress={handleDonePress} style={styles.saveButton}>
+            <Text style={styles.saveText}>
+              {`บันทึก ${selectedMaterialArray?.length} รายการ`}{' '}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <AddNewMaterial
+        isVisible={isOpenModal}
+        onClose={() => setIsOpenModal(false)}
       />
     </Modal>
   );
@@ -248,7 +229,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#F7F7F7',
-    width
+    width,
   },
   titleText: {
     fontSize: 16,
@@ -272,7 +253,7 @@ const styles = StyleSheet.create({
   saveButton: {
     padding: 14,
     borderRadius: 8,
-    backgroundColor:'#012b20',
+    backgroundColor: '#012b20',
     // backgroundColor: '#0073BA',
     alignItems: 'center',
     justifyContent: 'center',
@@ -334,20 +315,18 @@ const styles = StyleSheet.create({
   addNewButton: {
     width: 'auto',
     flexDirection: 'row',
-    alignItems: 'center', 
-    justifyContent: 'center', 
-paddingLeft:15,
-paddingRight:15,
-borderWidth:1,
-borderColor: '#012b20', 
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingLeft: 15,
+    paddingRight: 15,
+    borderWidth: 1,
+    borderColor: '#012b20',
 
     height: 50,
 
     borderRadius: 5,
-
   },
   modal: {
-
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
@@ -355,7 +334,6 @@ borderColor: '#012b20',
     paddingVertical: 10,
   },
   header: {
-
     justifyContent: 'space-between',
     flexDirection: 'row',
     paddingVertical: 10,
@@ -415,17 +393,15 @@ borderColor: '#012b20',
     height: 100, // Adjust the size according to your design
     borderRadius: 4, // If you want rounded corners
   },
-  addNewText:{
-    color:'#012b20',
-    fontSize:14,
-    fontStyle:'normal',
-    fontWeight:'bold',
+  addNewText: {
+    color: '#012b20',
+    fontSize: 14,
+    fontStyle: 'normal',
+    fontWeight: 'bold',
     fontFamily: 'Sukhumvit Set Bold',
-
   },
   icon: {
     color: '#012b20',
-
   },
 });
 

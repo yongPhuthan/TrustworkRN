@@ -45,6 +45,7 @@ const LoginScreen = ({navigation}: Props) => {
     };
 
     const isFormValid = isEmailValid(email) && password.length > 0;
+
     const handleLogin = async () => {
         try {
             const userCredential = await auth().signInWithEmailAndPassword(email, password);
@@ -75,7 +76,7 @@ const LoginScreen = ({navigation}: Props) => {
                 {/* <Icon name="arrow-back" size={24} color="#5C5F62" /> */}
             </TouchableOpacity>
 
-            <Text style={styles.title}>Salestrust</Text>
+            <Text style={styles.title}>Saletrusth</Text>
             <TextInput
                 placeholder="อีเมล"
                 style={styles.input}

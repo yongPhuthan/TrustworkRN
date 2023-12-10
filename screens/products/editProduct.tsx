@@ -55,14 +55,14 @@ type Props = {
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
 const EditProductForm = ({navigation, route}: Props) => {
-  const {control, handleSubmit, formState} = useForm<FormData>();
+  const {control, handleSubmit, formState,watch} = useForm<FormData>();
   const {isDirty} = formState;
   const {item} = route.params;
   const [qty, setQuantity] = useState(item.qty);
   const [count, setCount] = useState(0);
   const [unitPrice, setPrice] = useState(item.unitPrice);
   const [total, setTotalCost] = useState(item.total);
-  const [serviceImages, setServicesImages] = useState<string[]>(
+  const [serviceImages, setServiceImages] = useState<string[]>(
     item.serviceImages,
   );
   const [serviceListState, setServiceList] = useState<ServiceList[]>([]);
@@ -75,7 +75,7 @@ const EditProductForm = ({navigation, route}: Props) => {
   const [isModalImagesVisible, setModalImagesVisible] = useState(false);
   const serviceID = uuidv4();
   const [selectedMaterialArray, setSelectedMaterialArray] = useState<any[]>([]);
-  const [selectedAudits, setSelectedAudits] = useState<Audit[]>(item.audits);
+  const [selectedAudits, setSelectedAudits] = useState<Audit[]>([]);
 
 
 
@@ -158,11 +158,11 @@ const EditProductForm = ({navigation, route}: Props) => {
 
   useEffect(() => {
     setTotalCost(qty * unitPrice);
-
+  setSelectedAudits(item.audits);
     if (imageUrl) {
       item.serviceImage = imageUrl;
     }
-  }, [qty, unitPrice]);
+  }, [qty, unitPrice,selectedAudit]);
   console.log('selectedAudits', selectedAudits);
   return (
     <>
@@ -172,7 +172,7 @@ const EditProductForm = ({navigation, route}: Props) => {
             <View
               style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
               {isImageUpload ? (
-                <ActivityIndicator size="small" color="gray" />
+                <ActivityIndicator size="small" color="#0073BA" />
               ) : (
                 <FlatList
                   data={serviceImages}
@@ -186,13 +186,18 @@ const EditProductForm = ({navigation, route}: Props) => {
                   }}
                   keyExtractor={(item, index) => index.toString()}
                   ListFooterComponent={
-                    serviceImages?.length > 0 ? (
+                    serviceImages.length > 0 ? (
                       <TouchableOpacity
                         style={styles.addButtonContainer}
                         onPress={() => {
-                          navigation.navigate('GalleryScreen', {code});
+                          setModalImagesVisible(true);
+                          // navigation.navigate('GalleryScreen', {code});
                         }}>
-                        <FontAwesomeIcon icon={faPlus} size={32} color="gray" />
+                        <FontAwesomeIcon
+                          icon={faPlus}
+                          size={32}
+                          color="#0073BA"
+                        />
                       </TouchableOpacity>
                     ) : null
                   }
@@ -203,26 +208,33 @@ const EditProductForm = ({navigation, route}: Props) => {
                           justifyContent: 'center',
                           alignItems: 'center',
                           marginBottom: 20,
-                          borderColor: 'gray',
+                          borderColor: '#0073BA',
                           borderWidth: imageUrl == null ? 1 : 0,
-                          borderRadius: 10,
-                          borderStyle: 'dotted',
+                          borderRadius: 5,
+                          borderStyle: 'dashed',
                           // marginHorizontal: 100,
                           padding: 10,
                           height: imageUrl == null ? 100 : 150,
                           width: imageUrl == null ? 200 : 'auto',
                         }}
                         onPress={() => {
-                          navigation.navigate('GalleryScreen', {code});
+                          setModalImagesVisible(true);
+
+                          // navigation.navigate('GalleryScreen', {code});
                         }}>
                         <FontAwesomeIcon
                           icon={faImages}
                           style={{marginVertical: 5, marginHorizontal: 50}}
                           size={32}
-                          color="gray"
+                          color="#0073BA"
                         />
-                        <Text style={{textAlign: 'center', color: 'gray'}}>
-                          ภาพตัวอย่างผลงาน
+                        <Text
+                          style={{
+                            textAlign: 'center',
+                            color: '#0073BA',
+                            fontFamily: 'Sukhumvit set',
+                          }}>
+                          เลือกภาพตัวอย่างผลงาน
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -230,6 +242,7 @@ const EditProductForm = ({navigation, route}: Props) => {
                 />
               )}
             </View>
+            <Text style={styles.priceTitle}>ชื่อรายการ</Text>
             <Controller
               control={control}
               name="title"
@@ -243,6 +256,8 @@ const EditProductForm = ({navigation, route}: Props) => {
                 />
               )}
             />
+            <Text style={styles.priceTitle}>รายละเอียด</Text>
+
             <Controller
               control={control}
               name="description"
@@ -260,14 +275,13 @@ const EditProductForm = ({navigation, route}: Props) => {
                 />
               )}
             />
+
             <View style={styles.summary}>
               <Text style={styles.priceHead}>ราคา:</Text>
               <Controller
                 control={control}
                 name="unitPrice"
-                defaultValue={Number(item.unitPrice)
-                  .toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+                defaultValue={unitPrice.toString()}
                 render={({field: {onChange, value}}) => (
                   <TextInput
                     style={[styles.input, {textAlign: 'right'}]}
@@ -285,6 +299,7 @@ const EditProductForm = ({navigation, route}: Props) => {
             <View style={styles.summary}>
               <Text style={styles.price}>จำนวน:</Text>
 
+              {/* START COUNTER BUTTON */}
               <View style={styles.containerCounter}>
                 <TouchableOpacity
                   style={styles.button}
@@ -299,15 +314,14 @@ const EditProductForm = ({navigation, route}: Props) => {
                 <Controller
                   control={control}
                   name="qty"
-                  defaultValue={String(item.qty)}
                   render={({field: {onChange, value}}) => (
                     <TextInput
                       style={styles.counter}
-                      placeholder="0"
+                      placeholder="10"
                       keyboardType="number-pad"
                       onChangeText={value => {
                         onChange(value);
-                        setQuantity(parseInt(value, 1));
+                        setQuantity(parseInt(value, 10));
                       }}
                       value={qty.toString()}
                     />
@@ -325,9 +339,47 @@ const EditProductForm = ({navigation, route}: Props) => {
 
               {/* END COUNTER BUTTON */}
             </View>
-            <Divider />
             <View style={styles.summary}>
-              <Text style={styles.price}>รวมเป็นเงิน:</Text>
+              <Text style={styles.price}>หน่วย:</Text>
+              <Controller
+                control={control}
+                name="unit"
+                defaultValue="ชุด"
+                render={({field: {onChange, value}}) => (
+                  <TextInput
+                    style={styles.price}
+                    keyboardType="default"
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
+              />
+            </View>
+            {/* ปิดส่วนลดแยกรายการ */}
+            {/* <View style={styles.summary}>
+          <Text style={styles.price}>ส่วนลด(%):</Text>
+          <Controller
+  control={control}
+  name="discountPercent"
+  defaultValue=""
+  render={({field: {onChange, value}}) => (
+    <TextInput
+      style={styles.price}
+      placeholder="0"
+      keyboardType="number-pad"
+      onChangeText={value => {
+        onChange(value);
+        setDiscountPercent(parseFloat(value));
+      }}
+      value={value}
+    />
+  )}
+/>
+
+        </View> */}
+            <SmallDivider />
+            <View style={styles.summary}>
+              <Text style={styles.priceSum}>รวมเป็นเงิน:</Text>
 
               <Controller
                 control={control}
@@ -339,7 +391,7 @@ const EditProductForm = ({navigation, route}: Props) => {
                     placeholder="0"
                     keyboardType="number-pad"
                     value={
-                      isValidNumber(qty) && isValidNumber(unitPrice)
+                      qty > 0
                         ? Number(qty * unitPrice)
                             .toFixed(2)
                             .replace(/\d(?=(\d{3})+\.)/g, '$&,')
@@ -370,9 +422,10 @@ const EditProductForm = ({navigation, route}: Props) => {
                     style={{
                       marginBottom: 20,
                       marginTop: 20,
+                      fontFamily: 'Sukhumvit Set Bold',
 
                       fontSize: 16,
-                      fontWeight: 'bold',
+
                       color: '#333',
                     }}>
                     มาตรฐานของบริการนี้:
@@ -382,16 +435,9 @@ const EditProductForm = ({navigation, route}: Props) => {
                       key={item.id}
                       style={styles.card}
                       onPress={() => setModalVisible(true)}>
-                      {item.AuditData ? (
-                        <Text style={styles.cardTitle}>
-                          {item.AuditData.auditShowTitle}
-                        </Text>
-                      ) : (
-                        <Text style={styles.cardTitle}>
-                          {item.auditShowTitle}
-                        </Text>
-                      )}
-
+                      <Text style={styles.cardTitle}>
+                        {item.auditShowTitle}
+                      </Text>
                       <Icon name="chevron-right" size={24} color="gray" />
                     </TouchableOpacity>
                   ))}
@@ -401,7 +447,10 @@ const EditProductForm = ({navigation, route}: Props) => {
                   {selectedAudits.length === 0 && (
                     <TouchableOpacity
                       style={styles.selectButton}
-                      onPress={() => setModalVisible(true)}>
+                      onPress={() => setModalVisible(true)}
+
+                      // onPress={handleSubmit(handleSelectAudit)}
+                    >
                       <View style={styles.containerButton}>
                         <FontAwesomeIcon
                           icon={faPlusCircle}
@@ -442,11 +491,12 @@ const EditProductForm = ({navigation, route}: Props) => {
                     }}>
                     วัสดุอุปกรณ์ที่นำเสนอ:
                   </Text>
-                  {selectedMaterialArray?.map((item: any, index: number) => (
+                  {selectedMaterialArray?.map((item: any) => (
                     <TouchableOpacity
-                      key={index}
+                      key={item.id}
                       style={styles.card}
-                      onPress={() => setIsModalMaterialsVisible(true)}>
+                      onPress={() => setIsModalMaterialsVisible(true)}             
+                    >
                       <Text style={styles.cardTitle}>{item.name}</Text>
                       <Icon name="chevron-right" size={24} color="gray" />
                     </TouchableOpacity>
@@ -454,13 +504,27 @@ const EditProductForm = ({navigation, route}: Props) => {
                 </View>
               ) : (
                 <View>
-                  <TouchableOpacity
-                    style={styles.selectButton}
-                    onPress={() => setIsModalMaterialsVisible(true)}>
-                    <Text style={styles.selectButtonText}>
-                      เลือกวัสดุอุปกรณ์
-                    </Text>
-                  </TouchableOpacity>
+                  {selectedMaterialArray.length === 0 && (
+                    <TouchableOpacity
+                      style={styles.selectButton}
+                      onPress={() => setIsModalMaterialsVisible(true)}
+                      // onPress={() =>
+                      //   navigation.navigate('ExistingMaterials', {id: serviceID})
+                      // }
+                    >
+                      <View style={styles.containerButton}>
+                        <FontAwesomeIcon
+                          icon={faPlusCircle}
+                          color="#0073BA"
+                          size={14}
+                        />
+
+                        <Text style={styles.selectButtonText}>
+                          เลือกวัสดุอุปกรณ์
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
                 </View>
               )}
             </View>
@@ -476,31 +540,49 @@ const EditProductForm = ({navigation, route}: Props) => {
                 }),
               }}></View>
             <SmallDivider />
+
+            {/* <TouchableOpacity
+          style={[
+            styles.btn,
+            selectedAudit.length === 0 ? styles.btnDisabled : null,
+          ]}
+          onPress={handleSubmit(handleFormSubmit)}
+          disabled={selectedAudit.length === 0}>
+          <Text style={styles.label}>บันทึก</Text>
+        </TouchableOpacity> */}
           </View>
           <SelectAudit
             isVisible={isModalVisible}
+            serviceId=''
             onClose={() => setModalVisible(false)}
             selectedAudits={selectedAudits}
             setSelectedAudits={setSelectedAudits}
-            title="Some Title2"
-            description="Some Description"
-            onPress={() => {}}
+            title={watch('title')}
+            description={watch('description')}
+            onPress={() => {
+              /* Handle onPress here if needed */
+            }}
           />
           <ExistingMaterials
             isVisible={isModalMaterialsVisible}
             onClose={() => setIsModalMaterialsVisible(false)}
             selectedMaterialArray={selectedMaterialArray}
             setSelectedMaterialArray={setSelectedMaterialArray}
-            onPress={() => {}}
+            onPress={() => {
+              /* Handle onPress here if needed */
+            }}
           />
           <GalleryScreen
             isVisible={isModalImagesVisible}
             onClose={() => setModalImagesVisible(false)}
             serviceImages={serviceImages}
-            setServiceImages={setServicesImages}
+            setServiceImages={setServiceImages}
           />
         </ScrollView>
-        <SaveButton disabled={false} onPress={handleSubmit(handleFormSubmit)} />
+        <SaveButton
+          disabled={selectedAudit.length === 0}
+          onPress={handleSubmit(handleFormSubmit)}
+        />
       </View>
     </>
   );
@@ -515,12 +597,40 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     height: 'auto',
   },
+
   form: {
     border: '1px solid #0073BA',
     borderRadius: 10,
   },
   date: {
     textAlign: 'right',
+  },
+  containerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    marginTop: 40,
+    backgroundColor: '#0073BA',
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginVertical: 10,
+    fontSize: 16,
+    width: 150,
+    textAlign: 'right', // Add textAlign property
   },
 
   inputName: {
@@ -543,6 +653,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     height: 100,
   },
+  label: {
+    fontSize: 16,
+    color: 'white',
+  },
   inputContainer: {
     flexDirection: 'row',
 
@@ -561,13 +675,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'black',
   },
-  priceHead: {
-    fontSize: 18,
-    color: 'black',
-    marginTop: 10,
-  },
   containerPrice: {
     alignSelf: 'center',
+  },
+  imageContainer: {
+    width: imageContainerWidth,
+    flexDirection: 'column',
+    margin: 5,
+    position: 'relative',
+  },
+  addButtonContainer: {
+    width: 100,
+    margin: 5,
+    height: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: '#0073BA',
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderRadius: 4, // Optional, for rounded edges
   },
   summary: {
     flexDirection: 'row',
@@ -586,13 +712,32 @@ const styles = StyleSheet.create({
     marginTop: -10,
     color: 'black',
     fontWeight: 'bold',
+    fontFamily: 'Sukhumvit Set Bold',
   },
   price: {
+    fontSize: 16,
+    color: 'black',
+    fontFamily: 'Sukhumvit Set Bold',
+  },
+  priceSum: {
     fontSize: 18,
     color: 'black',
+    fontFamily: 'Sukhumvit Set Bold',
+  },
+  priceHead: {
+    fontSize: 16,
+    color: 'black',
+    marginTop: 10,
+    fontFamily: 'Sukhumvit Set Bold',
+  },
+  priceTitle: {
+    fontSize: 16,
+    color: 'black',
+    marginTop: 5,
+    fontFamily: 'Sukhumvit Set Bold',
   },
   counter: {
-    fontSize: 18,
+    fontSize: 16,
     paddingHorizontal: 20,
   },
   containerCounter: {
@@ -604,15 +749,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
   },
-  rowContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-  },
-
   selectButton: {
+    // backgroundColor: '#0073BA',
     backgroundColor: 'white',
-    borderColor: 'gray',
+    borderColor: '#0073BA',
     borderWidth: 1,
     borderStyle: 'dotted',
     paddingVertical: 12,
@@ -620,29 +760,22 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 20,
   },
+  image: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 0,
+    resizeMode: 'cover',
+  },
   selectButtonText: {
-    color: 'black',
     fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: '#0073BA',
+    fontFamily: 'Sukhumvit set',
+    marginLeft: 10,
   },
-  imageContainer: {
-    width: imageContainerWidth,
-    flexDirection: 'column',
-    margin: 5,
-    position: 'relative',
+  btnDisabled: {
+    backgroundColor: '#ccc',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginVertical: 10,
-    fontSize: 16,
-    width: 150,
-    textAlign: 'right', // Add textAlign property
-  },
+
   count: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -670,9 +803,9 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
+    marginTop: 10,
     flexDirection: 'row',
     width: '100%',
-    marginBottom: 10,
     justifyContent: 'space-between',
   },
   cardTitle: {
@@ -695,51 +828,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  btn: {
-    backgroundColor: '#007BFF', // A shade of blue.
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    borderRadius: 5,
-    // shadowColor: '#000',
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 2,
-    // },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
-    elevation: 5,
-    marginBottom: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+  imageWrapper: {
+    position: 'relative',
   },
-  label: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+  editIcon: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 10,
+    padding: 4,
   },
-  buttonContainer: {
+  headerRight: {
+    display: 'flex',
     flexDirection: 'row',
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: 'red',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // shadowColor: '#000',
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 2,
-    // },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
-    elevation: 5,
-  },
-  buttonLabel: {
-    color: 'red',
-    marginLeft: 10,
-    fontSize: 16,
-    fontWeight: '500',
   },
   headerContainer: {
     justifyContent: 'center',
@@ -753,35 +855,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Sukhumvit Set Bold',
     color: 'black',
   },
-  headerRight: {
-    display: 'flex',
-    flexDirection: 'row',
-  },
-  image: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: 0,
-    resizeMode: 'cover',
-  },
   headingRight: {
     fontSize: 16,
     fontFamily: 'Sukhumvit Set Bold',
     color: '#397af8',
   },
-  addButtonContainer: {
-    width: 100,
-    margin: 5,
-    height: 110,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: 'gray',
-    borderStyle: 'dotted',
-    borderWidth: 1,
-    borderRadius: 4, // Optional, for rounded edges
-  },
-  containerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });
+

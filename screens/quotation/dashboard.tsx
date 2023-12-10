@@ -12,9 +12,13 @@ import {
 } from 'react-native';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
 import CardDashBoard from '../../components/CardDashBoard';
-import {HOST_URL, PROJECT_NAME, PROJECT_FIREBASE} from '@env';
+import {HOST_URL, BACK_END_SERVER_URL, PROJECT_FIREBASE} from '@env';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
+import firebase, {
+  testFirebaseConnection,
+  testFunctionsConnection,
+} from '../../firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Header as HeaderRNE, HeaderProps, Icon, FAB} from '@rneui/themed';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -33,13 +37,16 @@ import {User, Quotation, CompanyUser} from '../../types/docType';
 import * as stateAction from '../../redux/actions';
 import {DashboardScreenProps} from '../../types/navigationType';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import {useUser} from '../../providers/UserContext';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(false);
+  const user = useUser();
   const {width, height} = Dimensions.get('window');
   const [email, setEmail] = useState<String>('');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [token, setToken] = useState<String>('');
   const [selectedItem, setSelectedItem] = useState(null) as any;
   const [originalQuotationData, setOriginalQuotationData] = useState<
     Quotation[] | null
@@ -68,65 +75,55 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
     return originalQuotationData.filter(q => q.status === activeFilter);
   }, [originalQuotationData, activeFilter]);
-  const getTokenAndEmail = async () => {
-    const currentUser = auth().currentUser;
-    if (currentUser) {
-      const token = await currentUser.getIdToken();
-      const email = currentUser.email as string;
-      setEmail(email);
-      return {token, email};
-    } else {
-      // User is not logged in
-      return null;
+  async function fetchDashboardData() {
+    if (!user || !user.email) {
+      console.error('User or user email is not available');
+      return;
     }
-  };
-  const fetchDashboardData = async () => {
-    const url = __DEV__
-      ? `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/queryDashBoard`
-      : `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/queryDashBoard`;
-
-    const user = await getTokenAndEmail();
-    if (user) {
-      const {token, email} = user;
-
-      if (email) {
-        const response = await fetch(url, {
-          method: 'POST',
+  
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/dashboard?email=${encodeURIComponent(user.email)}`,
+        {
+          method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            email: email,
-          }),
-        });
+        }
+      );
+  
+      if (!response.ok) {
         if (response.status === 401) {
           const errorData = await response.json();
-          if (
-            errorData.message ===
-            'Token has been revoked. Please reauthenticate.'
-          ) {
-            const newToken = await auth().currentUser?.getIdToken(true);
-            return fetchDashboardData();
-          } else {
-            auth().signOut();
+          if (errorData.message === 'Token has been revoked. Please reauthenticate.') {
+            // Decide how you want to handle reauthentication
+            // Possibly recall fetchDashboardData or handle reauthentication differently
           }
+          throw new Error(errorData.message);
         }
-
-        const data = await response.json();
-        await AsyncStorage.setItem('dashboardData', JSON.stringify(data));
-        if (data && data[1]) {
-          data[1].sort((a: Quotation, b: Quotation) => {
-            const dateA = new Date(a.dateOffer);
-            const dateB = new Date(b.dateOffer);
-            return dateB.getTime() - dateA.getTime();
-          });
-        }
-        return data;
+        throw new Error('Network response was not ok.');
       }
+  
+      const data = await response.json();
+      if (data && Array.isArray(data[1])) {
+        data[1].sort((a, b) => {
+          const dateA = new Date(a.dateOffer);
+          const dateB = new Date(b.dateOffer);
+          return dateB.getTime() - dateA.getTime();
+        });
+      }
+  
+      console.log('data after', data);
+      return data;
+    } catch (err) {
+      // Handle or throw the error depending on your error handling strategy
+      console.error('Error fetching dashboard data:', err);
+      throw err;
     }
-  };
-  const user = getTokenAndEmail();
+  }
+  
 
   const updateContractData = (filter: string) => {
     setActiveFilter(filter);
@@ -144,21 +141,19 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     }
   };
 
-  const {isLoading, error, data} = useQuery(
-    ['dashboardData'],
-    fetchDashboardData,
-    {
-      enabled: !!user,
-      onSuccess: data => {
-        setCompanyData(data[0]);
-        setQuotationData(data[1]);
-        setOriginalQuotationData(data[1]);
-
-        dispatch(stateAction.code_company(data[0].code));
-      },
+  const { isLoading, error, data } = useQuery({
+    queryKey: ['dashboardData'],
+    queryFn: fetchDashboardData,
+    enabled: !!user, 
+    onSuccess: (data) => {
+      console.log('success', data);
+      setCompanyData(data[0]);
+      setQuotationData(data[1]);
+      setOriginalQuotationData(data[1]);
+      dispatch(stateAction.code_company(data[0].code));
     },
-  );
-
+  });
+  
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -166,8 +161,15 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       </View>
     );
   }
+
   if (error) {
-    console.log('error55', error);
+    if (user) {
+      if (!companyData) {
+        navigation.navigate('CreateCompanyScreen');
+      }
+    } else {
+      navigation.navigate('FirstAppScreen');
+    }
   }
   const handleModal = () => {
     console.log('SHOW');
@@ -185,7 +187,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const handleFilterClick = filter => {
     setActiveFilter(filter);
   };
-// versionแรก ยังไม่มีการแก้ไข
+  // versionแรก ยังไม่มีการแก้ไข
 
   const editQuotation = async (services, customer, quotation) => {
     setIsLoadingAction(true);
@@ -352,9 +354,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     navigation.navigate('CreateQuotation');
   };
 
-console.log('filteredQuotationData',filteredQuotationData)
-
-return (
+  return (
     <>
       <View>
         <HeaderRNE
@@ -371,7 +371,7 @@ return (
                 width: 100,
               }}
               onPress={() => {}}>
-              Salestrust
+              Saletrusth
             </Text>
           }
           rightComponent={
@@ -443,7 +443,7 @@ return (
 
       <FAB
         icon={{name: 'add', color: 'white'}}
-        color='#012b20'
+        color="#012b20"
         // color="#0073BA"
         style={{
           backgroundColor: '#1f303cff',
@@ -565,4 +565,3 @@ const styles = StyleSheet.create({
     color: 'white',
   },
 });
-

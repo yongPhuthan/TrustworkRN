@@ -60,6 +60,7 @@ export type ParamListBase = {
   AddNewMaterial: undefined;
   ExistingWorkers: {id: string};
   AddNewWorker: undefined;
+  CreateCompanyScreen: undefined;
   FirstAppScreen: undefined;
   Signature: {
     text: string;
@@ -103,3 +104,4 @@ export type ScreenName =
   | 'FirstAppScreen'
   | 'LoginScreen'
   | 'DashboardQuotation'
+  | 'CreateCompanyScreen'

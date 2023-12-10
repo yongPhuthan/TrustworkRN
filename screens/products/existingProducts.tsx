@@ -19,6 +19,8 @@ import {CompanyUser, Service} from '../../types/docType';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
 import * as stateAction from '../../redux/actions';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {useUser} from '../../providers/UserContext';
+import {BACK_END_SERVER_URL} from '@env';
 import {faPlus, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
 import {Store} from '../../redux/store';
 type Props = {
@@ -27,7 +29,8 @@ type Props = {
   // onGoBack: (data: string) => void;
 };
 
-const fetchExistingProducts = async (company: CompanyUser) => {
+
+const fetchExistingProducts2 = async (company: CompanyUser) => {
   const user = auth().currentUser;
   if (!user) {
     throw new Error('User not authenticated');
@@ -60,17 +63,45 @@ const fetchExistingProducts = async (company: CompanyUser) => {
 const ExistingProducts = ({navigation}: Props) => {
   const [products, setProducts] = useState<Service[]>([]);
   const route = useRoute();
+  const user = useUser();
   const {width, height} = Dimensions.get('window');
   const companyID = route.params;
   const {
     state: {serviceList, selectedAudit, code, serviceImages},
     dispatch,
   }: any = useContext(Store);
+  const fetchExistingServices = async (company: CompanyUser) => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    } else {
+      const idToken = await user.getIdToken(true);
+
+      const companyID = company.id;
+      let url = `${BACK_END_SERVER_URL}/api/services/getExistingServices?id=${encodeURIComponent(
+        companyID,
+      )}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      console.log('dataSetting', data);
+      return data;
+    }
+  };
   const {data, isLoading, isError} = useQuery(
     ['existingProduct', companyID],
-    () => fetchExistingProducts(companyID as CompanyUser).then(res => res),
+    () => fetchExistingServices(companyID as CompanyUser).then(res => res),
     {
       onSuccess: data => {
+        
         setProducts(data);
         console.log('audit data', JSON.stringify(data));
       },

@@ -141,7 +141,6 @@ const AddExistProduct = ({navigation, route}: Props) => {
       setTotalCost(0);
     }
   }, [qty, unitPrice, discountPercent]);
-console.log('serviceImages',serviceImages.length)
   return (
     <>
       {/* <HeaderRNEComponent
