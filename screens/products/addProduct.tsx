@@ -1,4 +1,10 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react';
 import {
   View,
   TextInput,
@@ -14,10 +20,15 @@ import {
   TouchableOpacity,
   Pressable,
 } from 'react-native';
-import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
 import {Header as HeaderRNE, HeaderProps} from '@rneui/themed';
 import Divider from '../../components/styles/Divider';
-import { useForm, FormProvider, useFormContext,Controller, set } from 'react-hook-form';
+import {
+  useForm,
+  FormProvider,
+  useFormContext,
+  Controller,
+  set,
+} from 'react-hook-form';
 
 import {Store} from '../../redux/store';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -36,20 +47,11 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import SmallDivider from '../../components/styles/SmallDivider';
 import {FormData, ServiceList, CompanyUser, Audit} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
-import {
-  launchImageLibrary,
-  MediaType,
-  ImageLibraryOptions,
-  ImagePickerResponse,
-} from 'react-native-image-picker';
 import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
-import {service_images, selectedMaterials} from '../../redux/actions';
 import SelectAudit from '../../components/audits/selectAudit';
 import ExistingMaterials from '../../components/materials/existing';
 import GalleryScreen from '../../components/gallery/existing';
-import HeaderRNEComponent from '../../components/ui/Header';
 import SaveButton from '../../components/ui/Button/SaveButton';
-
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'AddProduct'>;
   route: {
@@ -59,112 +61,78 @@ type Props = {
   };
 };
 
-interface ImageForm {
-  image: FileList;
-}
-
-
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
 const AddProductForm = ({navigation, route}: Props) => {
-  const {control, handleSubmit,watch} = useForm<FormData>();
+  const {control, handleSubmit, watch} = useForm<FormData>();
   const [count, setCount] = useState(0);
   const [discountPercent, setDiscountPercent] = useState(0);
   const [qty, setQuantity] = useState(1);
-  const [serviceImageUri, setServiceImage] = useState<string | null>(null);
   const [unitPrice, setPrice] = useState(0);
-  const [total, setTotalCost] = useState(0);
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedAudits, setSelectedAudits] = useState<Audit[]>([]);
-  const [selectedMaterials, setSelectedMaterials] = useState<any[]>([]);
   const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
-  const [audits, setAudits] = useState<Audit[] | null>(null);
   const [selectedMaterialArray, setSelectedMaterialArray] = useState<any[]>([]);
-  const [serviceListState, setServiceList] = useState<ServiceList[]>([]);
-  const [selectedImage, setSelectedImage] = useState<string>('');
   const [serviceImages, setServiceImages] = useState<string[]>([]);
   const [isModalImagesVisible, setModalImagesVisible] = useState(false);
   const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
-  const [serviceID,setServiceID] = useState<string>('');
+  const [isEmptyAudits, setIsEmptyAudits] = useState(false);
+  const [isEmptyMaterials, setIsEmptyMaterials] = useState(false);
+  const [serviceID, setServiceID] = useState<string>('');
   const {
     state: {serviceList, selectedAudit, code},
     dispatch,
   }: any = useContext(Store);
-  const toggleModal = () => {
-    setModalVisible(!isModalVisible);
-  };
 
-  const handleFormSubmit = (data: FormData) => {
-    // const selectedAudits = selectedAudit.map((obj: any) => {
-    //   return {
-    //     ...obj,
-    //     serviceID,
-    //   };
-    // });
+  const handleFormSubmit = useCallback(
+    (data: FormData) => {
+      const newData = {
+        title: data.title,
+        description: data.description,
+        unitPrice: data.unitPrice,
+        serviceImages,
+        qty: qty,
+        discountPercent,
+        total: (qty * unitPrice).toString(),
+      };
+      dispatch(stateAction.put_serviceList(serviceID, newData));
+      dispatch(stateAction.reset_audit());
+      dispatch(stateAction.reset_service_images());
+      dispatch(stateAction.reset_materials());
+      navigation.pop(2);
+    },
+    [serviceList, qty, unitPrice, serviceID],
+  );
 
-    const newServiceItem = {
-      id: serviceID,
-      title: data.title,
-      description: data.description,
-      unitPrice: data.unitPrice,
-      serviceImages,
-      materials: selectedMaterialArray,
-      qty: qty,
-      discountPercent,
-      total: (qty * unitPrice).toString(),
-      audits: selectedAudits,
-    };
+  const serviceIndex = useMemo(
+    () => serviceList.findIndex(service => service.id === serviceID),
+    [serviceList, serviceID],
+  );
+  const totalCost = useMemo(
+    () => (qty > 0 ? qty * unitPrice : 0),
+    [qty, unitPrice],
+  );
 
-    dispatch(stateAction.service_list(newServiceItem as any));
-    dispatch(stateAction.reset_audit());
-    dispatch(stateAction.reset_service_images());
-    dispatch(stateAction.reset_materials());
-
-    navigation.pop(2);
-
-    // navigation.goBack();
-  };
-
-  // const handleSelectAudit = (data: FormData) => {
-  //   navigation.navigate('AuditCategory', {
-  //     title: data.title,
-  //     description: data.description,
-  //     serviceID: serviceID,
-
-  //   });
-  // };
-  const handleSelectAudit = (data: FormData) => {
-    navigation.navigate('SelectAudit', {
-      title: data.title,
-      description: data.description,
-      serviceID: serviceID,
-    });
-  };
-  const onGoback = () => {
-    dispatch(stateAction.reset_audit());
-    dispatch(stateAction.reset_service_images());
-    navigation.goBack();
-  };
   useEffect(() => {
     const newServiceID = uuidv4();
     console.log('Generated serviceID:', newServiceID); // Add this line
     setServiceID(newServiceID);
   }, []);
-  
+
   useEffect(() => {
-    if(serviceID){
-      console.log('got serviceID',serviceID)
+    if (serviceID) {
       dispatch(stateAction.initial_serviceId(serviceID));
     }
-    if (qty > 0) {
-      const total = qty * unitPrice;
-      // const discountedTotal = total - (total * discountPercent / 100);
-      setTotalCost(total);
-    } else {
-      setTotalCost(0);
-    }
-  }, [qty, unitPrice, serviceID,discountPercent]);
-  console.log('serviceListIDDD', JSON.stringify(serviceList));
+  }, [qty, unitPrice, serviceID, discountPercent, serviceList]);
+  const isAuditsDisabled = useMemo(() => {
+    return serviceList[serviceIndex]?.audits?.length > 0;
+  }, [serviceList, serviceIndex]);
+
+
+
+  const isMaterialsDisabled = useMemo(() => {
+    return serviceList[serviceIndex]?.materials?.length > 0;
+  }, [serviceList, serviceIndex]);
   return (
     <>
       <View style={{flex: 1}}>
@@ -181,7 +149,10 @@ const AddProductForm = ({navigation, route}: Props) => {
                   renderItem={({item, index}) => {
                     return (
                       <View style={styles.imageContainer}>
-                        <Image source={{uri: item}} style={styles.image} />
+                        <TouchableOpacity
+                          onPress={() => setModalImagesVisible(true)}>
+                          <Image source={{uri: item}} style={styles.image} />
+                        </TouchableOpacity>
                       </View>
                     );
                   }}
@@ -356,28 +327,6 @@ const AddProductForm = ({navigation, route}: Props) => {
                 )}
               />
             </View>
-            {/* ปิดส่วนลดแยกรายการ */}
-            {/* <View style={styles.summary}>
-          <Text style={styles.price}>ส่วนลด(%):</Text>
-          <Controller
-  control={control}
-  name="discountPercent"
-  defaultValue=""
-  render={({field: {onChange, value}}) => (
-    <TextInput
-      style={styles.price}
-      placeholder="0"
-      keyboardType="number-pad"
-      onChangeText={value => {
-        onChange(value);
-        setDiscountPercent(parseFloat(value));
-      }}
-      value={value}
-    />
-  )}
-/>
-
-        </View> */}
             <SmallDivider />
             <View style={styles.summary}>
               <Text style={styles.priceSum}>รวมเป็นเงิน:</Text>
@@ -393,7 +342,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                     keyboardType="number-pad"
                     value={
                       qty > 0
-                        ? Number(qty * unitPrice)
+                        ? Number(totalCost)
                             .toFixed(2)
                             .replace(/\d(?=(\d{3})+\.)/g, '$&,')
                         : '0'
@@ -417,11 +366,11 @@ const AddProductForm = ({navigation, route}: Props) => {
             <SmallDivider />
 
             <View>
-              {selectedAudits?.length > 0 ? (
+              {isAuditsDisabled ? (
                 <View style={styles.cardContainer}>
                   <Text
                     style={{
-                      marginBottom: 20,
+                      marginBottom: 5,
                       marginTop: 20,
                       fontFamily: 'Sukhumvit Set Bold',
 
@@ -431,40 +380,33 @@ const AddProductForm = ({navigation, route}: Props) => {
                     }}>
                     มาตรฐานของบริการนี้:
                   </Text>
-                  {selectedAudits?.map((item: any) => (
+                  {serviceList[serviceIndex]?.audits?.map((item: any) => (
                     <TouchableOpacity
-                      key={item.id}
+                      key={item.AuditData.id}
                       style={styles.card}
                       onPress={() => setModalVisible(true)}>
                       <Text style={styles.cardTitle}>
-                        {item.auditShowTitle}
+                        {item.AuditData.auditShowTitle} 
                       </Text>
                       <Icon name="chevron-right" size={24} color="gray" />
                     </TouchableOpacity>
                   ))}
                 </View>
               ) : (
-                <View>
-                  {selectedAudits.length === 0 && (
-                    <TouchableOpacity
-                      style={styles.selectButton}
-                      onPress={() => setModalVisible(true)}
-
-                      // onPress={handleSubmit(handleSelectAudit)}
-                    >
-                      <View style={styles.containerButton}>
-                        <FontAwesomeIcon
-                          icon={faPlusCircle}
-                          color="#0073BA"
-                          size={14}
-                        />
-                        <Text style={styles.selectButtonText}>
-                          เลือกมาตรฐานการทำงาน
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                </View>
+                <TouchableOpacity
+                  style={styles.selectButton}
+                  onPress={() => setModalVisible(true)}>
+                  <View style={styles.containerButton}>
+                    <FontAwesomeIcon
+                      icon={faPlusCircle}
+                      color="#0073BA"
+                      size={14}
+                    />
+                    <Text style={styles.selectButtonText}>
+                      เลือกมาตรฐานการทำงาน
+                    </Text>
+                  </View>
+                </TouchableOpacity>
               )}
             </View>
             <View
@@ -480,52 +422,48 @@ const AddProductForm = ({navigation, route}: Props) => {
               }}></View>
             <SmallDivider />
             <View>
-              {selectedMaterialArray?.length > 0 ? (
+              {isMaterialsDisabled? (
                 <View style={styles.cardContainer}>
                   <Text
                     style={{
-                      marginBottom: 20,
+                      marginBottom: 5,
                       marginTop: 20,
                       fontSize: 16,
+                      fontFamily: 'Sukhumvit Set Bold',
                       fontWeight: 'bold',
                       color: '#333',
                     }}>
-                    วัสดุอุปกรณ์ที่นำเสนอ:
+                    วัสดุอุปกรณ์ที่ใช้
                   </Text>
-                  {selectedMaterialArray?.map((item: any) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={styles.card}
-                      onPress={() => setIsModalMaterialsVisible(true)}             
-                    >
-                      <Text style={styles.cardTitle}>{item.name}</Text>
-                      <Icon name="chevron-right" size={24} color="gray" />
-                    </TouchableOpacity>
-                  ))}
+                  {serviceList[serviceIndex]?.materials?.map(
+                    (item: any,index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.card}
+                        onPress={() => setIsModalMaterialsVisible(true)}>
+                        <Text style={styles.cardTitle}>{item.materialData.name}</Text>
+                        <Icon name="chevron-right" size={24} color="gray" />
+                      </TouchableOpacity>
+                    ),
+                  )}
                 </View>
               ) : (
                 <View>
-                  {selectedMaterialArray.length === 0 && (
-                    <TouchableOpacity
-                      style={styles.selectButton}
-                      onPress={() => setIsModalMaterialsVisible(true)}
-                      // onPress={() =>
-                      //   navigation.navigate('ExistingMaterials', {id: serviceID})
-                      // }
-                    >
-                      <View style={styles.containerButton}>
-                        <FontAwesomeIcon
-                          icon={faPlusCircle}
-                          color="#0073BA"
-                          size={14}
-                        />
+                  <TouchableOpacity
+                    style={styles.selectButton}
+                    onPress={() => setIsModalMaterialsVisible(true)}>
+                    <View style={styles.containerButton}>
+                      <FontAwesomeIcon
+                        icon={faPlusCircle}
+                        color="#0073BA"
+                        size={14}
+                      />
 
-                        <Text style={styles.selectButtonText}>
-                          เลือกวัสดุอุปกรณ์
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
+                      <Text style={styles.selectButtonText}>
+                        เลือกวัสดุอุปกรณ์
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
@@ -541,37 +479,18 @@ const AddProductForm = ({navigation, route}: Props) => {
                 }),
               }}></View>
             <SmallDivider />
-
-            {/* <TouchableOpacity
-          style={[
-            styles.btn,
-            selectedAudit.length === 0 ? styles.btnDisabled : null,
-          ]}
-          onPress={handleSubmit(handleFormSubmit)}
-          disabled={selectedAudit.length === 0}>
-          <Text style={styles.label}>บันทึก</Text>
-        </TouchableOpacity> */}
           </View>
           <SelectAudit
             isVisible={isModalVisible}
             serviceId={serviceID}
             onClose={() => setModalVisible(false)}
-            selectedAudits={selectedAudits}
-            setSelectedAudits={setSelectedAudits}
             title={watch('title')}
             description={watch('description')}
-            onPress={() => {
-              /* Handle onPress here if needed */
-            }}
           />
           <ExistingMaterials
+            serviceId={serviceID}
             isVisible={isModalMaterialsVisible}
             onClose={() => setIsModalMaterialsVisible(false)}
-            selectedMaterialArray={selectedMaterialArray}
-            setSelectedMaterialArray={setSelectedMaterialArray}
-            onPress={() => {
-              /* Handle onPress here if needed */
-            }}
           />
           <GalleryScreen
             isVisible={isModalImagesVisible}
@@ -581,8 +500,9 @@ const AddProductForm = ({navigation, route}: Props) => {
           />
         </ScrollView>
         <SaveButton
-          disabled={selectedAudit.length === 0}
-          onPress={handleSubmit(handleFormSubmit)}
+          disabled={!isAuditsDisabled}
+          onPress={    handleSubmit(handleFormSubmit)
+          }
         />
       </View>
     </>
@@ -681,6 +601,8 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: imageContainerWidth,
+    borderWidth: 1,
+    borderColor: '#ccc',
     flexDirection: 'column',
     margin: 5,
     position: 'relative',
@@ -811,7 +733,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
   },
   header: {
     flexDirection: 'row',

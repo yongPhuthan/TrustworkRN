@@ -34,6 +34,7 @@ import CustomCheckbox from '../../components/CustomCheckbox';
 import {useUser} from '../../providers/UserContext';
 import {Store} from '../../redux/store';
 import AddNewMaterial from './addNew';
+
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ExistingMaterials'>;
   route: RouteProp<ParamListBase, 'ExistingProduct'>;
@@ -42,9 +43,8 @@ type Props = {
 interface ExistingModalProps {
   isVisible: boolean;
   onClose: () => void;
-  selectedMaterialArray: any[];
-  setSelectedMaterialArray: React.Dispatch<React.SetStateAction<any[]>>;
-  onPress?: () => void;
+  serviceId: string;
+
 }
 
 const numColumns = 2;
@@ -53,20 +53,20 @@ const imageContainerWidth = width / 3 - 10;
 const ExistingMaterials = ({
   isVisible,
   onClose,
-  selectedMaterialArray,
-  setSelectedMaterialArray,
-  onPress,
+  serviceId,
 }: ExistingModalProps) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [isOpenModal, setIsOpenModal] = useState(false);
+
   const route = useRoute();
   const user = useUser();
 
-  const companyID = route.params;
   const {
     state: {serviceList, selectedMaterials, code, serviceImages},
     dispatch,
   }: any = useContext(Store);
+  const servicListIndex = serviceList.findIndex(service => service.id === serviceId);
+
   const fetchExistingMaterials = async () => {
     if (!user) {
       throw new Error('User not authenticated');
@@ -87,7 +87,6 @@ const ExistingMaterials = ({
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      console.log('dataSetting', data);
       return data;
     }
   };
@@ -98,44 +97,23 @@ const ExistingMaterials = ({
     {
       onSuccess: data => {
         setMaterials(data);
-        console.log('audit data', JSON.stringify(data));
       },
     },
   );
-  const handleSelectAudit = (material: any) => {
-    const existingIndex = selectedMaterialArray.findIndex(
-      m => m.id === material.id, // Use id instead of title
-    );
-    if (existingIndex !== -1) {
-      // Remove the item if it's already selected
-      setSelectedMaterialArray(
-        selectedMaterialArray.filter(m => m.id !== material.id),
-      );
+  const handleSelectMaterial = (material:any) => {
+    const service = serviceList.find(s => s.id === serviceId);
+  
+    const existingMaterialInSelectedMaterialsList = 
+    service?.materials?.some(item => item.materialData.id === material.id) ?? false;
+  
+    if (existingMaterialInSelectedMaterialsList) {   
+      dispatch(stateAction.remove_selected_materials(serviceId, material.id));
+      
     } else {
-      // Add the item if it's not selected
-      setSelectedMaterialArray([...selectedMaterialArray, material]);
+  dispatch(stateAction.selected_materials(serviceId, material));
     }
   };
 
-  // const handleSelectAudit = (material: any) => {
-  //   const existingIndex = selectedMaterials.findIndex(
-  //     a => a.name === material.name,
-  //   );
-  //   if (existingIndex !== -1) {
-  //     setSelectedMaterialArray(
-  //       selectedMaterialArray.filter(a => a.name !== material.name),
-  //     );
-  //     dispatch(stateAction.remove_selected_materials(material));
-  //   } else {
-  //     setSelectedMaterialArray([...selectedMaterialArray, material]);
-  //     dispatch(stateAction.selected_materials(material));
-  //   }
-  // };
-  useEffect(() => {
-    if (selectedMaterials.length > 0) {
-      setSelectedMaterialArray(selectedMaterials);
-    }
-  }, [selectedMaterials]);
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -144,7 +122,7 @@ const ExistingMaterials = ({
     );
   }
   const handleDonePress = () => {
-    if (selectedMaterialArray.length > 0) {
+    if (serviceList[servicListIndex]?.materials?.length > 0) {
       // dispatch here
       onClose();
     }
@@ -152,6 +130,7 @@ const ExistingMaterials = ({
   const handleAddNewProduct = () => {
     setIsOpenModal(true);
   };
+  console.log('serviceListMaterial', JSON.stringify(serviceList));
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       <View style={styles.container}>
@@ -168,15 +147,15 @@ const ExistingMaterials = ({
               <TouchableOpacity
                 style={[
                   styles.card,
-                  selectedMaterialArray.some(m => m.id === item.id)
+                  (serviceList[servicListIndex]?.selectedMaterials || []).some(m => m.id === item.id)
                     ? styles.cardChecked
                     : null,
                 ]}
-                onPress={() => handleSelectAudit(item)}>
+                onPress={() => handleSelectMaterial(item)}>
                 <CheckBox
                   center
-                  checked={selectedMaterialArray.some(m => m.id === item.id)}
-                  onPress={() => handleSelectAudit(item)}
+                  checked={(serviceList[servicListIndex]?.materials || []).some( material => material.materialData.id === item.id)}
+                  onPress={() => handleSelectMaterial(item)}
                   containerStyle={styles.checkboxContainer}
                   checkedColor="#012b20"
                 />
@@ -207,10 +186,10 @@ const ExistingMaterials = ({
           keyExtractor={item => item.id}
         />
 
-        {selectedMaterialArray?.length > 0 && (
+        {serviceList[servicListIndex]?.materials?.length > 0 && (
           <TouchableOpacity onPress={handleDonePress} style={styles.saveButton}>
             <Text style={styles.saveText}>
-              {`บันทึก ${selectedMaterialArray?.length} รายการ`}{' '}
+              {`บันทึก ${serviceList[servicListIndex]?.materials?.length} รายการ`}{' '}
             </Text>
           </TouchableOpacity>
         )}

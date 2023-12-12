@@ -1,21 +1,48 @@
 [{
-    "AuditData": {
-        "auditEffectDescription": "ผลกระทบที่เกิดจากการไม่การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน",
-        "auditEffectImage": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
-        "auditShowTitle": "การันตีการตรวจเช็คการป้องกันน้ำ",
-        "category": "อลูมิเนียม",
-        "content": "การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน",
-        "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
-        "title": "การันตีการตรวจเช็คการป้องกันน้ำ"
-    }
-}, {
-    "AuditData": {
-        "auditEffectDescription": "ผลกระทบที่เกิดจากการไม่ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน",
-        "auditEffectImage": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
-        "auditShowTitle": "ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน",
-        "category": "อลูมิเนียม",
-        "content": "ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน",
-        "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
-        "title": "ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน"
-    }
+    "id": "f0af5fa3-ee4a-49f1-afa3-e631e8cdddd8",
+    "title": "ประตูบานเลื่อน",
+    "description": "กระจกเงาหมื่นบุปผา",
+    "unitPrice": "7990",
+    "qty": 1,
+    "unit": "none",
+    "total": "7990",
+    "quotationId": "8c9b9624-1b4c-4a19-b884-e11d6d77f3e3",
+    "companyId": "252f6cf1-7abf-48e6-b788-6265434a6200",
+    "serviceImages": ["https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/Test%2F122772%2Fgallery%2F266eccf0-630f-401d-9e5f-d3e482270e72-png?alt=media", "https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/Test%2F122772%2Fgallery%2F328590b2-296c-47f9-8cf0-ee486cab6ec2-png?alt=media"],
+    "audits": [{
+        "AuditData": {
+            "title": "ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน",
+            "content": "ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน",
+            "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+            "category": "อลูมิเนียม",
+            "auditShowTitle": "ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน",
+            "auditEffectImage": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/audits/aluminium/auditwaterproof1.png",
+            "auditEffectDescription": "ผลกระทบที่เกิดจากการไม่ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน"
+        }
+    }],
+    "materials": [{
+        "materialData": {
+            "name": "ลูกบิด",
+            "description": "กระจกนิรภัย",
+            "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/9290a618-1e4b-48e7-baef-83ef5636246f-png",
+            "category": "อลูมิเนียม",
+            "subCategory": "บานเลื่อน"
+        }
+    }, {
+        "materialData": {
+            "name": "กลอนฝังอลูมิเนียม",
+            "description": "เหล็ก",
+            "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/e053deca-8950-4d78-bd54-056063894a11-png",
+            "category": "อลูมิเนียม",
+            "subCategory": "บานเลื่อน"
+        }
+    }, {
+        "materialData": {
+            "name": "กลอนฝัง",
+            "description": "หนา 1.2 มม",
+            "image": "https://pub-99f8d7bf688c4c79afcc2d91f37141f2.r2.dev/72bc249d-5534-459b-a034-f68019e0764a-png",
+            "category": "อลูมิเนียม",
+            "subCategory": "บานเลื่อน"
+        }
+    }]
 }]

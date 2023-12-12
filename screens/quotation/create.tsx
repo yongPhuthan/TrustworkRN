@@ -104,8 +104,6 @@ const Quotation = ({navigation}: Props) => {
   const [customerAddress, setCustomerAddress] = useState('');
   const [docNumber, setDocnumber] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [dateOffer, setDateOffer] = useState<String>('');
-  const [dateEnd, setDateEnd] = useState<String>('');
   const [token, setToken] = useState<FirebaseAuthTypes.User | null>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [singatureModal, setSignatureModal] = useState(false);
@@ -209,7 +207,6 @@ const Quotation = ({navigation}: Props) => {
   const handleModalClose = () => {
     setVisibleModalIndex(null);
 
-    // setShowEditServiceModal(false);
   };
 
   const handleAddProductForm = async () => {
@@ -233,17 +230,10 @@ const Quotation = ({navigation}: Props) => {
     setCustomerAddress(value);
   };
   const handleButtonPress = async () => {
-    // navigation.navigate('SelectContract', {id: quotationId, totalPrice, sellerId: companyUser.id});
 
     setIsLoadingMutation(true);
     try {
-      // Perform mutation
-      // const resultArray: MyObject[] = [];
-      // serviceList.forEach((obj: MyObject) => {
-      //   const newObj: any = {...obj};
-      //   newObj.audits = obj.audits.map((audit: Audit) => audit.id);
-      //   resultArray.push(newObj);
-      // });
+
       const clientData = {
         id: uuidv4(),
         name: client_name,
@@ -283,9 +273,6 @@ const Quotation = ({navigation}: Props) => {
         apiData.data.taxName = 'vat5';
         apiData.data.taxValue = vat5Amount;
       }
-      // await mutate(apiData);
-      // navigation.navigate('InstallmentScreen', {data: apiData});
-      // navigation.navigate('SelectContract', {data: apiData} as any);
       navigation.navigate('DefaultContract', {data: apiData} as any);
 
       setIsLoadingMutation(false);
@@ -309,20 +296,34 @@ const Quotation = ({navigation}: Props) => {
     setDateEnd(formattedEndDate);
   };
 
-  useEffect(() => {
+  const { docnumber ,initialDateOffer, initialDateEnd }  = useMemo(() => {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
-    const randomNum = Math.floor(Math.random() * 900) + 100; // generates a random 3-digit number
-    setDocnumber(`${year}${month}${day}${randomNum}`);
-    setDateOffer(`${day}-${month}-${year}`);
+    const randomNum = Math.floor(Math.random() * 900) + 100;
+    const docnumber = `${year}${month}${day}${randomNum}`;
+
+    const dateOffer = `${day}-${month}-${year}`;
+
     const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
     const endYear = endDate.getFullYear();
     const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
     const endDay = String(endDate.getDate()).padStart(2, '0');
-    setDateEnd(`${endDay}-${endMonth}-${endYear}`);
-  }, [serviceList, navigation]);
+    const dateEnd = `${endDay}-${endMonth}-${endYear}`;
+
+    return { initialDateOffer: dateOffer, initialDateEnd: dateEnd, docnumber };
+  }, []) as any;
+
+  const [dateOffer, setDateOffer] = useState<String>(initialDateOffer);
+  const [dateEnd, setDateEnd] = useState<String>(initialDateEnd);
+
+  useEffect(() => {
+    setDocnumber(docnumber);
+    setDateOffer(dateOffer);
+    setDateEnd(dateEnd);
+  }, [serviceList, navigation, docnumber, dateOffer, dateEnd]);
+  
 
   if (isLoading) {
     return (
@@ -337,7 +338,6 @@ const Quotation = ({navigation}: Props) => {
     setVisibleModalIndex(null);
     dispatch(stateAction.remove_serviceList(index));
   };
-
 
   return (
     <View style={{flex: 1}}>

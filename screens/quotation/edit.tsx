@@ -5,10 +5,14 @@ import {
   TextInput,
   ScrollView,
   FlatList,
+  Switch,
+  Dimensions,
+  Platform,
   TouchableOpacity,
 } from 'react-native';
 import {v4 as uuidv4} from 'uuid';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
+import Modal from 'react-native-modal';
 import DocNumber from '../../components/DocNumber';
 import AddClient from '../../components/AddClient';
 import AddServices from '../../components/AddServices';
@@ -26,8 +30,10 @@ import {useQuery, useMutation} from '@tanstack/react-query';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import axios, {AxiosResponse, AxiosError} from 'axios';
 import {useRoute} from '@react-navigation/native';
-import {HOST_URL,PROJECT_NAME} from '@env';
+import {HOST_URL,PROJECT_NAME,BACK_END_SERVER_URL} from '@env';
 import FooterBtnEdit from '../../components/styles/FooterBtnEdit';
+import SignatureComponent from '../../components/utils/signature';
+import SmallDivider from '../../components/styles/SmallDivider';
 import {
   Audit,
   Quotation,
@@ -93,7 +99,6 @@ const EditQuotation = ({navigation}: Props) => {
   const [quotation, setQuotation] = useState<Quotation>((route.params as any)?.quotation);
   const [companyUser, setCompanyUser] = useState<CompanyUser>((route.params as any)?.company)
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
-
   const [total, setTotal] = useState(quotation.allTotal);
   const thaiDateFormatter = useThaiDateFormatter();
   const [discountValue, setDiscountValue] = useState(quotation.discountValue || 0);
@@ -103,11 +108,10 @@ const EditQuotation = ({navigation}: Props) => {
   const [customerName, setCustomerName] = useState(quotation.customer?.name);
   const [customerAddress, setCustomerAddress] = useState(quotation.customer?.address);
   const [docNumber, setDocnumber] = useState(quotation.docNumber);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [dateOffer, setDateOffer] = useState<String>(quotation.dateOffer);
   const [dateEnd, setDateEnd] = useState<String>(quotation.dateEnd);
-  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
-  const [token, setToken] = useState<FirebaseAuthTypes.User | null>(null);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [singatureModal, setSignatureModal] = useState(false);
   const quotationId = quotation.id;
   const [showEditServiceModal, setShowEditServiceModal] = useState(false);
   const { fetchDocument} = useFetchDocument();
@@ -152,7 +156,7 @@ const EditQuotation = ({navigation}: Props) => {
   const totalPrice = useMemo(() => {
     let total = 0;
     for (let i = 0; i < serviceList.length; i++) {
-      total += Number(serviceList[i].total);
+      total += Number(serviceList[i]?.total || quotation.allTotal);
     }
     return total;
   }, [serviceList]);
@@ -166,20 +170,25 @@ const EditQuotation = ({navigation}: Props) => {
     // TODO: Add client to quotation
     navigation.navigate('AddProduct');
   };
+  const useSignature = () => {
+    if (companyUser?.signature) {
+      setPickerVisible(!pickerVisible);
+      setSignature(companyUser?.signature);
+    } else {
+      setSignatureModal(!singatureModal);
+      setPickerVisible(!pickerVisible);
+    }
+  };
+  const handleSignatureSuccess = () => {
+    setSignatureModal(false);
+  };
   const handleEditService = (index: number) => {
-    handleModalClose()
-    // setShowEditServiceModal(false);
-    // navigation.navigate('EditProductForm', {item: serviceList[index]});
-
+    setShowEditServiceModal(!showEditServiceModal);
+    handleModalClose();
     navigation.navigate('EditProductForm', {item: serviceList[index]});
   };
   const handleCustomerAddressChange = (value: string) => {
     setCustomerAddress(value);
-  };
-
-  const handlewWebView = () => {
-    console.log('id quotation', quotationId);
-    navigation.navigate('WebViewScreen', {id });
   };
 
   const handleButtonPress = async () => {
@@ -224,8 +233,7 @@ const EditQuotation = ({navigation}: Props) => {
         },
       };
       console.log('apiData', JSON.stringify(apiData.data.services));
-      // await mutate(apiData);
-      // setIsLoadingMutation(false);
+
     } catch (error: Error | AxiosError | any) {
       console.error('There was a problem calling the function:', error);
       console.log(error.response);
@@ -247,22 +255,6 @@ const EditQuotation = ({navigation}: Props) => {
     setDateEnd(formattedEndDate);
   };
 
-  useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged(newUser => {
-      if (newUser && newUser.email) {
-        console.log('User is authenticated:', newUser.email);
-
-        setUser(newUser);
-        setEmail(newUser.email);
-      } else {
-        console.log('User is not authenticated, navigating to login page...');
-        navigation.navigate('SignUpScreen');
-      }
-
-    });
-    return unsubscribe;
-  }, [serviceList, navigation]);
-
   const handleRemoveService = (index: number) => {
     setVisibleModalIndex(null);
     dispatch(stateAction.remove_serviceList(index));
@@ -273,6 +265,7 @@ const EditQuotation = ({navigation}: Props) => {
   const handleEditClient = () => {
     navigation.navigate('EditClientForm');
   };
+  console.log('serviceList Editquoatation', JSON.stringify(serviceList))
   return (
     <View style={{flex: 1}}>
       <ScrollView style={styles.container}>
@@ -282,7 +275,6 @@ const EditQuotation = ({navigation}: Props) => {
             date="today"
             onDateSelected={handleStartDateSelected}
           />
-
           <DocNumber
             label="เลขที่เอกสาร"
             onChange={handleInvoiceNumberChange}
@@ -296,10 +288,11 @@ const EditQuotation = ({navigation}: Props) => {
         </View>
         <View style={styles.subContainer}>
           {client_name ? (
-            <CardClient handleEditClient={() => handleEditClient()} />
+            <CardClient handleEditClient={handleEditClient} />
           ) : (
             <AddClient handleAddClient={handleAddClientForm} />
           )}
+
           <View style={styles.header}>
             <Icon
               style={styles.icon}
@@ -307,52 +300,88 @@ const EditQuotation = ({navigation}: Props) => {
               size={20}
               color="#19232e"
             />
-
-            <Text style={styles.label}>บริการ-สินค้า</Text>
+            <Text style={styles.label}>บริการ-สินค้า00</Text>
           </View>
           {serviceList.map((item: any, index: number) => (
             <CardProject
-            handleModalClose={handleModalClose}
-            visibleModalIndex={visibleModalIndex === index}
-            setVisibleModalIndex={()=>setVisibleModalIndex(index)}
+              handleModalClose={handleModalClose}
+              visibleModalIndex={visibleModalIndex === index}
+              setVisibleModalIndex={()=>setVisibleModalIndex(index)}
               index={index}
               handleRemoveService={() => handleRemoveService(index)}
               handleEditService={() => handleEditService(index)}
               serviceList={item}
               key={index}
-              // index={index}
-              // handleEditService={() => handleEditService(index)}
-              // serviceList={item}
-              // key={index}
-            />
+            /> 
           ))}
 
           <AddServices handleAddProductFrom={handleAddProductForm} />
-
           <Divider />
+          {/* <View>
+          <Pressable
+            onPress={() => navigation.navigate('ExistingWorkers', {id:companyID})}
+            style={styles.btn}>
+            <Text style={{color:'white'}}>เลือกทีมงานติดตั้ง</Text>
+          </Pressable>
+        </View> */}
+          {/* <Divider /> */}
           <Summary
             title={'ยอดรวม'}
             price={totalPrice}
             onValuesChange={handleValuesChange}
           />
+          <SmallDivider />
+          <View style={styles.signatureRow}>
+            <Text style={styles.signHeader}>เพิ่มลายเซ็น</Text>
+            <Switch
+              trackColor={{false: '#767577', true: '#81b0ff'}}
+              thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={() => useSignature()}
+              value={signature ? true : false}
+              style={Platform.select({
+                ios: {
+                  transform: [{scaleX: 0.7}, {scaleY: 0.7}],
+                  marginTop: 5,
+                },
+                android: {},
+              })}
+            />
+          </View>
+          <Modal
+            isVisible={singatureModal}
+            style={styles.modal}
+            onBackdropPress={() => setSignatureModal(false)}>
+            <View style={styles.containerModal}>
+              <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
+              <SignatureComponent
+                onClose={() => setSignatureModal(false)}
+                setSignatureUrl={setSignature}
+                onSignatureSuccess={handleSignatureSuccess}
+              />
+            </View>
+          </Modal>
+
         </View>
       </ScrollView>
-
       <View>
-      <FooterBtn btnText='ดำเนินการต่อ' disabled={isDisabled} onPress={handleButtonPress} />
-        {/* <FooterBtnEdit onPress={handleButtonPress} WebView={handlewWebView} /> */}
+        <FooterBtn btnText='ดำเนินการต่อ' disabled={isDisabled} onPress={handleButtonPress} />
       </View>
     </View>
   );
 };
 
 export default EditQuotation;
-
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 const styles = StyleSheet.create({
-  container: {},
+  container: {
+    backgroundColor: '#e9f7ff',
+  },
   subContainerHead: {
     padding: 30,
     marginBottom: 10,
+    backgroundColor: '#e9f7ff',
     height: 'auto',
   },
   subContainer: {
@@ -365,6 +394,39 @@ const styles = StyleSheet.create({
     border: '1px solid #0073BA',
     borderRadius: 10,
   },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    width: '90%',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
+    // bottom: '40%',
+    left: 0,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    borderBottomWidth: 1,
+    borderColor: 'white',
+    paddingBottom: 10,
+    paddingTop: 10,
+    fontWeight: 'bold',
+    fontFamily: 'Sukhumvit set',
+  },
+  deleteButtonText: {
+    fontSize: 18,
+    borderBottomWidth: 1,
+    fontWeight: 'bold',
+    textDecorationColor: 'red',
+    color: 'red',
+    borderColor: 'white',
+    paddingBottom: 10,
+    fontFamily: 'Sukhumvit set',
+    paddingTop: 10,
+  },
+
   date: {
     textAlign: 'right',
   },
@@ -391,6 +453,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  signatureRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   buttonText: {
     color: 'white',
     fontSize: 18,
@@ -404,6 +470,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     color: '#19232e',
+    fontFamily: 'Sukhumvit Set Bold',
   },
   header: {
     flexDirection: 'row',
@@ -444,5 +511,110 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputContainerForm: {
+    marginBottom: 10,
+    borderWidth: 0.5,
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 15,
+    width: 80,
+  },
+  inputSuffix: {
+    alignSelf: 'flex-end',
+    alignItems: 'flex-end',
+  },
+  labelWaranty: {
+    // fontFamily: 'sukhumvit set',
+    fontSize: 16,
+    fontWeight: '400',
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    marginTop: 40,
+    backgroundColor: '#0073BA',
+  },
+  signHeader: {
+    flexDirection: 'row',
+    marginTop: 10,
+    fontSize: 16,
+  },
+  summaryTotal: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    justifyContent: 'space-between',
+  },
+  pickerWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  pickerAndroidContainer: {
+    borderWidth: 0.2,
+    borderColor: 'gray',
+    height: 40,
+    borderRadius: 5,
+    backgroundColor: 'white',
+    width: 120,
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+  },
+  signText: {
+    fontSize: 18,
+    marginVertical: 10,
+  },
+  addButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'gray',
+    width: '100%',
+  },
+  modal: {
+    marginTop: 100,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    borderRadius: 10,
+    height: windowHeight * 0.2,
+  },
+  closeButton: {
+    paddingVertical: 10,
+  },
+  headerModal: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    backgroundColor: '#ffffff',
+  },
+  containerModal: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#fff',
+    width: windowWidth,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#323232',
+    marginLeft: 20,
+
+    fontFamily: 'Sukhumvit set',
   },
 });

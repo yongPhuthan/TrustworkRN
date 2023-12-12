@@ -1,4 +1,4 @@
-import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
+import {StyleSheet, Text, View, TouchableOpacity,ActivityIndicator} from 'react-native';
 import React from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -7,29 +7,38 @@ type Props = {
   onPress: Function;
   disabled: boolean;
   btnText: string;
+  loading?: boolean;
 };
 
 const FooterBtn = (props: Props) => {
-  const {onPress, disabled} = props;
-  if (disabled) {
+  const {onPress, disabled,loading,btnText} = props;
+  const renderContent = () => {
+    if (loading) {
+      return <ActivityIndicator size="small" color="white" />;
+    }
+    return <Text style={styles.buttonText}>{btnText}</Text>;
+  };
+
+  if (disabled || loading) {
     return (
       <View style={styles.containerBtn}>
-        <TouchableOpacity style={styles.disabledButton} disabled>
+        <TouchableOpacity style={disabled ? styles.disabledButton : styles.button} disabled>
           <View style={styles.header}>
-            <Text style={styles.buttonText}>{props.btnText}</Text>
-            {/* <FontAwesomeIcon style={styles.icon} icon={faChevronRight} size={20} color="white" /> */}
+            {renderContent()}
           </View>
         </TouchableOpacity>
       </View>
     );
   }
+
   return (
     <View style={styles.containerBtn}>
-    <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
-    <Text style={styles.buttonText}>{props.btnText}</Text>
-
-    </TouchableOpacity>
-  </View>
+      <TouchableOpacity style={styles.button} onPress={() => onPress()}>
+        <View style={styles.header}>
+          {renderContent()}
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 };
 

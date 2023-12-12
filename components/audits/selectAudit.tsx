@@ -34,31 +34,22 @@ import {useUser} from '../../providers/UserContext';
 interface AuditModalProps {
   isVisible: boolean;
   onClose: () => void;
-  selectedAudits: Audit[];
-  setSelectedAudits: React.Dispatch<React.SetStateAction<Audit[]>>;
   title?: string;
   description?: string;
   serviceId: string;
-  onPress?: () => void;
 }
 
 const SelectAudit = ({
   isVisible,
   onClose,
-  selectedAudits,
   serviceId,
-  setSelectedAudits,
   title,
   description,
-  onPress,
 }: AuditModalProps) => {
-  //   const [selectedAudits, setSelectedAudits] = useState<Audit[]>([]);
-  const route = useRoute<RouteProp<ParamListBase, 'SelectAudit'>>();
   const [showCards, setShowCards] = useState(true);
   const [headerText, setHeaderText] = useState('');
   const user = useUser();
   const [audits, setAudits] = useState<Audit[] | null>(null);
-  //   const { title, description, onPress = () => {} }: ComponentProps = route.params;
 
   const {
     state: {selectedAudit, companyID, serviceList},
@@ -84,7 +75,6 @@ const SelectAudit = ({
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      console.log('dataSetting', data);
       return data;
     }
   };
@@ -94,39 +84,33 @@ const SelectAudit = ({
     {
       onSuccess: data => {
         setAudits(data);
-
-        console.log('audit data', JSON.stringify(data));
       },
     },
   );
+  const servicListIndex = serviceList.findIndex(
+    service => service.id === serviceId,
+  );
 
   const handleSelectAudit = (audit: Audit) => {
-    const existingIndex = selectedAudits.findIndex(
-      a => a.title === audit.title,
-    );
-    if (existingIndex !== -1) {
-      // if the audit is already selected, remove it
-      setSelectedAudits(selectedAudits.filter(a => a.title !== audit.title));
-      dispatch(stateAction.remove_selected_audit(audit));
+    const service = serviceList.find(s => s.id === serviceId);
+  
+    const existingAuditInAuditsList = 
+      service?.audits?.some(auditData => auditData.AuditData.id === audit.id) ?? false;
+  
+    if (existingAuditInAuditsList) {
+      dispatch(stateAction.remove_selected_audit(serviceId, audit.id));
     } else {
-      // if the audit is not selected, add it
-      setSelectedAudits([...selectedAudits, audit]);
       dispatch(stateAction.selected_audit(serviceId, audit));
-      console.log('serviceList Audits',serviceList)
-      console.log('serviceId Audits',serviceId)
-      console.log(' Audits',audit)
-
     }
   };
+  
 
   const handleDonePress = () => {
-    if (selectedAudits.length > 0) {
+    if (serviceList[servicListIndex]?.audits?.length > 0) {
       // dispatch here
       onClose();
     }
   };
-  const servicListIndex = serviceList.findIndex(service => service.id === serviceId);
-
 
   const auditsWithChecked =
     audits?.map(audit => ({
@@ -135,14 +119,9 @@ const SelectAudit = ({
     })) || [];
 
   useEffect(() => {
-    if (selectedAudit.length > 0) {
-      setSelectedAudits(selectedAudit);
-    }
     if (auditsWithChecked) {
       setShowCards(false);
     }
-
-
   }, [selectedAudit]);
 
   if (isLoading) {
@@ -159,9 +138,7 @@ const SelectAudit = ({
       </View>
     );
   }
-  console.log('serviceListIndex',serviceList[servicListIndex]?.audits)
-  console.log('selectedAudit',selectedAudit)
-
+console.log('serviceListEdit',serviceList[servicListIndex]?.audits)
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       <View style={styles.container}>
@@ -184,8 +161,6 @@ const SelectAudit = ({
 
         <ScrollView style={styles.scrollView}>
           <View style={styles.contentContainer}>
-    
-
             {showCards ? (
               <View style={styles.cardsContainer}>
                 <TouchableOpacity
@@ -208,7 +183,11 @@ const SelectAudit = ({
                     content={audit.content}
                     description={audit.description}
                     number={audit.number}
-                    defaultChecked={(serviceList[servicListIndex]?.audits || []).some(m => m.id === audit.id)}
+                    defaultChecked={
+                      (serviceList[servicListIndex]?.audits || []).some(
+                        auditData => auditData.AuditData.id === audit.id,
+                      ) 
+                    }
                     imageUri={audit.auditEffectImage}
                     onPress={() => handleSelectAudit(audit)}
                   />
@@ -218,13 +197,13 @@ const SelectAudit = ({
           </View>
         </ScrollView>
 
-        {selectedAudits.length > 0 && (
+        {serviceList[servicListIndex]?.audits?.length > 0 && (
           <View style={styles.containerBtn}>
             <TouchableOpacity onPress={handleDonePress} style={styles.button}>
               <Text
                 style={
                   styles.buttonText
-                }>{`บันทึก ${selectedAudits.length} มาตรฐาน`}</Text>
+                }>{`บันทึก ${serviceList[servicListIndex]?.audits?.length} มาตรฐาน`}</Text>
             </TouchableOpacity>
           </View>
         )}

@@ -33,7 +33,6 @@ const CardAudit = ({
   useEffect(() => {
     setChecked(defaultChecked);
   }, [defaultChecked]);
-  console.log('defaultChecked', defaultChecked)
   return (
     <View style={[styles.container, checked && styles.selected]}>
       <View style={styles.titleContainer}>

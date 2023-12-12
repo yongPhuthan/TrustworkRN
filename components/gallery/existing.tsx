@@ -69,39 +69,6 @@ interface ImageModalProps {
   setServiceImages: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
-type Props = {
-  navigation: StackNavigationProp<ParamListBase, 'GalleryScreen'>;
-  route: RouteProp<ParamListBase, 'GalleryScreen'>;
-  code: string;
-};
-const CLOUDFLARE_ENDPOINT = __DEV__ ? CLOUDFLARE_WORKER_DEV : CLOUDFLARE_WORKER;
-
-// const getGallery = async code => {
-//   try {
-//     const response = await fetch(`${CLOUDFLARE_ENDPOINT}gallery`, {
-//       headers: {
-//         code: code,
-//       },
-//     });
-//     console.log('response', response);
-
-//     if (!response.ok) {
-//       throw new Error('Server responded with status: ' + response.status);
-//     }
-
-//     const contentType = response.headers.get('content-type');
-//     if (contentType && contentType.indexOf('application/json') !== -1) {
-//       const data = await response.json();
-//       return data;
-//     } else {
-//       throw new Error('Received non-JSON response');
-//     }
-//   } catch (error) {
-//     console.error('Error fetching images:', error);
-//     return {};
-//   }
-// };
-
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
 const resizeImageForUpload = async (uri, newWidth, newHeight) => {
@@ -149,7 +116,6 @@ const GalleryScreen = ({
       .filter(img => img.defaultChecked)
       .map(img => img.url);
     setServiceImages(urls);
-    // dispatch(stateAction.service_images(urls));
   };
   const getGallery = async () => {
     console.log('GETAPI');
@@ -351,6 +317,7 @@ const GalleryScreen = ({
       </View>
     );
   }
+
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       {isImageUpload ? (
@@ -468,6 +435,8 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: imageContainerWidth,
     flexDirection: 'column',
+    borderWidth: 1,
+    borderColor: 'gray',
     margin: 5,
     position: 'relative',
   },

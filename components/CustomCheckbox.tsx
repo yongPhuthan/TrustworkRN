@@ -26,8 +26,8 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 20,
     height: 20,
-    borderWidth: 2,
-    borderColor: 'white',
+    borderWidth: 1,
+    borderColor: 'gray',
     alignItems: 'center',
     justifyContent: 'center',
   },

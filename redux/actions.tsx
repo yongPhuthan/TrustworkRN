@@ -184,9 +184,20 @@ export const selected_audit = (serviceId : string, auditData : any) => ({
   payload: { serviceId, auditData },
 
 });
-export const selected_materials = (payload: object) => ({
+export const remove_selected_audit = (serviceId : string, auditId : string) => ({
+  type: contrains.REMOVE_SELECTED_AUDIT,
+  payload: { serviceId, auditId },
+
+});
+
+export const put_serviceList = (serviceId : string, newData : any) => ({
+  type: contrains.PUT_SERVICELIST,
+  payload:{ serviceId, newData },
+});
+
+export const selected_materials = (serviceId : string, materialsData : any) => ({
   type: contrains.SELECTED_MATERIALS,
-  payload,
+  payload:{ serviceId, materialsData },
 });
 export const existing_audit_array = (payload: object) => ({
   type: contrains.EXISTING_ARRAY_AUDIT,
@@ -208,14 +219,10 @@ export const start_service_list = (payload: object[]) => ({
   payload,
 });
 
-export const remove_selected_audit = (payload: object) => ({
-  type: contrains.REMOVE_SELECTED_AUDIT,
-  payload,
-});
 
-export const remove_selected_materials = (payload: object) => ({
+export const remove_selected_materials = (serviceId: string, materialId: string) => ({
   type: contrains.REMOVE_SELECTED_MATERIALS,
-  payload,
+  payload: { serviceId, materialId }
 });
 
 
@@ -429,11 +436,24 @@ export const selectedAudit = (serviceId: string, auditData: any) => {
   };
 };
 
-export const selectedMaterials = (payload: object) => {
+export const selectedMaterials = (serviceId: string, materialsData: any) => {
   return (dispatch: any) => {
-    dispatch(selected_materials(payload));
+    dispatch(selected_materials(serviceId, materialsData));
   };
 };
+export const putServiceList = (serviceId: string, newData: any) => {
+  return (dispatch: any) => {
+    dispatch(put_serviceList(serviceId, newData));
+  };
+};
+
+export const removeSelectedAudit = (serviceId: string, auditId: string) => {
+  return (dispatch: any) => {
+    dispatch(remove_selected_audit(serviceId, auditId));
+  };
+};
+
+
 
 export const existingAuditArray = (payload: any) => {
   return (dispatch: any) => {
@@ -446,15 +466,11 @@ export const existingMaterialsArray = (payload: any) => {
     dispatch(existing_materials_array(payload));
   };
 }
-export const removeSelectedAudit = (payload: object) => {
-  return (dispatch: any) => {
-    dispatch(remove_selected_audit(payload));
-  };
-};
 
-export const removeSelectedMaterials = (payload: object) => {
+
+export const removeSelectedMaterials = (serviceId: string, materialId: any) => {
   return (dispatch: any) => {
-    dispatch(remove_selected_materials(payload));
+    dispatch(remove_selected_materials(serviceId, materialId));
   };
 };
 export const removeServiceList = (index: number) => {

@@ -34,6 +34,7 @@ type Props = {
   setVisibleModalIndex: () => void;
   handleModalClose: () => void;
   handleRemoveService: () => void;
+  
 };
 const windowWidth = Dimensions.get('window').width;
 
@@ -46,7 +47,8 @@ const CardProject = (props: Props) => {
     setVisibleModalIndex,
     visibleModalIndex,
     handleModalClose,
-  } = props;
+  } = props;  
+  
 
   return (
     <View>
@@ -95,6 +97,9 @@ const CardProject = (props: Props) => {
           style={styles.modalContainer}
           isVisible={visibleModalIndex}
           onBackdropPress={handleModalClose}>
+                      <Text style={styles.title}>
+            รายการที่{index + 1}. {serviceList.title}
+          </Text>
           <Pressable onPress={handleEditService}>
             <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
           </Pressable>

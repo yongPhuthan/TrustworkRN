@@ -103,7 +103,7 @@ const ExistingProducts = ({navigation}: Props) => {
       onSuccess: data => {
         
         setProducts(data);
-        console.log('audit data', JSON.stringify(data));
+        console.log('existing data', JSON.stringify(data));
       },
     },
   );
@@ -139,7 +139,7 @@ const ExistingProducts = ({navigation}: Props) => {
                 navigation.navigate('AddExistProduct', {item: item})}
               }>
               <Image
-                source={{uri: item.serviceImage}}
+                source={{uri: item.serviceImages[0]|| ''}}
                 style={styles.productImage}
               />
               <View style={styles.textContainer}>

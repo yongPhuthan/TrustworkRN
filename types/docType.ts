@@ -109,7 +109,7 @@ export type Service = {
   quotationId: string | null;
   company: CompanyUser | null;
   companyId: string | null;
-  audits: Audit[]; 
+  audits: SelectedAuditData[]; 
   materials: SelectedMaterialData[]; 
 };
 export type Material = {
@@ -121,29 +121,35 @@ image:string
 };
 
 export type SelectedAuditData = {
-  id: number;
-  number: number;
-  image: string;
-  title: string;
-  content: string;
-  auditEffectDescription: string;
-  auditEffectImage: string;
-  auditShowTitle: string;
-  category: string;
-  subCategory: string;
-  createdAt: string;
-  defaultChecked: boolean;
-  serviceID: string;
-};
+  AuditData : {
+    id: number;
+    number: number;
+    image: string;
+    title: string;
+    content: string;
+    auditEffectDescription: string;
+    auditEffectImage: string;
+    auditShowTitle: string;
+    category: string;
+    subCategory: string;
+    createdAt: string;
+    defaultChecked: boolean;
+    serviceID: string;
+  }
+
+} ;
 
 export type SelectedMaterialData = {
-  id: number;
-  name: string;
-  description: string;
-  image: string;
-  companyId: string;
-  created: string;
-  updated: string;
+  materialData : {
+    id: number;
+    name: string;
+    description: string;
+    image: string;
+    companyId: string;
+    created: string;
+    updated: string;
+  }
+
 };
 
 
@@ -314,5 +320,6 @@ export type FormData = {
   total: string;
   audits: AuditData[];
   materials?: MaterialData[];
+  unit: string;
 };
 

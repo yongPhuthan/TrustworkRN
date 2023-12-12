@@ -82,11 +82,6 @@ const initialState: StateType = {
 
 function reducer(state: StateType, action: ActionType): StateType {
   switch (action.type) {
-
-
-
-
-
     case contrains.ALL_DATA:
       return {...state, allData: action.payload as string};
     case contrains.CODE:
@@ -112,13 +107,13 @@ function reducer(state: StateType, action: ActionType): StateType {
         ...state,
         serviceList: [...state.serviceList, action.payload] as any,
       };
-      case contrains.REMOVE_SERVICE:
-        console.log('Removing service at index:', action.payload);
-        return {
-          ...state,
-          serviceList: state.serviceList.filter((_, i) => i !== action.payload),
-        };
-      
+    case contrains.REMOVE_SERVICE:
+      console.log('Removing service at index:', action.payload);
+      return {
+        ...state,
+        serviceList: state.serviceList.filter((_, i) => i !== action.payload),
+      };
+
     case contrains.UPDATE_SERVICE_LIST:
       return {
         ...state,
@@ -134,32 +129,105 @@ function reducer(state: StateType, action: ActionType): StateType {
         periodPercent: action.payload as any,
       };
 
-      case contrains.SELECTED_AUDIT:
-        const { serviceId, auditData } = action.payload;
+      case contrains.SELECTED_AUDIT: {
+        const { serviceId, auditData: auditSelected } = action.payload as any;
         const updatedServiceList = state.serviceList.map(service => {
           if (service.id === serviceId) {
-            const newAudits = service.audits ? [...service.audits, auditData] : [auditData];
+            const newAudit = { AuditData: auditSelected }; 
+            const newAudits = service.audits
+              ? [...service.audits, newAudit]
+              : [newAudit];
             return {
               ...service,
               audits: newAudits,
             };
           }
+      
           return service;
         });
         return {
           ...state,
           serviceList: updatedServiceList,
-        };
-      
-      case contrains.INITIAL_SERVICEID:
-        if (state.serviceList.some(service => service.id === action.payload)) {
-          return state;
+        } 
+      }
+      case contrains.SELECTED_MATERIALS:
+        {
+          const {serviceId, materialsData : meterialSelected} = action.payload as any;
+          const updatedServiceList = state.serviceList.map(service => {
+            if (service.id === serviceId) {
+              const newMaterial = { materialData: meterialSelected }; 
+              const newMaterials = service.materials
+                ? [...service.materials, newMaterial]
+                : [newMaterial];
+              return {
+                ...service,
+                materials: newMaterials,
+              };
+            }
+        
+            return service;
+          });
+          return {
+            ...state,
+            serviceList: updatedServiceList,
+          };
         }
-  
-        return {
-          ...state,
-          serviceList: [...state.serviceList, { id: action.payload }] as any,
-        };
+        case contrains.REMOVE_SELECTED_AUDIT: {
+          const { serviceId, auditId } = action.payload as any;
+        
+          const updatedServiceListForRemoveAuditInAuditsArray = state.serviceList.map(service => {
+            if (service.id === serviceId) {
+              // Check if the service has audits array and filter out the specific audit
+              const updatedAudits = service.audits
+                ? service.audits.filter(audit => audit.AuditData.id !== auditId)
+                : [];
+        
+              return {
+                ...service,
+                audits: updatedAudits,
+              };
+            }
+            return service;
+          });
+        
+          return {
+            ...state,
+            serviceList: updatedServiceListForRemoveAuditInAuditsArray,
+          };
+        }
+        case contrains.REMOVE_SELECTED_MATERIALS: {
+          const {serviceId, materialId} = action.payload as any;
+
+          const updatedServiceListForRemoveMaterialInMaterialsArray = state.serviceList.map(service => {
+            if (service.id === serviceId) {
+              const updatedMaterials = service.materials
+                ? service.materials.filter(material => material.materialData.id !== materialId)
+                : [];
+        
+              return {
+                ...service,
+                materials: updatedMaterials,
+              };
+            }
+            return service;
+          });
+    
+          return {
+            ...state,
+            serviceList: updatedServiceListForRemoveMaterialInMaterialsArray,
+          };
+        }
+      
+
+    case contrains.INITIAL_SERVICEID:
+      if (state.serviceList.some(service => service.id === action.payload)) {
+        return state;
+      }
+
+      return {
+        ...state,
+        serviceList: [...state.serviceList, {id: action.payload}] as any,
+      };
 
     case contrains.EXISTING_ARRAY_AUDIT:
       return {
@@ -169,30 +237,32 @@ function reducer(state: StateType, action: ActionType): StateType {
           ...(action.payload as AuditData[]),
         ],
       };
-    case contrains.REMOVE_SELECTED_AUDIT:
-      return {
-        ...state,
-        selectedAudit: state.selectedAudit.filter(
-          a => a.title !== action.payload.title,
-        ) as any,
-      };
 
     case contrains.RESET_AUDIT:
       return {...state, selectedAudit: []};
     case contrains.RESET_MATERIALS:
       return {...state, selectedMaterials: []};
 
-    case contrains.SELECTED_MATERIALS:
+
+      // case contrains.REMOVE_AUDITS_IN_SERVICE_LIST:
+
+      const removedAuditDataInServiceList = state.serviceList.map(service => {
+        if (service.id === serviceId) {
+          // Filter out the auditData that needs to be removed
+          const newAudits = service.audits
+            ? service.audits.filter(audit => audit.id !== auditData.id)
+            : [];
+          return {
+            ...service,
+            audits: newAudits,
+          };
+        }
+        return service;
+      }) as any;
+
       return {
         ...state,
-        selectedMaterials: [...state.selectedMaterials, action.payload] as any,
-      };
-    case contrains.REMOVE_AUDITS_IN_SERVICE_LIST:
-      return {
-        ...state,
-        serviceList: state.serviceList.map((service, i) =>
-          i === action.index ? {...service, audits: []} : service,
-        ),
+        serviceList: removedAuditDataInServiceList,
       };
     case contrains.EXISTING_ARRAY_MATERIALS:
       return {
@@ -207,13 +277,6 @@ function reducer(state: StateType, action: ActionType): StateType {
     case contrains.RESET_SERVICE_IMAGES:
       return {...state, serviceImages: []};
 
-    case contrains.REMOVE_SELECTED_MATERIALS:
-      return {
-        ...state,
-        selectedMaterials: state.selectedMaterials.filter(
-          a => a.name !== action.payload.name,
-        ) as any,
-      };
 
     case contrains.START_SERVICE_LIST:
       return {...state, serviceList: action.payload as any};
@@ -228,6 +291,29 @@ function reducer(state: StateType, action: ActionType): StateType {
         ...state,
         selectedContract: [...state.selectedContract, action.payload] as any,
       };
+
+    case contrains.PUT_SERVICELIST: {
+      const {serviceId, newData} = action.payload as any;
+      const serviceIndex = state.serviceList.findIndex(
+        service => service.id === serviceId,
+      );
+
+      if (serviceIndex !== -1) {
+        const updatedServiceList = [
+          ...state.serviceList.slice(0, serviceIndex),
+          {...state.serviceList[serviceIndex], ...newData},
+          ...state.serviceList.slice(serviceIndex + 1),
+        ];
+
+        return {
+          ...state,
+          serviceList: updatedServiceList,
+        };
+      } else {
+        // Handle service not found
+        return state;
+      }
+    }
     case contrains.REMOVE_SELECTED_CONTRACT:
       return {
         ...state,

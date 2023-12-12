@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Animated,
   TouchableOpacity,
+  Alert,
   Platform,
   Pressable,
 } from 'react-native';
@@ -15,10 +16,7 @@ import CardDashBoard from '../../components/CardDashBoard';
 import {HOST_URL, BACK_END_SERVER_URL, PROJECT_FIREBASE} from '@env';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
-import firebase, {
-  testFirebaseConnection,
-  testFunctionsConnection,
-} from '../../firebase';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Header as HeaderRNE, HeaderProps, Icon, FAB} from '@rneui/themed';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -30,7 +28,7 @@ import {
   faSheetPlastic,
   faUserCog,
 } from '@fortawesome/free-solid-svg-icons';
-import {useQuery} from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import Lottie from 'lottie-react-native';
 import messaging from '@react-native-firebase/messaging';
 import {User, Quotation, CompanyUser} from '../../types/docType';
@@ -38,16 +36,18 @@ import * as stateAction from '../../redux/actions';
 import {DashboardScreenProps} from '../../types/navigationType';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useUser} from '../../providers/UserContext';
+import {set} from 'react-hook-form';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(false);
   const user = useUser();
   const {width, height} = Dimensions.get('window');
-  const [email, setEmail] = useState<String>('');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
-  const [selectedQuotation, setSelectedQuotation] = useState(null);
-  const [token, setToken] = useState<String>('');
+  const queryClient = useQueryClient();
+
   const [selectedItem, setSelectedItem] = useState(null) as any;
+  const [selectedIndex, setSelectedIndex] = useState(null);
+
   const [originalQuotationData, setOriginalQuotationData] = useState<
     Quotation[] | null
   >(null);
@@ -75,56 +75,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
     return originalQuotationData.filter(q => q.status === activeFilter);
   }, [originalQuotationData, activeFilter]);
-  async function fetchDashboardData() {
-    if (!user || !user.email) {
-      console.error('User or user email is not available');
-      return;
-    }
-  
-    try {
-      const token = await user.getIdToken(true);
-      const response = await fetch(
-        `${BACK_END_SERVER_URL}/api/dashboard?email=${encodeURIComponent(user.email)}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-  
-      if (!response.ok) {
-        if (response.status === 401) {
-          const errorData = await response.json();
-          if (errorData.message === 'Token has been revoked. Please reauthenticate.') {
-            // Decide how you want to handle reauthentication
-            // Possibly recall fetchDashboardData or handle reauthentication differently
-          }
-          throw new Error(errorData.message);
-        }
-        throw new Error('Network response was not ok.');
-      }
-  
-      const data = await response.json();
-      if (data && Array.isArray(data[1])) {
-        data[1].sort((a, b) => {
-          const dateA = new Date(a.dateOffer);
-          const dateB = new Date(b.dateOffer);
-          return dateB.getTime() - dateA.getTime();
-        });
-      }
-  
-      console.log('data after', data);
-      return data;
-    } catch (err) {
-      // Handle or throw the error depending on your error handling strategy
-      console.error('Error fetching dashboard data:', err);
-      throw err;
-    }
-  }
-  
-
   const updateContractData = (filter: string) => {
     setActiveFilter(filter);
 
@@ -141,20 +91,133 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     }
   };
 
-  const { isLoading, error, data } = useQuery({
+  async function fetchDashboardData() {
+    if (!user || !user.email) {
+      console.error('User or user email is not available');
+      return;
+    }
+
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/dashboard?email=${encodeURIComponent(
+          user.email,
+        )}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          const errorData = await response.json();
+          if (
+            errorData.message ===
+            'Token has been revoked. Please reauthenticate.'
+          ) {
+            // Decide how you want to handle reauthentication
+            // Possibly recall fetchDashboardData or handle reauthentication differently
+          }
+          throw new Error(errorData.message);
+        }
+        throw new Error('Network response was not ok.');
+      }
+
+      const data = await response.json();
+      if (data && Array.isArray(data[1])) {
+        data[1].sort((a, b) => {
+          const dateA = new Date(a.dateOffer);
+          const dateB = new Date(b.dateOffer);
+          return dateB.getTime() - dateA.getTime();
+        });
+      }
+
+      console.log('data after', data);
+      return data;
+    } catch (err) {
+      // Handle or throw the error depending on your error handling strategy
+      console.error('Error fetching dashboard data:', err);
+      throw err;
+    }
+  }
+
+  const removeQuotation = async (id: string) => {
+    handleModalClose();
+    setIsLoadingAction(true);
+    if (!user || !user.email) {
+      console.error('User or user email is not available');
+      return;
+    }
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/documents/removeQuotation?id=${encodeURIComponent(
+          id,
+        )}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          const errorData = await response.json();
+          throw new Error(errorData.message);
+        }
+        throw new Error('Network response was not ok.');
+      }
+      if (response.ok) {
+        queryClient.invalidateQueries(['dashboardData']);
+        setIsLoadingAction(false);
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      throw err;
+    }
+  };
+  const confirmRemoveQuotation = (id,customer) => {
+    setShowModal(false);
+    Alert.alert(
+      'ยืนยันลบใบเสนอราคา',
+      `ลูกค้า ${customer}`,
+      [
+        {
+          text: 'ยกเลิก',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {text: 'ตกลง', onPress: () => removeQuotation(id)},
+      ],
+      {cancelable: false},
+    );
+  };
+
+  const {
+    isLoading: isQuery,
+    error,
+    data,
+    refetch,
+  } = useQuery({
     queryKey: ['dashboardData'],
     queryFn: fetchDashboardData,
-    enabled: !!user, 
-    onSuccess: (data) => {
-      console.log('success', data);
+    enabled: !!user,
+    onSuccess: data => {
       setCompanyData(data[0]);
       setQuotationData(data[1]);
       setOriginalQuotationData(data[1]);
       dispatch(stateAction.code_company(data[0].code));
     },
   });
-  
-  if (isLoading) {
+
+  if (isQuery || !data) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator />
@@ -171,17 +234,24 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       navigation.navigate('FirstAppScreen');
     }
   }
+
   const handleModal = () => {
     console.log('SHOW');
     setShowModal(true);
   };
-  const handleModalClose = () => {
-    setShowModal(false);
+  const handleModalOpen = (item, index) => {
+    console.log('item', item);
+    console.log('index', index);
+    setSelectedItem(item);
+    setSelectedIndex(index);
+    setShowModal(true);
   };
 
-  const handleModalOpen = item => {
-    setSelectedItem(item);
-    setShowModal(true);
+  // Function to handle closing the modal
+  const handleModalClose = () => {
+    setSelectedItem(null);
+    setSelectedIndex(null);
+    setShowModal(false);
   };
 
   const handleFilterClick = filter => {
@@ -218,127 +288,138 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       </TouchableOpacity>
     );
   };
-  const renderItem = ({item}) => (
+  const renderItem = ({item, index}) => (
     <>
-      <View style={{marginTop: 10}}>
-        <CardDashBoard
-          status={item.status}
-          date={item.dateOffer}
-          end={item.dateEnd}
-          price={item.allTotal}
-          customerName={item.customer?.name as string}
-          description={'quotation.'}
-          unit={'quotation.'}
-          // onCardPress={handleModal}
-          onCardPress={() => handleModalOpen(item)}
-        />
-      </View>
-
-      {Platform.OS === 'android' ? (
-        <Modal
-          backdropOpacity={0.1}
-          backdropTransitionOutTiming={100}
-          style={styles.modalContainer}
-          isVisible={showModal}
-          onBackdropPress={handleModalClose}>
-          {/* <Pressable
-            onPress={() => {
-              setShowModal(false);
-              editQuotation(item.services, item.customer, item);
-            }}>
-            <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
-          </Pressable>
-          <View
-            style={{
-              width: '100%',
-              alignSelf: 'center',
-              borderBottomWidth: 1,
-              borderBottomColor: '#cccccc',
-            }}></View> */}
-          <Pressable
-            onPress={() => {
-              setShowModal(false);
-              navigation.navigate('DocViewScreen', {id: item.id});
-            }}>
-            <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
-          </Pressable>
-          <View
-            style={{
-              width: '100%',
-              alignSelf: 'center',
-              borderBottomWidth: 1,
-              borderBottomColor: '#cccccc',
-            }}></View>
-          <Pressable
-            onPress={() => {
-              // setShowModal(false); // Step 4
-            }}>
-            <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
-          </Pressable>
-          <View
-            style={{
-              width: '100%',
-              alignSelf: 'center',
-              borderBottomWidth: 1,
-              borderBottomColor: '#cccccc',
-            }}></View>
-        </Modal>
+      {isLoadingAction ? (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <ActivityIndicator size="large" />
+        </View>
       ) : (
-        <Modal
-          backdropTransitionOutTiming={100}
-          style={styles.modalContainer}
-          isVisible={showModal}
-          onBackdropPress={() => setShowModal(false)}
-
-          // onBackdropPress={handleModalClose}
-        >
-          {/* <TouchableOpacity
-            onPress={() => {
-              setShowModal(false);
-              editQuotation(
-                selectedItem?.services,
-                selectedItem?.customer,
-                selectedItem,
-              );
-            }}>
-            <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
-          </TouchableOpacity>
-          <View
-            style={{
-              width: '100%',
-              alignSelf: 'center',
-              borderBottomWidth: 1,
-              borderBottomColor: '#cccccc',
-            }}></View> */}
-          <TouchableOpacity
-            onPress={() => {
-              setShowModal(false);
-              navigation.navigate('WebViewScreen', {id: item.id});
-            }}>
-            <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
-          </TouchableOpacity>
-          <View
-            style={{
-              width: '100%',
-              alignSelf: 'center',
-              borderBottomWidth: 1,
-              borderBottomColor: '#cccccc',
-            }}></View>
-          <TouchableOpacity
-            onPress={() => {
-              // setShowModal(false); // Step 4
-            }}>
-            <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
-          </TouchableOpacity>
-          <View
-            style={{
-              width: '100%',
-              alignSelf: 'center',
-              borderBottomWidth: 1,
-              borderBottomColor: '#cccccc',
-            }}></View>
-        </Modal>
+        <View style={{marginTop: 10}}>
+          <CardDashBoard
+            status={item.status}
+            date={item.dateOffer}
+            end={item.dateEnd}
+            price={item.allTotal}
+            customerName={item.customer?.name as string}
+            description={'quotation.'}
+            unit={'quotation.'}
+            // onCardPress={handleModal}
+            onCardPress={() => handleModalOpen(item, index)}
+          />
+        </View>
       )}
+
+      {selectedIndex === index &&
+        (Platform.OS === 'android' ? (
+          <Modal
+            backdropOpacity={0.1}
+            backdropTransitionOutTiming={100}
+            style={styles.modalContainer}
+            isVisible={showModal}
+            onBackdropPress={handleModalClose}>
+            <Text style={styles.title}>
+              ลูกค้า {selectedItem.customer?.name}
+            </Text>
+            <Pressable
+              onPress={() => {
+                setShowModal(false);
+                editQuotation(
+                  selectedItem.services,
+                  selectedItem.customer,
+                  selectedItem,
+                );
+              }}>
+              <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
+            </Pressable>
+            <View
+              style={{
+                width: '100%',
+                alignSelf: 'center',
+                borderBottomWidth: 1,
+                borderBottomColor: '#cccccc',
+              }}></View>
+            <Pressable
+              onPress={() => {
+                setShowModal(false);
+                navigation.navigate('DocViewScreen', {id: item.id});
+              }}>
+              <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
+            </Pressable>
+            <View
+              style={{
+                width: '100%',
+                alignSelf: 'center',
+                borderBottomWidth: 1,
+                borderBottomColor: '#cccccc',
+              }}></View>
+            <Pressable onPress={() => confirmRemoveQuotation(item.id,item.selectedItem.customer?.name)}>
+              <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
+            </Pressable>
+
+            <View
+              style={{
+                width: '100%',
+                alignSelf: 'center',
+                borderBottomWidth: 1,
+                borderBottomColor: '#cccccc',
+              }}></View>
+          </Modal>
+        ) : (
+          <Modal
+            backdropTransitionOutTiming={100}
+            style={styles.modalContainer}
+            isVisible={showModal}
+            onBackdropPress={() => setShowModal(false)}
+
+            // onBackdropPress={handleModalClose}
+          >
+            <Text style={styles.title}>ลูกค้า {item.customer?.name}</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowModal(false);
+                editQuotation(
+                  selectedItem?.services,
+                  selectedItem?.customer,
+                  selectedItem,
+                );
+              }}>
+              <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
+            </TouchableOpacity>
+            <View
+              style={{
+                width: '100%',
+                alignSelf: 'center',
+                borderBottomWidth: 1,
+                borderBottomColor: '#cccccc',
+              }}></View>
+            <TouchableOpacity
+              onPress={() => {
+                setShowModal(false);
+                navigation.navigate('WebViewScreen', {id: item.id});
+              }}>
+              <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
+            </TouchableOpacity>
+            <View
+              style={{
+                width: '100%',
+                alignSelf: 'center',
+                borderBottomWidth: 1,
+                borderBottomColor: '#cccccc',
+              }}></View>
+            <Pressable onPress={() => confirmRemoveQuotation(item.id,selectedItem.customer?.name)}>
+              <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
+            </Pressable>
+
+            <View
+              style={{
+                width: '100%',
+                alignSelf: 'center',
+                borderBottomWidth: 1,
+                borderBottomColor: '#cccccc',
+              }}></View>
+          </Modal>
+        ))}
     </>
   );
 
@@ -368,6 +449,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                 color: '#000000',
                 fontSize: 18,
                 fontWeight: 'bold',
+                marginLeft: 5,
                 width: 100,
               }}
               onPress={() => {}}>
@@ -386,8 +468,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          // data={filteredData}
-
           data={filters}
           renderItem={({item}) => (
             <FilterButton
@@ -402,43 +482,35 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         />
         {/* <View style={{height: 0.5, backgroundColor: 'gray', width: '100%'}} /> */}
       </View>
-      {isLoadingAction ? (
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          {/* Replace this with your preferred loading indicator */}
-          <ActivityIndicator size="large" />
-        </View>
-      ) : (
-        companyData &&
-        quotationData && (
-          <View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: '#f5f5f5',
-            }}>
-            <FlatList
-              data={filteredQuotationData}
-              renderItem={renderItem}
-              keyExtractor={item => item.id}
-              ListEmptyComponent={
-                <View
-                  style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    height: height * 0.5,
+      {companyData && (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#f5f5f5',
+          }}>
+          <FlatList
+            data={filteredQuotationData}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            ListEmptyComponent={
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  height: height * 0.5,
 
-                    alignItems: 'center',
-                  }}>
-                  <Text style={{marginTop: 10}}>
-                    กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
-                  </Text>
-                </View>
-              }
-              contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
-            />
-          </View>
-        )
+                  alignItems: 'center',
+                }}>
+                <Text style={{marginTop: 10}}>
+                  กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา555
+                </Text>
+              </View>
+            }
+            contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
+          />
+        </View>
       )}
 
       <FAB
@@ -563,5 +635,11 @@ const styles = StyleSheet.create({
   activeFilter: {
     backgroundColor: '#1f303cff',
     color: 'white',
+  },
+  title: {
+    marginBottom: 20,
+    fontSize: 14,
+    fontFamily: 'Sukhumvit Set Bold',
+    color: 'gray',
   },
 });
