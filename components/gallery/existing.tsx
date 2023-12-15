@@ -10,6 +10,7 @@ import {
   Text,
 } from 'react-native';
 import {useUser} from '../../providers/UserContext';
+import {useForm, Controller, useFormContext, set} from 'react-hook-form';
 
 import {StackNavigationProp} from '@react-navigation/stack';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
@@ -66,7 +67,7 @@ interface ImageModalProps {
   isVisible: boolean;
   onClose: () => void;
   serviceImages: string[];
-  setServiceImages: React.Dispatch<React.SetStateAction<any[]>>;
+  setServiceImages: any;
 }
 
 const {width, height} = Dimensions.get('window');
@@ -91,10 +92,18 @@ const GalleryScreen = ({
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const user = useUser();
   const [loading, setLoading] = useState(true);
-  const [galleryImages, setGalleryImages] = useState<ImageData[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [responseLog, setResponseLog] = useState<string | null>(null);
+  const context = useFormContext();
+  const initialGalleryImages = serviceImages?.map((url, index) => ({
+    id: index + 1,  // Assuming IDs should be unique and start from 1
+    url: url,
+    defaultChecked: true  // Set to true as initial value
+  }));
+  const [galleryImages, setGalleryImages] = useState<ImageData[]>(initialGalleryImages);
+
+  const {register, control, getValues, watch, setValue} = context;
   const {
     state: {serviceList, code},
     dispatch,
@@ -118,7 +127,6 @@ const GalleryScreen = ({
     setServiceImages(urls);
   };
   const getGallery = async () => {
-    console.log('GETAPI');
     if (!user) {
       throw new Error('User not authenticated');
     } else {
@@ -318,6 +326,9 @@ const GalleryScreen = ({
     );
   }
 
+console.log('galleryImages', galleryImages)
+console.log(initialGalleryImages);
+
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       {isImageUpload ? (
@@ -336,7 +347,6 @@ const GalleryScreen = ({
               <FontAwesomeIcon icon={faPlus} size={24} color="gray" />
             </TouchableOpacity>
           </View>
-
           <FlatList
             data={galleryImages}
             numColumns={3}
@@ -404,7 +414,6 @@ const GalleryScreen = ({
               </TouchableOpacity>
             </View>
           )}
-
           <Modal
             isVisible={modalVisible}
             onBackdropPress={() => setModalVisible(false)}>

@@ -92,10 +92,12 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
 
   async function fetchDashboardData() {
+
     if (!user || !user.email) {
       console.error('User or user email is not available');
       return;
     }
+console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
 
     try {
       const token = await user.getIdToken(true);
@@ -353,7 +355,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                 borderBottomWidth: 1,
                 borderBottomColor: '#cccccc',
               }}></View>
-            <Pressable onPress={() => confirmRemoveQuotation(item.id,item.selectedItem.customer?.name)}>
+           <Pressable onPress={() => confirmRemoveQuotation(item.id,selectedItem.customer?.name)}>
               <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
             </Pressable>
 
@@ -434,7 +436,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     // navigation.navigate('GalleryScreen', {code: companyData?.code});
     navigation.navigate('CreateQuotation');
   };
-
   return (
     <>
       <View>
@@ -453,7 +454,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                 width: 100,
               }}
               onPress={() => {}}>
-              Saletrusth
+              Trusthwork
             </Text>
           }
           rightComponent={
@@ -480,7 +481,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           )}
           keyExtractor={item => item}
         />
-        {/* <View style={{height: 0.5, backgroundColor: 'gray', width: '100%'}} /> */}
       </View>
       {companyData && (
         <View
@@ -504,7 +504,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                   alignItems: 'center',
                 }}>
                 <Text style={{marginTop: 10}}>
-                  กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา555
+                  กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
                 </Text>
               </View>
             }
@@ -514,7 +514,8 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       )}
 
       <FAB
-        icon={{name: 'add', color: 'white'}}
+    icon={<FontAwesomeIcon icon={faPlus} size={20} color="white" />}
+
         color="#012b20"
         // color="#0073BA"
         style={{

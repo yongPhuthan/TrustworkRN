@@ -1,4 +1,4 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import React, {useState, useContext, useEffect, useMemo} from 'react';
 import {
   View,
   TextInput,
@@ -65,91 +65,98 @@ const AddExistProduct = ({navigation, route}: Props) => {
   const [serviceImageUri, setServiceImage] = useState<string | null>(null);
   const [unitPrice, setPrice] = useState(item.unitPrice);
   const [total, setTotalCost] = useState(0);
-  const [serviceListState, setServiceList] = useState<ServiceList[]>([]);
   const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
-  const [selectedMaterialArray, setSelectedMaterialArray] = useState<any[]>([]);
   const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [selectedAudits, setSelectedAudits] = useState<Audit[]>([]);
   const [isModalImagesVisible, setModalImagesVisible] = useState(false);
   const [serviceImages, setServiceImages] = useState<string[]>(item.serviceImages);
 
   const serviceID = uuidv4();
+  
   const {
     state: {serviceList, selectedAudit, code},
     dispatch,
   }: any = useContext(Store);
 
-  const handleFormSubmit: (data: FormData) => void = (data)=> {
-    const selectedAudits = selectedAudit.map((obj: any) => {
-      return {
-        ...obj,
-        serviceID,
-      };
-    });
+  // const handleFormSubmit: (data: FormData) => void = (data)=> {
 
-    const newServiceItem = {
-      id: serviceID,
-      title: data.title,
-      description: data.description,
-      unitPrice: data.unitPrice,
-      serviceImage: imageUrl,
-      qty: qty,
-      discountPercent,
-      total: (qty * unitPrice).toString(),
-      audits: selectedAudits,
+
+  //   const newServiceItem = {
+  //     id: serviceID,
+  //     title: data.title,
+  //     description: data.description,
+  //     unitPrice: data.unitPrice,
+  //     serviceImage: imageUrl,
+  //     qty: qty,
+  //     discountPercent,
+  //     total: totalCost,
+      
+  //   };
+
+  //   dispatch(stateAction.service_list(newServiceItem as any));
+  //   dispatch(stateAction.reset_audit());
+  //   navigation.pop(2);
+
+  //   // navigation.goBack();
+  // };
+  const totalCost = useMemo(
+    () => (qty > 0 ? qty * unitPrice : 0),
+    [qty, unitPrice],
+  );
+  const serviceIndex = useMemo(
+    () => serviceList.findIndex(service => service.id === serviceID),
+    [serviceList, serviceID],
+  );
+
+  const handleFormSubmit = (data: FormData) => {
+    const newData = {
+      id: item.id,
+      title: data.title ? data.title : item.title,
+      description: data.description ? data.description : item.description,
+      serviceImages,
+      unitPrice: data.unitPrice
+        ? Number(data.unitPrice.replace(/,/g, ''))
+        : Number(item.unitPrice),
+      qty,
+      total: totalCost,
     };
-
-    dispatch(stateAction.service_list(newServiceItem as any));
-    dispatch(stateAction.reset_audit());
-    navigation.pop(2);
-
-    // navigation.goBack();
+    dispatch(stateAction.put_serviceList(serviceID, newData));
+    navigation.goBack();
   };
 
-  const {
-    handleSubmit,
-    control,
-    watch,
-    setValue,
-    reset,
-    formState: {errors, isDirty, dirtyFields, isValid},
-  } = useForm<Inputs>({
-    mode: 'onChange',
-    defaultValues: {
-      title: item.title,
-      description: item.description,
-      serviceImage: item.serviceImage,
-      unitPrice: item.unitPrice
-      
-    },
-  });
-  const handleSelectAudit = (data: Inputs) => {
-    navigation.navigate('SelectAudit', {
-      title: data.title ,
-      description: data.description,
-      serviceID: serviceID,
-      
-    });
-  };
+  // const {
+  //   handleSubmit,
+  //   control,
+  //   watch,
+  //   setValue,
+  //   reset,
+  //   formState: {errors, isDirty, dirtyFields, isValid},
+  // } = useForm<Inputs>({
+  //   mode: 'onChange',
+  //   defaultValues: {
+  //     title: item.title,
+  //     description: item.description,
+  //     unitPrice: item.unitPrice.toString(),
+  //     audits: item.audits,
+  //     materials: item.materials,
+  //     serviceImages: item.serviceImages,
+  //   } as any,
+  // });
   useEffect(() => {
-    if (qty > 0) {
-      const total = qty * unitPrice;
-      // const discountedTotal = total - (total * discountPercent / 100);
-      setTotalCost(total);
-    } else {
-      setTotalCost(0);
+    if (serviceID) {
+      dispatch(stateAction.initial_serviceId(serviceID));
     }
-  }, [qty, unitPrice, discountPercent]);
+  }, [qty, unitPrice, serviceID, discountPercent, serviceList]);
+
+  const isAuditsDisabled = useMemo(() => {
+    return serviceList[serviceIndex]?.audits?.length > 0;
+  }, [serviceList, serviceIndex]);
+
+  const isMaterialsDisabled = useMemo(() => {
+    return serviceList[serviceIndex]?.materials?.length > 0;
+  }, [serviceList, serviceIndex]);
   return (
     <>
-      {/* <HeaderRNEComponent
-     onLeftPress={ () => onGoback()}
-     onRightPress={handleSubmit(handleFormSubmit)}
-     title="เพิ่มรายการ-สินค้า"
-     rightText="บันทึก"
-    
-    /> */}
       <View style={{flex: 1}}>
         <ScrollView style={styles.container}>
           <View style={styles.subContainer}>
@@ -164,7 +171,10 @@ const AddExistProduct = ({navigation, route}: Props) => {
                   renderItem={({item, index}) => {
                     return (
                       <View style={styles.imageContainer}>
-                        <Image source={{uri: item}} style={styles.image} />
+                        <TouchableOpacity
+                          onPress={() => setModalImagesVisible(true)}>
+                          <Image source={{uri: item}} style={styles.image} />
+                        </TouchableOpacity>
                       </View>
                     );
                   }}
@@ -339,28 +349,6 @@ const AddExistProduct = ({navigation, route}: Props) => {
                 )}
               />
             </View>
-            {/* ปิดส่วนลดแยกรายการ */}
-            {/* <View style={styles.summary}>
-          <Text style={styles.price}>ส่วนลด(%):</Text>
-          <Controller
-  control={control}
-  name="discountPercent"
-  defaultValue=""
-  render={({field: {onChange, value}}) => (
-    <TextInput
-      style={styles.price}
-      placeholder="0"
-      keyboardType="number-pad"
-      onChangeText={value => {
-        onChange(value);
-        setDiscountPercent(parseFloat(value));
-      }}
-      value={value}
-    />
-  )}
-/>
-
-        </View> */}
             <SmallDivider />
             <View style={styles.summary}>
               <Text style={styles.priceSum}>รวมเป็นเงิน:</Text>
@@ -376,7 +364,7 @@ const AddExistProduct = ({navigation, route}: Props) => {
                     keyboardType="number-pad"
                     value={
                       qty > 0
-                        ? Number(qty * unitPrice)
+                        ? Number(totalCost)
                             .toFixed(2)
                             .replace(/\d(?=(\d{3})+\.)/g, '$&,')
                         : '0'
@@ -400,11 +388,11 @@ const AddExistProduct = ({navigation, route}: Props) => {
             <SmallDivider />
 
             <View>
-              {selectedAudits?.length > 0 ? (
+              {isAuditsDisabled ? (
                 <View style={styles.cardContainer}>
                   <Text
                     style={{
-                      marginBottom: 20,
+                      marginBottom: 5,
                       marginTop: 20,
                       fontFamily: 'Sukhumvit Set Bold',
 
@@ -414,40 +402,33 @@ const AddExistProduct = ({navigation, route}: Props) => {
                     }}>
                     มาตรฐานของบริการนี้:
                   </Text>
-                  {selectedAudits?.map((item: any) => (
+                  {serviceList[serviceIndex]?.audits?.map((item: any) => (
                     <TouchableOpacity
-                      key={item.id}
+                      key={item.AuditData.id}
                       style={styles.card}
                       onPress={() => setModalVisible(true)}>
                       <Text style={styles.cardTitle}>
-                        {item.auditShowTitle}
+                        {item.AuditData.auditShowTitle} 
                       </Text>
                       <Icon name="chevron-right" size={24} color="gray" />
                     </TouchableOpacity>
                   ))}
                 </View>
               ) : (
-                <View>
-                  {selectedAudits.length === 0 && (
-                    <TouchableOpacity
-                      style={styles.selectButton}
-                      onPress={() => setModalVisible(true)}
-
-                      // onPress={handleSubmit(handleSelectAudit)}
-                    >
-                      <View style={styles.containerButton}>
-                        <FontAwesomeIcon
-                          icon={faPlusCircle}
-                          color="#0073BA"
-                          size={14}
-                        />
-                        <Text style={styles.selectButtonText}>
-                          เลือกมาตรฐานการทำงาน
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                </View>
+                <TouchableOpacity
+                  style={styles.selectButton}
+                  onPress={() => setModalVisible(true)}>
+                  <View style={styles.containerButton}>
+                    <FontAwesomeIcon
+                      icon={faPlusCircle}
+                      color="#0073BA"
+                      size={14}
+                    />
+                    <Text style={styles.selectButtonText}>
+                      เลือกมาตรฐานการทำงาน
+                    </Text>
+                  </View>
+                </TouchableOpacity>
               )}
             </View>
             <View
@@ -457,61 +438,54 @@ const AddExistProduct = ({navigation, route}: Props) => {
                     paddingVertical: 10,
                   },
                   android: {
-                    paddingVertical: 0,
+                    paddingVertical: 10,
                   },
                 }),
               }}></View>
             <SmallDivider />
             <View>
-              {selectedMaterialArray?.length > 0 ? (
+              {isMaterialsDisabled? (
                 <View style={styles.cardContainer}>
                   <Text
                     style={{
-                      marginBottom: 20,
+                      marginBottom: 5,
                       marginTop: 20,
                       fontSize: 16,
+                      fontFamily: 'Sukhumvit Set Bold',
                       fontWeight: 'bold',
                       color: '#333',
                     }}>
-                    วัสดุอุปกรณ์ที่นำเสนอ:
+                    วัสดุอุปกรณ์ที่ใช้
                   </Text>
-                  {selectedMaterialArray?.map((item: any) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={styles.card}
-                      onPress={() => setIsModalMaterialsVisible(true)}
-                      // onPress={() =>
-                      //   navigation.navigate('ExistingMaterials', {id: serviceID})
-                      // }
-                    >
-                      <Text style={styles.cardTitle}>{item.name}</Text>
-                      <Icon name="chevron-right" size={24} color="gray" />
-                    </TouchableOpacity>
-                  ))}
+                  {serviceList[serviceIndex]?.materials?.map(
+                    (item: any,index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.card}
+                        onPress={() => setIsModalMaterialsVisible(true)}>
+                        <Text style={styles.cardTitle}>{item.materialData.name}</Text>
+                        <Icon name="chevron-right" size={24} color="gray" />
+                      </TouchableOpacity>
+                    ),
+                  )}
                 </View>
               ) : (
                 <View>
-                  {selectedMaterialArray.length === 0 && (
-                    <TouchableOpacity
-                      style={styles.selectButton}
-                      onPress={() => setIsModalMaterialsVisible(true)}
-                      // onPress={() =>
-                      //   navigation.navigate('ExistingMaterials', {id: serviceID})
-                      // }
-                    >
-                      <View style={styles.containerButton}>
-                        <FontAwesomeIcon
-                          icon={faPlusCircle}
-                          color="#0073BA"
-                          size={14}
-                        />
+                  <TouchableOpacity
+                    style={styles.selectButton}
+                    onPress={() => setIsModalMaterialsVisible(true)}>
+                    <View style={styles.containerButton}>
+                      <FontAwesomeIcon
+                        icon={faPlusCircle}
+                        color="#0073BA"
+                        size={14}
+                      />
 
-                        <Text style={styles.selectButtonText}>
-                          เลือกวัสดุอุปกรณ์
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
+                      <Text style={styles.selectButtonText}>
+                        เลือกวัสดุอุปกรณ์
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
@@ -522,41 +496,23 @@ const AddExistProduct = ({navigation, route}: Props) => {
                     paddingVertical: 10,
                   },
                   android: {
-                    paddingVertical: 0,
+                    paddingVertical: 10,
                   },
                 }),
               }}></View>
             <SmallDivider />
-
-            {/* <TouchableOpacity
-          style={[
-            styles.btn,
-            selectedAudit.length === 0 ? styles.btnDisabled : null,
-          ]}
-          onPress={handleSubmit(handleFormSubmit)}
-          disabled={selectedAudit.length === 0}>
-          <Text style={styles.label}>บันทึก</Text>
-        </TouchableOpacity> */}
           </View>
           <SelectAudit
             isVisible={isModalVisible}
+            serviceId={serviceID}
             onClose={() => setModalVisible(false)}
-            selectedAudits={selectedAudits}
-            setSelectedAudits={setSelectedAudits}
-            title="Some Title"
-            description="Some Description"
-            onPress={() => {
-              /* Handle onPress here if needed */
-            }}
+            title={watch('title')}
+            description={watch('description')}
           />
           <ExistingMaterials
+            serviceId={serviceID}
             isVisible={isModalMaterialsVisible}
             onClose={() => setIsModalMaterialsVisible(false)}
-            selectedMaterialArray={selectedMaterialArray}
-            setSelectedMaterialArray={setSelectedMaterialArray}
-            onPress={() => {
-              /* Handle onPress here if needed */
-            }}
           />
           <GalleryScreen
             isVisible={isModalImagesVisible}
@@ -566,8 +522,9 @@ const AddExistProduct = ({navigation, route}: Props) => {
           />
         </ScrollView>
         <SaveButton
-          disabled={selectedAudit.length === 0}
-          onPress={handleSubmit(handleFormSubmit)}
+          disabled={!isAuditsDisabled}
+          onPress={    handleSubmit(handleFormSubmit)
+          }
         />
       </View>
     </>

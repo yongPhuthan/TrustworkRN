@@ -155,7 +155,10 @@ const Summary = (props: Props) => {
               ios: {
                 transform: [{scaleX: 0.7}, {scaleY: 0.7}],
               },
-              android: {},
+              android: {
+                transform: [{scaleX: 1}, {scaleY: 1}],
+
+              },
             }),
           ]}
         />
@@ -180,7 +183,6 @@ const Summary = (props: Props) => {
           </Text>
         </View>
       )}
-      {/* <SmallDivider /> */}
       <View style={styles.summaryTotal}>
         <Text style={styles.totalSummary}>รวมทั้งสิ้น</Text>
         <Text style={styles.totalSummary}>
@@ -199,16 +201,21 @@ const styles = StyleSheet.create({
   summary: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    color: '#19232e',
   },
   summaryTax: {
     flexDirection: 'row',
     marginTop: 20,
     justifyContent: 'space-between',
+    color: '#19232e',
+
   },
   summaryTotal: {
     flexDirection: 'row',
     marginBottom: 10,
     justifyContent: 'space-between',
+    color: '#19232e',
+
   },
   container: {
     // width: windowWidth * 0.7,
@@ -220,20 +227,28 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 16,
     marginVertical: 10,
+    color: '#19232e',
+
 
   },
   summaryTaxVat: {
     fontSize: 16,
     marginVertical: 10,
+    color: '#19232e',
+
   },
   totalSummary: {
     fontSize: 20,
     fontWeight: 'bold',
     marginVertical: 10,
+    color: '#19232e',
+
   },
   summaryPrice: {
     fontSize: 18,
     marginVertical: 10,
+    color: '#19232e',
+
   },
   pickerContainer: {
     flex: 1,
@@ -252,6 +267,8 @@ const styles = StyleSheet.create({
   vat3Container: {
     flexDirection: 'row',
     alignItems: 'center',
+    color: '#19232e',
+
   },
   pickerWrapper: {
     flexDirection: 'row',
@@ -259,6 +276,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     marginBottom: 10,
+    color: '#19232e',
+
   },
   pickerAndroidContainer: {
     borderWidth: 0.2,
@@ -289,7 +308,7 @@ const pickerSelectStyles = StyleSheet.create({
     borderColor: 'gray',
     borderRadius: 4,
     color: 'black',
-    paddingRight: 30, // to ensure the text is never behind the icon
+    paddingRight: 30, 
   },
 
   inputAndroid: {
@@ -300,6 +319,6 @@ const pickerSelectStyles = StyleSheet.create({
     borderColor: 'gray',
     borderRadius: 8,
     color: 'black',
-    paddingRight: 30, // to ensure the text is never behind the icon
+    paddingRight: 30,
   },
 });

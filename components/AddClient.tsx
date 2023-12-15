@@ -3,13 +3,19 @@ import React from 'react';
 // import Icon from 'react-native-vector-icons/FontAwesome';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import { useForm, FormProvider, useFormContext } from "react-hook-form"
+
 import {
   faBell,
   faCog,
   faCogs,
+  faPeopleCarry,
+  faPerson,
   faPlus,
   faPlusCircle,
   faSheetPlastic,
+  faUser,
+  faUserCircle,
   faUserCog,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -18,10 +24,12 @@ type Props = {
 };
 
 const AddClient = (props: Props) => {
+  const context = useFormContext();
+  const { handleSubmit, register } = context;
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Icon style={styles.icon} name="account" size={20} color="#19232e" />
+      <FontAwesomeIcon icon={faUser} style={styles.icon} size={20} color="#19232e" />
 
         <Text style={styles.label}>ลูกค้า</Text>
       </View>
@@ -30,7 +38,7 @@ const AddClient = (props: Props) => {
         onPress={() => props.handleAddClient()}
         style={styles.button}>
         <View style={styles.containerButton}>
-          <FontAwesomeIcon icon={faPlusCircle} color="#0073BA" size={18} />
+          <FontAwesomeIcon style={styles.icon2} icon={faPlusCircle} color="#0073BA" size={18} />
           <Text style={styles.labelButton}>เพิ่มลูกค้า</Text>
         </View>
       </TouchableOpacity>
@@ -45,7 +53,7 @@ const styles = StyleSheet.create({
   containerButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   button: {
     flexDirection: 'row',
@@ -64,11 +72,17 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
+
   },
   icon: {
     width: 24,
     height: 24,
-    marginRight: 8,
+    marginRight: 15,
+  },
+  icon2: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
   },
   label: {
     fontSize: 16,
@@ -79,7 +93,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#0073BA',
     fontFamily: 'Sukhumvit set',
-    marginLeft: 10,
   },
 });
 

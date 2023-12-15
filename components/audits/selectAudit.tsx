@@ -138,7 +138,6 @@ const SelectAudit = ({
       </View>
     );
   }
-console.log('serviceListEdit',serviceList[servicListIndex]?.audits)
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       <View style={styles.container}>

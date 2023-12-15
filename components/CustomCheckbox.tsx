@@ -1,6 +1,8 @@
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Assuming you're using react-native-vector-icons
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import { faBriefcase, faCheck } from '@fortawesome/free-solid-svg-icons';
 
 type CustomCheckboxProps = {
   checked: boolean;
@@ -15,7 +17,7 @@ const CustomCheckbox: React.FC<CustomCheckboxProps> = ({ checked, onPress }) => 
       ]}  onPress={onPress}>
       {checked && (
         <View style={styles.checkedCircle}>
-          <Icon name="check" size={24} color="white" />
+          <FontAwesomeIcon icon={faCheck} size={20} color="white" />
         </View>
       )}
     </TouchableOpacity>

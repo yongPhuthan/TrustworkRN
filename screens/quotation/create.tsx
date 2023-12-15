@@ -50,20 +50,8 @@ import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
 import {useFetchCompanyUser} from '../../hooks/company/useFetchCompany';
 import SignatureComponent from '../../components/utils/signature';
 import SmallDivider from '../../components/styles/SmallDivider';
-import {
-  useForm,
-  FormProvider,
-  SubmitHandler,
-  useFormContext,
-  useFieldArray,
-} from 'react-hook-form';
-import {yupResolver} from '@hookform/resolvers/yup';
-import {
-  quotationsValidationSchema,
-  customersValidationSchema,
-  servicesValidationSchema,
-} from '../utils/validationSchema';
-import * as yup from 'yup';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import { faBriefcase } from '@fortawesome/free-solid-svg-icons';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
 }
@@ -115,7 +103,6 @@ const Quotation = ({navigation}: Props) => {
   const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(
     null,
   );
-
   const dataSignature = {};
   const [vat7, setVat7] = useState(false);
   const fetchCompanyUser = async () => {
@@ -178,6 +165,7 @@ const Quotation = ({navigation}: Props) => {
     setVat7Amount(vat7Amount);
     setVat3Amount(vat3Amount);
   };
+
   const handleCustomerNameChange = (value: string) => {
     setCustomerName(value);
   };
@@ -195,8 +183,6 @@ const Quotation = ({navigation}: Props) => {
     setSignatureModal(false);
   };
   const handleAddClientForm = () => {
-    // navigation.navigate('AddCustomer', { control, formState });
-
     navigation.navigate('AddCustomer');
   };
 
@@ -367,7 +353,7 @@ const Quotation = ({navigation}: Props) => {
           )}
 
           <View style={styles.header}>
-            <Icon
+          <Icon
               style={styles.icon}
               name="briefcase"
               size={20}
@@ -538,11 +524,12 @@ const styles = StyleSheet.create({
   icon: {
     width: 24,
     height: 24,
-    marginRight: 8,
+    marginRight: 15,
   },
   label: {
     fontSize: 16,
     color: '#19232e',
+    fontWeight: 'bold',
     fontFamily: 'Sukhumvit Set Bold',
   },
   header: {
@@ -625,6 +612,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 10,
     fontSize: 16,
+    color: '#19232e',
+
   },
   summaryTotal: {
     flexDirection: 'row',
@@ -685,9 +674,10 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#323232',
+    color: '#19232e',
     marginLeft: 20,
 
     fontFamily: 'Sukhumvit set',
   },
 });
+

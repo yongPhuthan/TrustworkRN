@@ -130,7 +130,6 @@ const ExistingMaterials = ({
   const handleAddNewProduct = () => {
     setIsOpenModal(true);
   };
-  console.log('serviceListMaterial', JSON.stringify(serviceList));
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       <View style={styles.container}>

@@ -79,8 +79,8 @@ const CardDashBoard = (props: Props) => {
       </View>
 
       <View style={styles.telAndTax}>
-        <Text>เสนอราคา {props.date}</Text>
-        <Text>สิ้นสุด {props.end}</Text>
+        <Text style={styles.summaryPrice}>เสนอราคา {props.date}</Text>
+        <Text style={styles.summaryPrice}>สิ้นสุด {props.end}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -121,20 +121,28 @@ const styles = StyleSheet.create({
   unitPrice: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    color: '#19232e',
+
     width: windowWidth * 0.2,
     marginTop: 10,
   },
   subummary: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    color: '#19232e',
+
   },
   summaryText: {
     fontSize: 16,
-    width: '60%',
+
+    color: '#19232e',
   },
   summaryPrice: {
     fontSize: 16,
     alignSelf: 'flex-end',
+    color: '#19232e',
+    
+
 
   },
   icon: {

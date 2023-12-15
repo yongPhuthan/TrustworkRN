@@ -42,6 +42,7 @@ export type ParamListBase = {
   EditProductForm: {item: Service};
   AddExistProduct: {item: Service};
   EditClientForm: undefined;
+  EditCustomerForm: undefined;
   SettingsScreen: undefined;
   WebViewScreen: {id: string};
   DocViewScreen: {id: any};

@@ -92,46 +92,35 @@ const CardProject = (props: Props) => {
       </TouchableOpacity>
       {Platform.OS === 'android' ? (
         <Modal
-          backdropOpacity={0.1}
-          backdropTransitionOutTiming={100}
-          style={styles.modalContainer}
-          isVisible={visibleModalIndex}
-          onBackdropPress={handleModalClose}>
-                      <Text style={styles.title}>
-            รายการที่{index + 1}. {serviceList.title}
-          </Text>
-          <Pressable onPress={handleEditService}>
-            <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
-          </Pressable>
-          <View
-            style={{
-              width: '100%',
-              alignSelf: 'center',
-              borderBottomWidth: 1,
-              borderBottomColor: '#cccccc',
-            }}></View>
-
-          <View
-            style={{
-              width: '100%',
-              alignSelf: 'center',
-              borderBottomWidth: 1,
-              borderBottomColor: '#cccccc',
-            }}></View>
-          <Pressable
-            onPress={() => {
-              // setShowModal(false); // Step 4
-            }}>
-            <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
-          </Pressable>
-          <View
-            style={{
-              width: '100%',
-              alignSelf: 'center',
-              borderBottomWidth: 1,
-              borderBottomColor: '#cccccc',
-            }}></View>
-        </Modal>
+        backdropTransitionOutTiming={100}
+        style={styles.modalContainer}
+        isVisible={visibleModalIndex}
+        onBackdropPress={handleModalClose}>
+        <Text style={styles.title}>
+          รายการที่{index + 1}. {serviceList.title}
+        </Text>
+        <TouchableOpacity onPress={handleEditService}>
+          <Text style={styles.closeButtonText}>แก้ไขรายการ</Text>
+        </TouchableOpacity>
+        <View
+          style={{
+            width: '100%',
+            alignSelf: 'center',
+            borderBottomWidth: 1,
+            borderBottomColor: '#cccccc',
+          }}></View>
+     
+        <TouchableOpacity onPress={handleRemoveService}>
+          <Text style={styles.deleteButtonText}>ลบ</Text>
+        </TouchableOpacity>
+        <View
+          style={{
+            width: '100%',
+            alignSelf: 'center',
+            borderBottomWidth: 1,
+            borderBottomColor: '#cccccc',
+          }}></View>
+      </Modal>
       ) : (
         <Modal
           backdropTransitionOutTiming={100}

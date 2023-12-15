@@ -70,14 +70,10 @@ const AddProductForm = ({navigation, route}: Props) => {
   const [qty, setQuantity] = useState(1);
   const [unitPrice, setPrice] = useState(0);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [selectedAudits, setSelectedAudits] = useState<Audit[]>([]);
   const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
-  const [selectedMaterialArray, setSelectedMaterialArray] = useState<any[]>([]);
   const [serviceImages, setServiceImages] = useState<string[]>([]);
   const [isModalImagesVisible, setModalImagesVisible] = useState(false);
   const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
-  const [isEmptyAudits, setIsEmptyAudits] = useState(false);
-  const [isEmptyMaterials, setIsEmptyMaterials] = useState(false);
   const [serviceID, setServiceID] = useState<string>('');
   const {
     state: {serviceList, selectedAudit, code},
@@ -416,7 +412,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                     paddingVertical: 10,
                   },
                   android: {
-                    paddingVertical: 0,
+                    paddingVertical: 10,
                   },
                 }),
               }}></View>
@@ -474,7 +470,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                     paddingVertical: 10,
                   },
                   android: {
-                    paddingVertical: 0,
+                    paddingVertical: 10,
                   },
                 }),
               }}></View>
@@ -626,7 +622,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
       },
       android: {
-        paddingVertical: 0,
+        paddingVertical: 10,
       },
     }),
   },

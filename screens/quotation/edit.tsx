@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {v4 as uuidv4} from 'uuid';
-import React, {useState, useContext, useEffect, useMemo} from 'react';
+import React, {useState, useContext, useCallback, useMemo} from 'react';
 import Modal from 'react-native-modal';
 import DocNumber from '../../components/DocNumber';
 import AddClient from '../../components/AddClient';
@@ -21,7 +21,7 @@ import Divider from '../../components/styles/Divider';
 import {StackNavigationProp} from '@react-navigation/stack';
 import CardProject from '../../components/CardProject';
 import CardClient from '../../components/CardClient';
-import{ParamListBase} from '../../types/navigationType'
+import {ParamListBase} from '../../types/navigationType';
 import DatePickerButton from '../../components/styles/DatePicker';
 import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
@@ -30,9 +30,10 @@ import {useQuery, useMutation} from '@tanstack/react-query';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import axios, {AxiosResponse, AxiosError} from 'axios';
 import {useRoute} from '@react-navigation/native';
-import {HOST_URL,PROJECT_NAME,BACK_END_SERVER_URL} from '@env';
+import {HOST_URL, PROJECT_NAME, BACK_END_SERVER_URL} from '@env';
 import FooterBtnEdit from '../../components/styles/FooterBtnEdit';
 import SignatureComponent from '../../components/utils/signature';
+import {useForm, Controller, FormProvider, set} from 'react-hook-form';
 import SmallDivider from '../../components/styles/SmallDivider';
 import {
   Audit,
@@ -41,15 +42,15 @@ import {
   CompanyUser,
   Service,
 } from '../../types/docType';
-import type { RouteProp } from '@react-navigation/native';
-
+import type {RouteProp} from '@react-navigation/native';
 import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
-import {useFetchDocument} from '../../hooks/quotation/useFetchDocument'; 
+import {useFetchDocument} from '../../hooks/quotation/useFetchDocument';
 import FooterBtn from '../../components/styles/FooterBtn';
+import EditCustomer from '../../components/edit/customer/EditCustomer';
+import EditProductForm from '../../components/edit/products/EditProduct';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'EditQuotation'>;
   route: RouteProp<ParamListBase, 'EditQuotation'>;
-
 }
 interface MyError {
   response: object;
@@ -96,17 +97,27 @@ const EditQuotation = ({navigation}: Props) => {
   // const { data, isLoading } = useQuery('data', fetchData);
   const [email, setEmail] = useState('');
   const route = useRoute();
-  const [quotation, setQuotation] = useState<Quotation>((route.params as any)?.quotation);
-  const [companyUser, setCompanyUser] = useState<CompanyUser>((route.params as any)?.company)
+  const [quotation, setQuotation] = useState<Quotation>(
+    (route.params as any)?.quotation,
+  );
+  const [companyUser, setCompanyUser] = useState<CompanyUser>(
+    (route.params as any)?.company,
+  );
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const [total, setTotal] = useState(quotation.allTotal);
   const thaiDateFormatter = useThaiDateFormatter();
-  const [discountValue, setDiscountValue] = useState(quotation.discountValue || 0);
-  const [summaryAfterDiscount, setSumAfterDiscount] = useState(quotation.summaryAfterDiscount || 0);
+  const [discountValue, setDiscountValue] = useState(
+    quotation.discountValue || 0,
+  );
+  const [summaryAfterDiscount, setSumAfterDiscount] = useState(
+    quotation.summaryAfterDiscount || 0,
+  );
   const [vat7Amount, setVat7Amount] = useState(quotation.vat7 || 0);
-  const [vat3Amount, setVat3Amount] = useState(quotation.taxValue === 3  || 0);
+  const [vat3Amount, setVat3Amount] = useState(quotation.taxValue === 3 || 0);
   const [customerName, setCustomerName] = useState(quotation.customer?.name);
-  const [customerAddress, setCustomerAddress] = useState(quotation.customer?.address);
+  const [customerAddress, setCustomerAddress] = useState(
+    quotation.customer?.address,
+  );
   const [docNumber, setDocnumber] = useState(quotation.docNumber);
   const [dateOffer, setDateOffer] = useState<String>(quotation.dateOffer);
   const [dateEnd, setDateEnd] = useState<String>(quotation.dateEnd);
@@ -114,12 +125,60 @@ const EditQuotation = ({navigation}: Props) => {
   const [singatureModal, setSignatureModal] = useState(false);
   const quotationId = quotation.id;
   const [showEditServiceModal, setShowEditServiceModal] = useState(false);
-  const { fetchDocument} = useFetchDocument();
-  const [discount, setDiscount] = useState(quotation.discountValue  || 0);
-  const [vat7, setVat7] = useState(Boolean(quotation.vat7))
-  const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(null);
+  const {fetchDocument} = useFetchDocument();
+  const [discount, setDiscount] = useState(quotation.discountValue || 0);
+  const [vat7, setVat7] = useState(Boolean(quotation.vat7));
+  const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(
+    null,
+  );
   const isDisabled = !client_name || serviceList.length === 0;
+  const [editCustomerModal, setEditCustomerModal] = useState(false);
+  const [serviceIndex, setServiceIndex] = useState(0);
+  const [editServicesModal, setEditServicesModal] = useState(false);
+
   const [signature, setSignature] = useState('');
+  const customerData = {
+    id: quotation.customer?.id,
+    name: quotation.customer?.name,
+    address: quotation.customer?.address,
+    companyId: quotation.customer?.companyId,
+    officePhone: quotation.customer?.officePhone,
+    mobilePhone: quotation.customer?.mobilePhone,
+  };
+  const quotationData = {
+    id: quotationId,
+    allTotal: quotation.allTotal,
+    summary: quotation.summary,
+    discountValue: quotation.discountValue,
+    discountName: quotation.discountName,
+    summaryAfterDiscount: quotation.summaryAfterDiscount,
+    vat7: quotation.vat7,
+    taxValue: quotation.taxValue,
+    taxName: quotation.taxName,
+    dateOffer: quotation.dateOffer,
+    dateEnd: quotation.dateEnd,
+    docNumber: quotation.docNumber,
+    services: quotation.services as any,
+    customer: customerData,
+  };
+
+  const {
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+
+    reset,
+    formState: {errors, isDirty, dirtyFields, isValid},
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: quotationData,
+  });
+
+  const methods = useForm({
+    mode: 'onChange',
+    defaultValues: quotationData,
+  });
 
   const {mutate} = useMutation(updateQuotation, {
     onSuccess: data => {
@@ -196,13 +255,9 @@ const EditQuotation = ({navigation}: Props) => {
     try {
       // Perform mutation
       const resultArray: Service[] = [];
-      serviceList.forEach((obj: Service) => {
-        const newObj: any = {...obj};
-        newObj.audits = obj.audits.map((audit: any) => audit.id);
-        resultArray.push(newObj);
-      });
+
       const clientData = {
-        id: uuidv4(),
+        id: quotation.customer?.id,
         name: client_name,
         address: client_address,
         companyId: client_tax,
@@ -223,17 +278,16 @@ const EditQuotation = ({navigation}: Props) => {
           discountName: 'percent',
           dateOffer,
           docNumber,
-          
           summaryAfterDiscount,
           allTotal: totalPrice,
-          sellerSignature: signature? signature : '',
+          sellerSignature: signature ? signature : '',
           offerContract: idContractList,
           conditions: [],
           userId: companyUser?.id,
         },
       };
-      console.log('apiData', JSON.stringify(apiData.data.services));
-
+      // console.log('apiData', JSON.stringify(apiData.data.customer));
+      navigation.navigate('DefaultContract', {data: apiData} as any);
     } catch (error: Error | AxiosError | any) {
       console.error('There was a problem calling the function:', error);
       console.log(error.response);
@@ -244,15 +298,17 @@ const EditQuotation = ({navigation}: Props) => {
     setDocnumber(text);
   };
 
-
   const handleStartDateSelected = (date: Date) => {
     const formattedDate = thaiDateFormatter(date);
-    setDateOffer(formattedDate);
-    console.log(dateOffer);
+    setValue('dateOffer', formattedDate, {shouldDirty: true});
+    console.log('New dateOffer value:', formattedDate);
   };
+
   const handleEndDateSelected = (date: Date) => {
     const formattedEndDate = thaiDateFormatter(date);
-    setDateEnd(formattedEndDate);
+    setValue('dateEnd', formattedEndDate, {shouldDirty: true});
+
+    console.log('New dateOffer value:', formattedEndDate);
   };
 
   const handleRemoveService = (index: number) => {
@@ -263,111 +319,229 @@ const EditQuotation = ({navigation}: Props) => {
   const idContractList = selectedContract.map((obj: IdContractList) => obj.id);
 
   const handleEditClient = () => {
-    navigation.navigate('EditClientForm');
+    navigation.navigate('EditCustomerForm');
   };
-  console.log('serviceList Editquoatation', JSON.stringify(serviceList))
+  const handleEditServiceCallback = useCallback(
+    index => {
+      setServiceIndex(index);
+      handleModalClose();
+      setEditServicesModal(true);
+    },
+    [setServiceIndex, handleModalClose, setEditServicesModal],
+  );
+
+  const handleRemoveServiceCallback = useCallback(
+    index => {
+      handleRemoveService(index);
+    },
+    [handleRemoveService],
+  );
+
+  // useEffect(() => {
+  //   if (customerData.name !== client_name ) {
+  //     methods.setValue('customer.name', client_name, { shouldDirty: true });
+  //     console.log('New customer name value:', client_name);
+  //   }
+  //   if (customerData.address !== client_address ) {
+  //     methods.setValue('customer.address', client_address, { shouldDirty: true });
+  //     console.log('New customer address value:', client_address);
+  //   }
+  //   if (customerData.officePhone !== client_tel ) {
+  //     methods.setValue('customer.officePhone', client_tel, { shouldDirty: true });
+  //     console.log('New customer officePhone value:', client_tel);
+  //   }
+  //   if (customerData.mobilePhone !== client_tel ) {
+  //     methods.setValue('customer.mobilePhone', client_tel, { shouldDirty: true });
+  //     console.log('New customer mobilePhone value:', client_tel);
+  //   }
+  //   if (customerData.companyId !== client_tax ) {
+  //     methods.setValue('customer.companyId', client_tax, { shouldDirty: true });
+  //     console.log('New customer companyId value:', client_tax);
+  //   }
+  //   quotationData.services.forEach((service, index) => {
+  //     if (serviceList[index].title !== service.title) {
+  //       methods.setValue(`services[${index}].title` as any, serviceList[index].title, { shouldDirty: true });
+  //       console.log('New service title value:', serviceList[index].title);
+  //     }
+  //     if (serviceList[index].unitPrice !== service.unitPrice) {
+  //       methods.setValue(`services[${index}].unitPrice` as any, serviceList[index].unitPrice, { shouldDirty: true });
+  //       console.log('New service price value:', serviceList[index].unitPrice);
+  //     }
+  //     if (serviceList[index].qty !== service.qty) {
+  //       methods.setValue(`services[${index}].qty` as any, serviceList[index].qty, { shouldDirty: true });
+  //       console.log('New service quantity value:', serviceList[index].qty);
+  //     }
+  //     if (serviceList[index].total !== service.total) {
+  //       methods.setValue(`services[${index}].total` as any, serviceList[index].total, { shouldDirty: true });
+  //       console.log('New service total value:', serviceList[index].total);
+  //     }
+  //     const reduxService = serviceList.find(s => s.id === service.id);
+  //     if (reduxService) {
+  //       service.audits.forEach((audit, auditIndex) => {
+  //         const reduxAudit = reduxService.audits.find(a => a.AuditData.id === audit.AuditData.id);
+
+  //         if (reduxAudit) {
+  //           if (audit.title !== reduxAudit.title) {
+  //             setValue(`services[${index}].audits[${auditIndex}].title` as any, reduxAudit.title, { shouldDirty: true });
+  //           }
+  //           if (audit.qty !== reduxAudit.qty) {
+  //             setValue(`services[${index}].audits[${auditIndex}].qty` as any, reduxAudit.qty, { shouldDirty: true });
+  //           }
+
+  //         }
+  //       });
+  //     }
+
+  //   } );
+
+  // }, [client_name, client_address, client_tel, client_tax, setValue]);
+
+  const datePickerValue = watch('dateOffer');
+  console.log('watch dateOffer:', watch('dateOffer'));
+  console.log('watch dateEnd:', watch('dateEnd'));
+  console.log('watch docNumber:', methods.formState.isDirty);
   return (
-    <View style={{flex: 1}}>
-      <ScrollView style={styles.container}>
-        <View style={styles.subContainerHead}>
-          <DatePickerButton
-            label="วันที่เสนอราคา"
-            date="today"
-            onDateSelected={handleStartDateSelected}
-          />
-          <DocNumber
-            label="เลขที่เอกสาร"
-            onChange={handleInvoiceNumberChange}
-            value={docNumber}
-          />
-          <DatePickerButton
-            label="ยืนราคาถึงวันที่ี"
-            date="sevenDaysFromNow"
-            onDateSelected={handleEndDateSelected}
-          />
-        </View>
-        <View style={styles.subContainer}>
-          {client_name ? (
-            <CardClient handleEditClient={handleEditClient} />
-          ) : (
-            <AddClient handleAddClient={handleAddClientForm} />
-          )}
-
-          <View style={styles.header}>
-            <Icon
-              style={styles.icon}
-              name="briefcase"
-              size={20}
-              color="#19232e"
+    <FormProvider {...methods}>
+      <View style={{flex: 1}}>
+        <ScrollView style={styles.container}>
+          <View style={styles.subContainerHead}>
+            <Controller
+              control={methods.control}
+              name="dateOffer"
+              render={({field: {onChange, value}}) => (
+                <DatePickerButton
+                  label="วันที่เสนอราคา"
+                  date={value || 'today'}
+                  onDateSelected={handleStartDateSelected}
+                />
+              )}
             />
-            <Text style={styles.label}>บริการ-สินค้า00</Text>
-          </View>
-          {serviceList.map((item: any, index: number) => (
-            <CardProject
-              handleModalClose={handleModalClose}
-              visibleModalIndex={visibleModalIndex === index}
-              setVisibleModalIndex={()=>setVisibleModalIndex(index)}
-              index={index}
-              handleRemoveService={() => handleRemoveService(index)}
-              handleEditService={() => handleEditService(index)}
-              serviceList={item}
-              key={index}
-            /> 
-          ))}
+            <Controller
+              control={methods.control}
+              name="docNumber"
+              render={({field: {onChange, value}}) => (
+                <DocNumber
+                  label="เลขที่เอกสาร"
+                  onChange={onChange}
+                  value={value}
+                />
+              )}
+            />
 
-          <AddServices handleAddProductFrom={handleAddProductForm} />
-          <Divider />
-          {/* <View>
+            <Controller
+              control={methods.control}
+              name="dateEnd"
+              render={({field: {onChange, value}}) => (
+                <DatePickerButton
+                  label="ยืนราคาถึงวันที่"
+                  date={value || 'sevenDaysFromNow'}
+                  onDateSelected={handleEndDateSelected}
+                />
+              )}
+            />
+          </View>
+          <View style={styles.subContainer}>
+            {client_name ? (
+              <CardClient handleEditClient={() => setEditCustomerModal(true)} />
+            ) : (
+              <AddClient handleAddClient={() => setEditCustomerModal(true)} />
+              // <AddClient handleAddClient={handleAddClientForm} />
+            )}
+
+            <View style={styles.header}>
+              <Icon
+                style={styles.icon}
+                name="briefcase"
+                size={20}
+                color="#19232e"
+              />
+              <Text style={styles.label}>บริการ-สินค้า</Text>
+            </View>
+            {serviceList.map((item, index) => (
+              <CardProject
+                handleModalClose={handleModalClose}
+                visibleModalIndex={visibleModalIndex === index}
+                setVisibleModalIndex={() => setVisibleModalIndex(index)}
+                index={index}
+                handleRemoveService={() => handleRemoveServiceCallback(index)}
+                handleEditService={() => handleEditServiceCallback(index)}
+                serviceList={item}
+                key={item.id} // Assuming each item has a unique 'id'
+              />
+            ))}
+
+            <AddServices handleAddProductFrom={handleAddProductForm} />
+            <Divider />
+            {/* <View>
           <Pressable
             onPress={() => navigation.navigate('ExistingWorkers', {id:companyID})}
             style={styles.btn}>
             <Text style={{color:'white'}}>เลือกทีมงานติดตั้ง</Text>
           </Pressable>
         </View> */}
-          {/* <Divider /> */}
-          <Summary
-            title={'ยอดรวม'}
-            price={totalPrice}
-            onValuesChange={handleValuesChange}
-          />
-          <SmallDivider />
-          <View style={styles.signatureRow}>
-            <Text style={styles.signHeader}>เพิ่มลายเซ็น</Text>
-            <Switch
-              trackColor={{false: '#767577', true: '#81b0ff'}}
-              thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
-              ios_backgroundColor="#3e3e3e"
-              onValueChange={() => useSignature()}
-              value={signature ? true : false}
-              style={Platform.select({
-                ios: {
-                  transform: [{scaleX: 0.7}, {scaleY: 0.7}],
-                  marginTop: 5,
-                },
-                android: {},
-              })}
+            {/* <Divider /> */}
+            <Summary
+              title={'ยอดรวม'}
+              price={totalPrice}
+              onValuesChange={handleValuesChange}
             />
-          </View>
-          <Modal
-            isVisible={singatureModal}
-            style={styles.modal}
-            onBackdropPress={() => setSignatureModal(false)}>
-            <View style={styles.containerModal}>
-              <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
-              <SignatureComponent
-                onClose={() => setSignatureModal(false)}
-                setSignatureUrl={setSignature}
-                onSignatureSuccess={handleSignatureSuccess}
+            <SmallDivider />
+            <View style={styles.signatureRow}>
+              <Text style={styles.signHeader}>เพิ่มลายเซ็น</Text>
+              <Switch
+                trackColor={{false: '#767577', true: '#81b0ff'}}
+                thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={() => useSignature()}
+                value={signature ? true : false}
+                style={Platform.select({
+                  ios: {
+                    transform: [{scaleX: 0.7}, {scaleY: 0.7}],
+                    marginTop: 5,
+                  },
+                  android: {},
+                })}
               />
             </View>
-          </Modal>
-
+            <Modal
+              isVisible={singatureModal}
+              style={styles.modal}
+              onBackdropPress={() => setSignatureModal(false)}>
+              <View style={styles.containerModal}>
+                <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
+                <SignatureComponent
+                  onClose={() => setSignatureModal(false)}
+                  setSignatureUrl={setSignature}
+                  onSignatureSuccess={handleSignatureSuccess}
+                />
+              </View>
+            </Modal>
+          </View>
+        </ScrollView>
+        <Modal
+          isVisible={editCustomerModal}
+          style={styles.modalFull}
+          onBackdropPress={() => setEditCustomerModal(false)}>
+          <EditCustomer onClose={() => setEditCustomerModal(false)} />
+        </Modal>
+        <Modal
+          isVisible={editServicesModal}
+          style={styles.modalServiceFull}
+          onBackdropPress={() => setEditServicesModal(false)}>
+          <EditProductForm
+            onClose={() => setEditServicesModal(false)}
+            serviceIndex={serviceIndex}
+          />
+        </Modal>
+        <View>
+          <FooterBtn
+            btnText="ดำเนินการต่อ"
+            disabled={isDisabled}
+            onPress={handleButtonPress}
+          />
         </View>
-      </ScrollView>
-      <View>
-        <FooterBtn btnText='ดำเนินการต่อ' disabled={isDisabled} onPress={handleButtonPress} />
       </View>
-    </View>
+    </FormProvider>
   );
 };
 
@@ -594,6 +768,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     height: windowHeight * 0.2,
+  },
+  modalFull: {
+    margin: 0,
+    marginTop: 100,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    width: windowWidth,
+    height: windowHeight,
+  },
+  modalServiceFull: {
+    margin: 0,
+
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    width: windowWidth,
+    height: windowHeight,
   },
   closeButton: {
     paddingVertical: 10,

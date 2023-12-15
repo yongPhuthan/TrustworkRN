@@ -9,18 +9,19 @@ type Props = {
 
 const windowWidth = Dimensions.get('window').width;
 
-const DocNumber = (props: Props) => {
+const DocNumber = (props) => {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{props.label}</Text>
       <TextInput
         style={styles.input}
         value={props.value}
-        onChangeText={() => props.onChange()}
+        onChangeText={(text) => props.onChange(text)} // Pass the new text value
       />
     </View>
   );
 };
+
 
 export default DocNumber;
 

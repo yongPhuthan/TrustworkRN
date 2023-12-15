@@ -1,6 +1,8 @@
 import React, {useState, useContext, useEffect} from 'react';
 import {View, Text, Image, StyleSheet} from 'react-native';
 import {CheckBox} from '@rneui/themed';
+import { faCheck, faPlus, faSquare, faSquareCheck, faSquareFull } from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {Store} from '../redux/store';
 type CardProps = {
   title: string;
@@ -33,10 +35,29 @@ const CardAudit = ({
   useEffect(() => {
     setChecked(defaultChecked);
   }, [defaultChecked]);
+  const UncheckedIcon = () => {
+    return (
+      <View style={{
+        borderWidth: 1, 
+        borderColor: '#808080', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        width: 22, 
+        height: 22, 
+        borderRadius: 3 // Optional: if you want rounded corners
+      }}>
+        <FontAwesomeIcon icon={faSquare} size={20} color="white" />
+      </View>
+    );
+  };
+  
   return (
     <View style={[styles.container, checked && styles.selected]}>
       <View style={styles.titleContainer}>
         <CheckBox
+        checkedIcon={<FontAwesomeIcon icon={faSquareCheck} size={20} color="black" />}
+        uncheckedIcon={<UncheckedIcon />}
+
           checked={checked}
           onPress={handleCheckbox}
           checkedColor="#012b20"

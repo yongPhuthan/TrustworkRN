@@ -12,29 +12,20 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import {Store} from '../../../redux/store';
+
 import messaging from '@react-native-firebase/messaging';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import firebase, {
-  testFirebaseConnection,
-  testFunctionsConnection,
-} from '../../../firebase';
-import {HOST_URL, PROJECT_FIREBASE} from '@env';
+import {HOST_URL, PROJECT_FIREBASE,BACK_END_SERVER_URL} from '@env';
 import {v4 as uuidv4} from 'uuid';
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Store} from '../../../redux/store';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {Contract, Quotation, Customer,DefaultContractType} from '../../../types/docType';
+import {Contract, Quotation, Customer,DefaultContractType} from './../../../types/docType';
 import {useForm, Controller} from 'react-hook-form';
-
-import SmallDivider from '../../../components/styles/SmallDivider';
-import ContractFooter from '../../../components/styles/ContractFooter';
-import CreateContractScreen from '../createContractScreen';
-import Lottie from 'lottie-react-native';
-import EditInstallment from '../../../components/editInstallment';
+import {useUser} from './../../../providers/UserContext';
+import SmallDivider from './../../../components/styles/SmallDivider';
 import {ParamListBase} from '../../../types/navigationType';
 import FooterBtn from '../../../components/styles/FooterBtn';
 type Props = {
@@ -45,134 +36,12 @@ interface MyError {
   response: object;
 }
 
-const fetchContractByEmail = async ( email: string) => {
-  const user = auth().currentUser;
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
-  
-  if (user.email !== email) {
-    throw new Error('Email mismatch with authenticated user.');
-  }
-console.log('EMAIL',{email})
-  const idToken = await user.getIdToken();
-  let url;
-  if (__DEV__) {
-    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appQueryDefaultContract`;
-  } else {
-    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appQueryDefaultContract`;
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-    body: JSON.stringify({ email}),
-    credentials: 'include',
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-
-  return data;
-};
-
-const createContractAndQuotation = async (data: any) => {
-  const user = auth().currentUser;
-
-  if (!user) {
-    console.error('No user authenticated');
-    return;
-  }
-
-  let url;
-  if (__DEV__) {
-    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appCreateContractAndQuotation`;
-  } else {
-    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appCreateContractAndQuotation`;
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${user?.uid}`,
-    },
-    body: JSON.stringify({data}),
-  });
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-};
-
-const createQuotation = async ( data: any) => {
-  const user = auth().currentUser;
-  let url;
-
-  console.log('DATA API ++++', data)
-
-  if (__DEV__) {
-    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appCreateQuotation`;
-  } else {
-    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appCreateQuotation`;
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${user?.uid}`,
-    },
-    body: JSON.stringify({data}),
-  });
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-};
-
-const updateDefaultContractAndCreateQuotation = async ( data: any) => {
-  const user = firebase.auth().currentUser;
-console.log('UPDATEDD')
-  if (user) {
-    console.log(user.uid);
-
-  } else {
-    console.log('No user is signed in');
-  }
-  let url;
-  if (__DEV__) {
-    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appUpdateContractAndCreateQuotation`;
-  } else {
-    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appUpdateContractAndCreateQuotation`;
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${user?.uid}`,
-    },
-    body: JSON.stringify({data}),
-  });
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-};
-
-
-const EditContract = ({navigation}: Props) => {
+const DefaultContract = ({navigation}: Props) => {
   const route = useRoute();
   const [defaultContractValues, setDefaultContractValues] = useState<DefaultContractType>();
-  const contracts: any = route?.params;
+  const id: any = route?.params;
   const [fcnToken, setFtmToken] = useState('');
+  const user = useUser();
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const [step, setStep] = useState(1);
   const [contract, setContract] = useState<DefaultContractType>();
@@ -181,11 +50,154 @@ const EditContract = ({navigation}: Props) => {
   const {data: dataProps}: any = route?.params;
   const quotation = dataProps.data;
   const queryClient = useQueryClient();
-  console.log('data props', dataProps);
-  const email = auth().currentUser?.email; 
+  const {
+    state: {
+      client_name,
+      selectedContract,
+      serviceList,
+      client_address,
+      client_tel,
+      client_tax,
+      selectedAudit,
+    },
+    dispatch,
+  }: any = useContext(Store);
 
-if (!email) {
-    throw new Error('Email is missing');
+async function fetchContractByEmail() {
+  if (!user || !user.email) {
+    console.error('User or user email is not available');
+    return;
+  }
+
+  try {
+    const token = await user.getIdToken(true);
+    const response = await fetch(
+      `${BACK_END_SERVER_URL}/api/documents/queryDefaultContracts?email=${encodeURIComponent(user.email)}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        const errorData = await response.json();
+        if (errorData.message === 'Token has been revoked. Please reauthenticate.') {
+        }
+        throw new Error(errorData.message);
+      }
+      throw new Error('Network response was not ok.');
+    }
+
+    const data = await response.json();
+    if (data && Array.isArray(data[1])) {
+      data[1].sort((a, b) => {
+        const dateA = new Date(a.dateOffer);
+        const dateB = new Date(b.dateOffer);
+        return dateB.getTime() - dateA.getTime();
+      });
+    }
+
+    console.log('data after', data);
+    return data;
+  } catch (err) {
+    console.error('Error fetching dashboard data:', err);
+    throw err;
+  }
+}
+const createQuotation = async (data: any) => {
+  if (!user || !user.email) {
+    throw new Error('User or user email is not available');
+  }
+  try {
+    const token = await user.getIdToken(true);
+    const response = await fetch(`${BACK_END_SERVER_URL}/api/documents/createQuotation?email=${encodeURIComponent(user.email)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ data }),
+    });
+
+    if (response.status === 200) {
+      // Assuming you want to return the response for successful operations
+      return response.json();
+    } else {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Network response was not ok.');
+    }
+  } catch (err) {
+    // Propagate the error to the caller
+    throw err;
+  }
+};
+
+const createContractAndQuotation = async ( data: any) => {
+  if (!user || !user.email) {
+    console.error('User or user email is not available');
+    return;
+  }
+try{
+  const token = await user.getIdToken(true);
+  const response = await fetch(`${BACK_END_SERVER_URL}/api/documents/createContractAndQuotation?email=${encodeURIComponent(user.email)}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({data}),
+  });
+  if (!response.ok) {
+    if (response.status === 401) {
+      const errorData = await response.json();
+      if (errorData.message === 'Token has been revoked. Please reauthenticate.') {
+      }
+      throw new Error(errorData.message);
+    }
+    throw new Error('Network response was not ok.');
+  }
+
+  
+}
+catch(err){
+  console.log(err)
+}
+}
+
+const updateDefaultContractAndCreateQuotation = async ( data: any) => {
+  if (!user || !user.email) {
+    console.error('User or user email is not available');
+    return;
+  }
+try{
+  const token = await user.getIdToken(true);
+  const response = await fetch(`${BACK_END_SERVER_URL}/api/documents/updateDefaultContractAndCreateQuotation?email=${encodeURIComponent(user.email)}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({data}),
+  });
+  if (!response.ok) {
+    if (response.status === 401) {
+      const errorData = await response.json();
+      if (errorData.message === 'Token has been revoked. Please reauthenticate.') {
+      }
+      throw new Error(errorData.message);
+    }
+    throw new Error('Network response was not ok.');
+  }
+
+  
+}
+catch(err){
+  console.log(err)
+}
 }
   const {
     handleSubmit,
@@ -197,50 +209,46 @@ if (!email) {
   } = useForm({
     mode: 'onChange',
     defaultValues: {
-      warantyTimeWork: contracts?.warantyTimeWork,
-      workCheckEnd: contracts?.workCheckEnd,
-      workCheckDay: contracts?.workCheckDay,
-      installingDay:    contracts?.installingDay,
-      adjustPerDay: contracts?.adjustPerDay,
-      workAfterGetDeposit: contracts?.workAfterGetDeposit,
-      prepareDay: contracts?.prepareDay,
-      finishedDay: contracts?.finishedDay,
-      productWarantyYear: contracts?.productWarantyYear,
-      skillWarantyYear: contracts?.skillWarantyYear,
+      warantyTimeWork: '',
+      workCheckEnd: '',
+      workCheckDay: '',
+      installingDay: '',
+      adjustPerDay: '',
+      workAfterGetDeposit: '',
+      prepareDay: '',
+      finishedDay: '',
+      productWarantyYear:'',
+      skillWarantyYear:'',
     },
   });
-//   const {data, isLoading, isError} = useQuery(
-//     ['ContractByEmail', email], 
-//     () => fetchContractByEmail(email), 
-//     {
-//       onSuccess: data => {
-//         console.log('data Query',data);
-      
-//         if (data) {
-//           setContract(data as any);
-     
-//           const defaultValues = {
-//             warantyTimeWork: data.warantyTimeWork,
-//             workCheckEnd: data.workCheckEnd,
-//             workCheckDay: data.workCheckDay,
-//             installingDay: data.installingDay,
-//             adjustPerDay: data.adjustPerDay,
-//             workAfterGetDeposit: data.workAfterGetDeposit,
-//             prepareDay: data.prepareDay,
-//             finishedDay: data.finishedDay,
-//             productWarantyYear: data.productWarantyYear,
-//             skillWarantyYear: data.skillWarantyYear,
-//           };
-//           setDefaultContractValues(defaultValues);
-//           reset(defaultValues);
-//         }
-//       }
-      
-      
-//     }
-// );
+  const {data, isLoading, isError} = useQuery({
+    queryKey: ['ContractByEmail'],
+    queryFn: fetchContractByEmail,
+    enabled: !!user,
+    onSuccess: data => {      
+      if (data) {
+        setContract(data as any);
+   
+        const defaultValues = {
+          warantyTimeWork: data.warantyTimeWork,
+          workCheckEnd: data.workCheckEnd,
+          workCheckDay: data.workCheckDay,
+          installingDay: data.installingDay,
+          adjustPerDay: data.adjustPerDay,
+          workAfterGetDeposit: data.workAfterGetDeposit,
+          prepareDay: data.prepareDay,
+          finishedDay: data.finishedDay,
+          productWarantyYear: data.productWarantyYear,
+          skillWarantyYear: data.skillWarantyYear,
+        };
+        setDefaultContractValues(defaultValues);
+        reset(defaultValues);
+      }
+    }
+  }
+);
 
-  const {mutate: UpdateQuotationMutation} = useMutation(
+  const {mutate: createContractAndQuotationMutation} = useMutation(
     createContractAndQuotation,
     {
       onSuccess: data => {
@@ -267,8 +275,7 @@ if (!email) {
     },
   });
 
-  // Mutation for updating an existing contract
-  const {mutate: updateContractAndQuotationMutation} = useMutation(
+  const {mutate: updateContractMutation} = useMutation(
     updateDefaultContractAndCreateQuotation,
     {
       onSuccess: data => {
@@ -283,13 +290,22 @@ if (!email) {
     },
   );
 
-//   if (isLoading) {
-//     return (
-//       <View style={styles.loadingContainer}>
-//         <ActivityIndicator />
-//       </View>
-//     );
-//   }
+
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+  if(isError){
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง</Text>
+      </View>
+    );
+  }
   const watchedValues: DefaultContractType = watch();
   const dirtyValues = Object.keys(dirtyFields).reduce((acc, key) => {
     if (key in watchedValues) {
@@ -306,11 +322,21 @@ if (!email) {
         data: quotation,
         contract: dirtyValues,
       };
+      console.log('apiData before mutation' ,JSON.stringify(apiData))
+
       if (!contract) {
-        UpdateQuotationMutation(apiData);
+        createContractAndQuotationMutation(apiData);
       } else if (isDirty) {
-        updateContractAndQuotationMutation({...apiData});
-      } 
+        updateContractMutation({...apiData});
+      } else {
+        const newData = {
+          data: quotation,
+          contract: defaultContractValues,
+        };
+        // console.log('newData before mutation' ,JSON.stringify(newData))
+        createQuotationMutation(newData);
+      }
+
       setIsLoadingMutation(false);
     } catch (error: Error | MyError | any) {
       console.error('There was a problem calling the function:', error);
@@ -319,6 +345,25 @@ if (!email) {
     }
   };
 
+  const handleBackPress = () => {
+    // If it's not the first step, decrement the step.
+    if (step > 1) {
+      setStep(step - 1);
+    } else {
+      ('');
+      //   reset({
+      //     warantyTimeWork: '',
+      //     workCheckEnd: '',
+      //     workCheckDay: '',
+      //     installingDay: '',
+      //     adjustPerDay: '',
+      //     workAfterGetDeposit: '',
+      //     prepareDay: '',
+      //     finishedDay: '',
+      //   });
+      navigation.goBack();
+    }
+  };
   function safeToString(value) {
     return value !== undefined && value !== null ? value.toString() : "";
   }
@@ -343,6 +388,8 @@ if (!email) {
             render={({field: {onChange, onBlur, value}}) => (
               <TextInput
                 keyboardType="number-pad"
+                textAlign='center'
+                textAlignVertical='bottom'
                 defaultValue={defaultValue}
                 onBlur={onBlur}
                 onChangeText={val => {
@@ -351,9 +398,9 @@ if (!email) {
                     onChange(numericValue);
                   }
                 }}
-           
-                // value={value !== undefined && value !== null ? value.toString() : defaultValue}
-                style={{width: 30}}
+                style={{width: 30,height: 45,    flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',}}
                 placeholderTextColor="#A6A6A6"
               />
             )}
@@ -371,11 +418,12 @@ if (!email) {
           }}>
           {textRequired}
         </Text>
+        
       )}
+        <View style={styles.divider} />
+
     </>
   );
-
-  console.log('workCheckDay', contract?.workCheckDay)
   return (
     <>
       {contract ? (
@@ -432,19 +480,12 @@ if (!email) {
                  safeToString( contract.adjustPerDay),
                 )}
 
-                <SmallDivider />
               </View>
             </ScrollView>
           </KeyboardAvoidingView>
           <FooterBtn btnText='บันทึก' disabled={!isValid} onPress={handleDonePress} />
-{/* 
-          <ContractFooter
-              finalStep={false}
-              onBack={handleBackPress}
-              onNext={handleDonePress}
-              isLoading={isLoading}
-              disabled={!isValid }
-            /> */}
+
+
         </SafeAreaView>
       ) : (
         // ... Same for the other part of the ternary operator ...
@@ -470,7 +511,6 @@ if (!email) {
                 {renderTextInput('workCheckEnd', 'Work Check End')}
                 {renderTextInput('adjustPerDay', 'Adjust Per Days')}
 
-                <SmallDivider />
               </View>
             </ScrollView>
             <FooterBtn btnText='บันทึกใบเสนอราคา' disabled={!isValid || !isDirty} onPress={handleDonePress} />
@@ -550,15 +590,31 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 20,
   },
-  inputContainerForm: {
+  inputContainerForm1: {
     marginBottom: 10,
     borderWidth: 0.5,
-    borderRadius: 8,
+    borderRadius: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 10,
-    paddingVertical: 15,
+    backgroundColor: '#FAFAFA', // A light color for odd rows
+
     width: 80,
+    height: Platform.OS === 'android' ? 50 : 50, // Adjust height based on platform
+    paddingVertical: Platform.OS === 'android' ? 0 : 15, // Remove padding for Android
+  },
+  inputContainerForm: {
+    marginBottom: 10,
+    borderWidth: 0.5,
+    borderRadius: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    backgroundColor: '#FFFFFF', // Keep even rows white
+
+    width: 80,
+    height: Platform.OS === 'android' ? 50 : 50, // Adjust height based on platform
+    paddingVertical: Platform.OS === 'android' ? 0 : 15, // Remove padding for Android
   },
   label: {
     // fontFamily: 'sukhumvit set',
@@ -572,9 +628,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 0.5,
 
-    height: 50,
+    height: 10,
 
-    paddingHorizontal: 10,
+    // paddingHorizontal: 10,
   },
   inputPrefix: {
     flexDirection: 'row',
@@ -582,7 +638,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   inputSuffix: {
-    alignSelf: 'flex-end',
+    // flexDirection: 'row',
+    alignSelf: 'center',
     alignItems: 'flex-end',
   },
   inputFormRight: {
@@ -640,11 +697,6 @@ const styles = StyleSheet.create({
 
     paddingBottom: 30,
   },
-  divider: {
-    borderBottomWidth: 1,
-    borderColor: '#A6A6A6',
-    marginTop: 1,
-  },
 
   buttonForm: {
     backgroundColor: '#0073BA',
@@ -660,6 +712,12 @@ const styles = StyleSheet.create({
   },
   smallInput: {
     width: '30%',
+  },
+  rowOdd: {
+    backgroundColor: '#FAFAFA', // A light color for odd rows
+  },
+  rowEven: {
+    backgroundColor: '#FFFFFF', // Keep even rows white
   },
   iconForm: {
     color: 'white',
@@ -677,6 +735,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  divider: {
+    borderBottomWidth: 1,
+    borderColor: '#E0E0E0', // A light grey color for the divider
+    marginTop: 1,
+    marginBottom: 1, // Adjust spacing as needed
+  },
 });
 
-export default EditContract;
+export default DefaultContract;

@@ -4,6 +4,7 @@ import functions from '@react-native-firebase/functions';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import { getStorage, isAvailable } from '@react-native-firebase/storage';
+import config from 'react-native-config';
 
 import auth from '@react-native-firebase/auth'
 const firebaseConfig = {
@@ -21,13 +22,15 @@ if (!firebase.apps.length) {
 }
 
 if (__DEV__) {
-  let emulatorHost = 'http://localhost';
+  let emulatorHost = 'http://localhost'; 
+
   if (Platform.OS === 'android') {
-    emulatorHost = 'http://124.120.205.238';
+    emulatorHost = 'http://127.0.0.1'; 
   }
+
   firebase.functions().useEmulator(emulatorHost, 5001);
   firebase.auth().useEmulator(`${emulatorHost}:9099`);
-  firebase.firestore().useEmulator('localhost', 8080)
+  firebase.firestore().useEmulator(emulatorHost, 8080)
   firebase.storage().useEmulator(emulatorHost,9199)
   // firebase.firestore().settings({
   //   host: `${emulatorHost}:8080`,
@@ -46,7 +49,7 @@ export const testFirestoreWrite = async () => {
   
   let emulatorHost = 'http://localhost';
   if (Platform.OS === 'android') {
-    emulatorHost = 'http://124.120.205.238';
+    emulatorHost = '127.0.0.1';
   }
 
   const db = firestore();

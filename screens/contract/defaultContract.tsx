@@ -26,7 +26,6 @@ import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {Contract, Quotation, Customer,DefaultContractType} from '../../types/docType';
 import {useForm, Controller} from 'react-hook-form';
 import {useUser} from '../../providers/UserContext';
-
 import SmallDivider from '../../components/styles/SmallDivider';
 import ContractFooter from '../../components/styles/ContractFooter';
 import CreateContractScreen from './createContractScreen';
@@ -41,68 +40,6 @@ type Props = {
 interface MyError {
   response: object;
 }
-
-const createContractAndQuotation = async (data: any) => {
-  const user = auth().currentUser;
-
-  if (!user) {
-    console.error('No user authenticated');
-    return;
-  }
-
-  let url;
-  if (__DEV__) {
-    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appCreateContractAndQuotation`;
-  } else {
-    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appCreateContractAndQuotation`;
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${user?.uid}`,
-    },
-    body: JSON.stringify({data}),
-  });
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-};
-
-
-
-const updateDefaultContractAndCreateQuotation = async ( data: any) => {
-  const user = firebase.auth().currentUser;
-console.log('UPDATEDD')
-  if (user) {
-    console.log(user.uid);
-
-  } else {
-    console.log('No user is signed in');
-  }
-  let url;
-  if (__DEV__) {
-    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appUpdateContractAndCreateQuotation`;
-  } else {
-    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appUpdateContractAndCreateQuotation`;
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${user?.uid}`,
-    },
-    body: JSON.stringify({data}),
-  });
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-};
-
 
 const DefaultContract = ({navigation}: Props) => {
   const route = useRoute();
@@ -369,6 +306,9 @@ catch(err){
     return acc;
   }, {} as DefaultContractType);
 
+
+
+
   const handleDonePress = async () => {
     setIsLoadingMutation(true);
 
@@ -388,6 +328,7 @@ catch(err){
           data: quotation,
           contract: defaultContractValues,
         };
+        // console.log('newData before mutation' ,JSON.stringify(newData))
         createQuotationMutation(newData);
       }
 
@@ -442,6 +383,8 @@ catch(err){
             render={({field: {onChange, onBlur, value}}) => (
               <TextInput
                 keyboardType="number-pad"
+                textAlign='center'
+                textAlignVertical='bottom'
                 defaultValue={defaultValue}
                 onBlur={onBlur}
                 onChangeText={val => {
@@ -450,9 +393,9 @@ catch(err){
                     onChange(numericValue);
                   }
                 }}
-           
-                // value={value !== undefined && value !== null ? value.toString() : defaultValue}
-                style={{width: 30}}
+                style={{width: 30,height: 45,    flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',}}
                 placeholderTextColor="#A6A6A6"
               />
             )}
@@ -470,7 +413,10 @@ catch(err){
           }}>
           {textRequired}
         </Text>
+        
       )}
+        <View style={styles.divider} />
+
     </>
   );
   return (
@@ -529,19 +475,12 @@ catch(err){
                  safeToString( contract.adjustPerDay),
                 )}
 
-                <SmallDivider />
               </View>
             </ScrollView>
           </KeyboardAvoidingView>
           <FooterBtn btnText='บันทึก' disabled={!isValid} onPress={handleDonePress} />
-{/* 
-          <ContractFooter
-              finalStep={false}
-              onBack={handleBackPress}
-              onNext={handleDonePress}
-              isLoading={isLoading}
-              disabled={!isValid }
-            /> */}
+
+
         </SafeAreaView>
       ) : (
         // ... Same for the other part of the ternary operator ...
@@ -567,7 +506,6 @@ catch(err){
                 {renderTextInput('workCheckEnd', 'Work Check End')}
                 {renderTextInput('adjustPerDay', 'Adjust Per Days')}
 
-                <SmallDivider />
               </View>
             </ScrollView>
             <FooterBtn btnText='บันทึกใบเสนอราคา' disabled={!isValid || !isDirty} onPress={handleDonePress} />
@@ -647,15 +585,31 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 20,
   },
-  inputContainerForm: {
+  inputContainerForm1: {
     marginBottom: 10,
     borderWidth: 0.5,
-    borderRadius: 8,
+    borderRadius: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 10,
-    paddingVertical: 15,
+    backgroundColor: '#FAFAFA', // A light color for odd rows
+
     width: 80,
+    height: Platform.OS === 'android' ? 50 : 50, // Adjust height based on platform
+    paddingVertical: Platform.OS === 'android' ? 0 : 15, // Remove padding for Android
+  },
+  inputContainerForm: {
+    marginBottom: 10,
+    borderWidth: 0.5,
+    borderRadius: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    backgroundColor: '#FFFFFF', // Keep even rows white
+
+    width: 80,
+    height: Platform.OS === 'android' ? 50 : 50, // Adjust height based on platform
+    paddingVertical: Platform.OS === 'android' ? 0 : 15, // Remove padding for Android
   },
   label: {
     // fontFamily: 'sukhumvit set',
@@ -669,9 +623,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 0.5,
 
-    height: 50,
+    height: 10,
 
-    paddingHorizontal: 10,
+    // paddingHorizontal: 10,
   },
   inputPrefix: {
     flexDirection: 'row',
@@ -679,7 +633,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   inputSuffix: {
-    alignSelf: 'flex-end',
+    // flexDirection: 'row',
+    alignSelf: 'center',
     alignItems: 'flex-end',
   },
   inputFormRight: {
@@ -737,11 +692,6 @@ const styles = StyleSheet.create({
 
     paddingBottom: 30,
   },
-  divider: {
-    borderBottomWidth: 1,
-    borderColor: '#A6A6A6',
-    marginTop: 1,
-  },
 
   buttonForm: {
     backgroundColor: '#0073BA',
@@ -758,6 +708,12 @@ const styles = StyleSheet.create({
   smallInput: {
     width: '30%',
   },
+  rowOdd: {
+    backgroundColor: '#FAFAFA', // A light color for odd rows
+  },
+  rowEven: {
+    backgroundColor: '#FFFFFF', // Keep even rows white
+  },
   iconForm: {
     color: 'white',
     marginLeft: 10,
@@ -773,6 +729,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderColor: '#E0E0E0', // A light grey color for the divider
+    marginTop: 1,
+    marginBottom: 1, // Adjust spacing as needed
   },
 });
 

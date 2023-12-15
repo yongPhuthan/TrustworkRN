@@ -94,18 +94,6 @@ const EditProductForm = ({navigation, route}: Props) => {
       total: totalCost,
     };
     dispatch(stateAction.put_serviceList(serviceID, newData));
-
-    // const index = serviceList.findIndex(
-    //   (serviceItem: any) => serviceItem.id === item.id,
-    // );
-
-    // if (index !== -1) {
-    //   const updatedServiceList = [...serviceList];
-    //   updatedServiceList[index] = {
-    //     ...updatedServiceList[index],
-    //     ...newServiceItem,
-    //   };
-    //   dispatch(stateAction.update_service_list(updatedServiceList));
     navigation.goBack();
   };
 
@@ -131,9 +119,7 @@ const EditProductForm = ({navigation, route}: Props) => {
   const isAuditsDisabled = useMemo(() => {
     return serviceList[serviceIndex]?.audits?.length > 0;
   }, [serviceList, serviceIndex]);
-  const optimizedHandleSubmit = useCallback(() => {
-    handleSubmit(handleFormSubmit);
-  }, [handleSubmit, handleFormSubmit]);
+
   const isMaterialsDisabled = useMemo(() => {
     return serviceList[serviceIndex]?.materials?.length > 0;
   }, [serviceList, serviceIndex]);
@@ -364,7 +350,7 @@ const EditProductForm = ({navigation, route}: Props) => {
                     paddingVertical: 10,
                   },
                   android: {
-                    paddingVertical: 0,
+                    paddingVertical: 10,
                   },
                 }),
               }}></View>
@@ -421,7 +407,7 @@ const EditProductForm = ({navigation, route}: Props) => {
                     paddingVertical: 10,
                   },
                   android: {
-                    paddingVertical: 0,
+                    paddingVertical: 10,
                   },
                 }),
               }}></View>
@@ -481,7 +467,7 @@ const EditProductForm = ({navigation, route}: Props) => {
                     paddingVertical: 10,
                   },
                   android: {
-                    paddingVertical: 0,
+                    paddingVertical: 10,
                   },
                 }),
               }}></View>
@@ -508,7 +494,7 @@ const EditProductForm = ({navigation, route}: Props) => {
         </ScrollView>
         <SaveButton
           disabled={!isAuditsDisabled}
-          onPress={optimizedHandleSubmit}
+          onPress={handleSubmit(handleFormSubmit)}
         />
       </View>
     </>

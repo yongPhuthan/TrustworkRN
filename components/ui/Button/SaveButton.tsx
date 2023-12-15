@@ -1,8 +1,6 @@
 import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import React from 'react';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faPlus, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
+
 type Props = {
   onPress: Function;
   disabled: boolean;
@@ -16,7 +14,6 @@ const SaveButton = (props: Props) => {
         <TouchableOpacity style={styles.disabledButton} disabled>
           <View style={styles.header}>
             <Text style={styles.buttonText}>บันทึก</Text>
-            {/* <FontAwesomeIcon style={styles.icon} icon={faChevronRight} size={20} color="white" /> */}
           </View>
         </TouchableOpacity>
       </View>
@@ -24,36 +21,26 @@ const SaveButton = (props: Props) => {
   }
   return (
     <View style={styles.containerBtn}>
-    <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
-    <View style={styles.header}>
-
-    <Text style={styles.buttonText}>บันทึก</Text>
+      <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
+        <View style={styles.header}>
+          <Text style={styles.buttonText}>บันทึก</Text>
+        </View>
+      </TouchableOpacity>
     </View>
-
-    </TouchableOpacity>
-  </View>
   );
 };
 
 export default SaveButton;
 
 const styles = StyleSheet.create({
-    containerBtn: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center', 
-        backgroundColor: '#FFFFFF',
-        width: '100%',
-        paddingBottom: 30,
-        shadowColor: '#000', // สีเงา
-        shadowOffset: {
-          width: 0, // ตำแหน่งแนวนอนของเงา
-          height: 10, // ตำแหน่งแนวตั้งของเงา
-        },
-        shadowOpacity: 0.10, // ความโปร่งใสของเงา
-        shadowRadius: 20, // รัศมีของเงา
-        elevation: 5, // สำหรับ Android เพื่อให้มีเงา
-      },
+  containerBtn: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    width: '100%',
+    paddingBottom: 30,
+  },
   button: {
     width: '90%',
     height: 50,
@@ -61,27 +48,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#0073BA',
     borderRadius: 5,
     justifyContent: 'center',
-    alignItems: 'center', 
-
-
+    alignItems: 'center',
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
-    // fontWeight: 'bold',
     marginRight: 8,
     marginTop: 1,
-    alignSelf: 'center', 
+    alignSelf: 'center',
     fontFamily: 'Sukhumvit Set Bold',
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center', 
-    justifyContent: 'center', 
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   icon: {
     color: 'white',
-    marginLeft: 8, 
+    marginLeft: 8,
   },
   disabledButton: {
     width: '90%',

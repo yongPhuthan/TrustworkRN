@@ -8,12 +8,13 @@ import {
 } from 'react-native';
 import React, {useState, useContext, useEffect, useRef} from 'react';
 import {Store} from '../redux/store';
-import * as stateAction from '../redux/actions';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp, ParamListBase} from '@react-navigation/native';
-import { client_address } from '../redux/actions';
+import {useForm, Controller,useFormContext} from 'react-hook-form';
 
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faPeopleCarry,
+} from '@fortawesome/free-solid-svg-icons';
 type Props = {
   handleEditClient: Function
 };
@@ -24,10 +25,10 @@ const CardClient = (props: Props) => {
     state: {client_name, client_address, client_tel, client_tax},
     dispatch,
   }: any = useContext(Store);
-
-
+  const context= useFormContext();
+  const {  register,control,getValues } = context;
   return (
-    <View>
+    <View >
       <View style={styles.header}>
         <View style={styles.labelContainer}>
           <Icon style={styles.icon} name="account" size={20} color="#19232e" />
@@ -42,7 +43,7 @@ const CardClient = (props: Props) => {
       </View>
       <TouchableOpacity style={styles.subContainer}>
         <View style={styles.summary}>
-          <Text style={styles.summaryText}>{client_name}</Text>
+          <Text style={styles.summaryText}>{getValues('customer.name')}</Text>
           <Text style={styles.summaryPrice}></Text>
         </View>
         <View style={styles.description}>
@@ -128,6 +129,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     color: '#19232e',
+    fontWeight: 'bold',
   },
   labelContainer: {
     flexDirection: 'row',

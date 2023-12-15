@@ -184,7 +184,7 @@ const Navigation = ({initialRouteName}) => {
           options={{
             ...commonScreenOptions,
             headerShown: true,
-            title: 'เพิ่มรายการ-สินค้า',
+            title: 'แก้ไขรายการ-สินค้า',
             headerBackTitleVisible: false,
             headerStyle: {
               backgroundColor: '#ffffff',
@@ -193,7 +193,7 @@ const Navigation = ({initialRouteName}) => {
           }}
         />
         <Stack.Screen
-          name="EditClientForm"
+          name="EditCustomerForm"
           component={EditCustomer}
           options={{
             ...commonScreenOptions,

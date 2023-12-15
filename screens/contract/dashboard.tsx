@@ -10,7 +10,6 @@ import {
   TouchableNativeFeedback,
 } from 'react-native';
 import React, {useState, useContext, useCallback, useMemo} from 'react';
-
 import auth from '@react-native-firebase/auth';
 import {HOST_URL,PROJECT_FIREBASE} from '@env';
 import {StackNavigationProp} from '@react-navigation/stack';

@@ -33,12 +33,12 @@ const FirstAppScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.logo}>Trustsify</Text>
+            <Text style={styles.logo}>Saletrusth</Text>
             <Image
                 style={styles.image}
                 source={require('../../assets/images/Buildingpermit-bro.png')}
             />
-            <Text style={styles.heading}>Start selling online with Trustsify</Text>
+            <Text style={styles.heading}>Start selling online with Saletrusth</Text>
             <View style={styles.bulletPointContainer}>
                 <Icon name="storefront-outline" style={styles.icon} />
                 <Text style={styles.description}>Create your online store</Text>
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     heading: {
-        fontSize: 24,
+        fontSize: 18,
         color: 'black',
         fontWeight: 'bold',
         textAlign: 'center',

@@ -72,9 +72,7 @@ const AddCustomer = ({navigation, route}: Props) => {
         keyboardVerticalOffset={20}
         style={styles.container}>
         <ScrollView style={styles.subContainer}>
-        <Text style={styles.priceTitle}>ชื่อลูกค้า</Text>
-
-          {/* <Text>{client_name}</Text> */}
+          <Text style={styles.priceTitle}>ชื่อลูกค้า</Text>
           <Controller
             control={control}
             rules={{required: true}}
@@ -141,6 +139,7 @@ const AddCustomer = ({navigation, route}: Props) => {
             )}
             name="companyId"
           />
+
           {/* <Pressable
             disabled={isButtonDisabled}
             style={[styles.btn, isButtonDisabled && styles.disabledBtn]}
@@ -148,6 +147,7 @@ const AddCustomer = ({navigation, route}: Props) => {
             <Text style={styles.label}>บันทึก</Text>
           </Pressable> */}
         </ScrollView>
+
         <SaveButton
           onPress={handleSubmit(onSubmit)}
           disabled={isButtonDisabled}
@@ -161,15 +161,13 @@ export default AddCustomer;
 
 const styles = StyleSheet.create({
   container: {
-    height: '100%',
-    paddingBottom: 150,
-
+    height: 'auto',
+    paddingBottom: 20,
   },
   subContainer: {
     backgroundColor: '#ffffff',
     padding: 30,
-    height: '100%',
-  
+    height: 'auto',
   },
   btn: {
     flexDirection: 'row',
@@ -209,7 +207,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     fontSize: 16,
     height: 40,
-    marginBottom: 100,
+    marginBottom: 20,
   },
   disabledBtn: {
     backgroundColor: 'gray',
@@ -231,8 +229,8 @@ const styles = StyleSheet.create({
   priceTitle: {
     fontSize: 14,
     color: 'black',
-marginTop: 15,
+    fontWeight: 'bold',
+    marginTop: 15,
     fontFamily: 'Sukhumvit Set Bold',
-
   },
 });
