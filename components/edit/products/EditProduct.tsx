@@ -8,13 +8,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  SafeAreaView,
+  Alert,
   Dimensions,
   FlatList,
   Image,
 } from 'react-native';
 import Divider from '../../../components/styles/Divider';
-import {Header as HeaderRNE, HeaderProps} from '@rneui/themed';
+import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import {
   faCloudUpload,
   faClose,
@@ -34,18 +34,33 @@ import {FormData} from '../../../types/docType';
 import SmallDivider from '../../../components/styles/SmallDivider';
 import {useImageUpload} from '../../../hooks/utils/image/useImageUpload';
 import SaveButton from '../../../components/ui/Button/SaveButton';
+import {useUser} from '../../../providers/UserContext';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 
 interface EditProductFormProps {
   serviceIndex: number;
+  quotationId: string;
   onClose: Function;
 }
 
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
-const EditProductForm = ({serviceIndex, onClose}: EditProductFormProps) => {
+const EditProductForm = ({
+  serviceIndex,
+  onClose,
+  quotationId,
+}: EditProductFormProps) => {
   const context = useFormContext();
-  const {register, control, getValues, watch, setValue} = context;
+  const {
+    register,
+    control,
+    getValues,
+    watch,
+    setValue,
+    formState: {isDirty},
+  } = context;
   const serviceID = getValues('id');
+  const user = useUser();
   //   const [qty, setQuantity] = useState(item.qty);
   //   const [unitPrice, setPrice] = useState(item.unitPrice);
   const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
@@ -56,30 +71,67 @@ const EditProductForm = ({serviceIndex, onClose}: EditProductFormProps) => {
   const unitPrice = watch(`services[${serviceIndex}].unitPrice`);
   const qty = watch(`services[${serviceIndex}].qty`);
   const [serviceImages, setServiceImages] = useState<string[]>(
-    watch(`services[${serviceIndex}].serviceImages`)
+    watch(`services[${serviceIndex}].serviceImages`),
   );
 
+  const upsertService = async (data: any) => {
+    if (!user || !user.email) {
+      console.error('User or user email is not available');
+      return;
+    }
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/documents/upsertService`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({data}),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Network response was not ok.');
+      }
+    } catch (err) {
+      console.error('Error in updateContractAndQuotation:', err);
+      throw err;
+    }
+  };
   const totalCost = useMemo(
     () => (qty > 0 ? qty * unitPrice : 0),
     [qty, unitPrice],
   );
   const handleFormSubmit = (data: FormData) => {
-    const newData = {
-      id: item.id,
-      title: data.title ? data.title : item.title,
-      description: data.description ? data.description : item.description,
-      serviceImages,
-      unitPrice: data.unitPrice
-        ? Number(data.unitPrice.replace(/,/g, ''))
-        : Number(item.unitPrice),
-      qty,
-      total: totalCost,
-    };
-    dispatch(stateAction.put_serviceList(serviceID, newData));
-    navigation.goBack();
+    console.log('handle me');
   };
   const audits = watch(`services[${serviceIndex}].audits`);
   const materials = watch(`services[${serviceIndex}].materials`);
+  // useMutation for upsertService
+  const queryClient = useQueryClient();
+  const {mutate, isLoading} = useMutation({
+    mutationFn: upsertService,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['dashboardData', user?.email]);
+      onClose();
+    },
+    onError: (error: any) => {
+      console.error('There was a problem calling the function:', error);
+      let errorMessage = 'An unexpected error occurred';
+
+      if (error.response && error.response.status === 401) {
+        errorMessage = 'Authentication error. Please re-login.';
+      } else if (error.response) {
+        errorMessage = error.response.data.error || errorMessage;
+      }
+
+      Alert.alert('Error', errorMessage);
+    },
+  });
 
   const isAuditsDisabled = useMemo(() => {
     return audits?.length > 0;
@@ -88,38 +140,47 @@ const EditProductForm = ({serviceIndex, onClose}: EditProductFormProps) => {
   const isMaterialsDisabled = useMemo(() => {
     return materials?.length > 0;
   }, [materials]);
-const images = watch(`services[${serviceIndex}].serviceImages`);
-const handleTransformAndSetImages = () => {
-    const serviceImages = getValues(`services[${serviceIndex}].serviceImages`);
-  
-    const transformedImages = serviceImages.map(imageUrl => ({
-      url: imageUrl,
-      defaultChecked: true // Set this to whatever default you need
-    }));
-  
-    setValue(`services[${serviceIndex}].serviceImages`, transformedImages);
-    setServiceImages(transformedImages);
-  };
-  
-
-//   useEffect(() => {
-//    handleTransformAndSetImages()
-
-//   }, [])
-  
 
   const onGetValues = useCallback(() => {
-    const values = getValues();
-    console.log('serviceIndex', serviceIndex);
-  }, [getValues]);
+    const serviceFormContxt = getValues(`services[${serviceIndex}]`);
+    const service = {
+      ...serviceFormContxt,
+      unit: serviceFormContxt.unit === 'none' ? 'ชุด' : serviceFormContxt.unit,
+      audits: serviceFormContxt.audits?.map(audit => ({
+        id: audit?.AuditData?.id,
+      })),
+      materials: serviceFormContxt.materials?.map(material => ({
+        id: material?.materialData?.id,
+      })),
+    };
+    console.log('modified service', JSON.stringify(service));
+    mutate({service, quotationId});
+  }, [getValues, serviceIndex]);
 
   useEffect(() => {
     const parsedUnitPrice = parseFloat(unitPrice) || 0;
     const parsedQty = parseInt(qty, 10) || 0;
     const total = parsedUnitPrice * parsedQty;
-    setValue(`services[${serviceIndex}].total`, total.toString());
-    setValue(`services[${serviceIndex}].serviceImages`, serviceImages);
-  }, [unitPrice, qty, serviceIndex, setValue,serviceImages]);
+    setValue(`services[${serviceIndex}].total`, total.toString(), {
+      shouldDirty: true,
+    });
+    setValue(`services[${serviceIndex}].serviceImages`, serviceImages, {
+      shouldDirty: true,
+    });
+  }, [unitPrice, qty, serviceIndex, setValue, serviceImages]);
+
+  if (isLoading) {
+    return (
+      <ActivityIndicator
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        size="large"
+      />
+    );
+  }
 
   return (
     <>
@@ -268,7 +329,11 @@ const handleTransformAndSetImages = () => {
                     parseInt(getValues(`services[${serviceIndex}].qty`), 10) ||
                     0;
                   if (currentCount > 0) {
-                    setValue(`services[${serviceIndex}].qty`, currentCount - 1);
+                    setValue(
+                      `services[${serviceIndex}].qty`,
+                      currentCount - 1,
+                      {shouldDirty: true},
+                    );
                   }
                 }}>
                 <Text style={styles.buttonText}>-</Text>
@@ -326,19 +391,13 @@ const handleTransformAndSetImages = () => {
           <SmallDivider />
           <View style={styles.summary}>
             <Text style={styles.priceSum}>รวมเป็นเงิน:</Text>
-
             <Controller
               control={control}
               name={`services[${serviceIndex}].total`}
               defaultValue=""
               render={({field: {value}}) => (
-                <TextInput
-                  style={styles.priceSummary}
-                  placeholder="0"
-                  keyboardType="number-pad"
-                  value={value}
-                  editable={false}
-                />
+                <Text style={styles.priceSummary}>{Number(value) .toFixed(2)
+                  .replace(/\d(?=(\d{3})+\.)/g, '$&,') || '0'}</Text>
               )}
             />
           </View>
@@ -363,6 +422,7 @@ const handleTransformAndSetImages = () => {
                     marginBottom: 5,
                     marginTop: 20,
                     fontFamily: 'Sukhumvit Set Bold',
+                    fontWeight: 'bold',
 
                     fontSize: 16,
 
@@ -469,6 +529,18 @@ const handleTransformAndSetImages = () => {
               }),
             }}></View>
           <SmallDivider />
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <SaveButton
+              disabled={!isAuditsDisabled}
+              onPress={onGetValues} 
+            />
+          </View>
         </View>
         <SelectAudit
           isVisible={isModalVisible}
@@ -489,7 +561,6 @@ const handleTransformAndSetImages = () => {
           setServiceImages={setServiceImages}
         />
       </ScrollView>
-      <SaveButton disabled={!isAuditsDisabled} onPress={onGetValues} />
     </>
   );
 };
@@ -531,7 +602,6 @@ const styles = StyleSheet.create({
     marginTop: 40,
     backgroundColor: '#0073BA',
   },
-
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -543,7 +613,6 @@ const styles = StyleSheet.create({
     width: 150,
     textAlign: 'right', // Add textAlign property
   },
-
   inputName: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -566,6 +635,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
+    fontWeight: 'bold',
+
     color: 'white',
   },
   inputContainer: {
@@ -608,6 +679,7 @@ const styles = StyleSheet.create({
   },
   summary: {
     flexDirection: 'row',
+    
     justifyContent: 'space-between',
     ...Platform.select({
       ios: {
@@ -628,22 +700,28 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     color: 'black',
+    fontWeight: 'bold',
     fontFamily: 'Sukhumvit Set Bold',
   },
   priceSum: {
     fontSize: 18,
+    
     color: 'black',
+    fontWeight: 'bold',
     fontFamily: 'Sukhumvit Set Bold',
+
   },
   priceHead: {
     fontSize: 16,
     color: 'black',
+    fontWeight: 'bold',
     marginTop: 10,
     fontFamily: 'Sukhumvit Set Bold',
   },
   priceTitle: {
     fontSize: 16,
     color: 'black',
+    fontWeight: 'bold',
     marginTop: 5,
     fontFamily: 'Sukhumvit Set Bold',
   },

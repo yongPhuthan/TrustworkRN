@@ -3,7 +3,6 @@ import React from 'react';
 // import Icon from 'react-native-vector-icons/FontAwesome';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import { useForm, FormProvider, useFormContext } from "react-hook-form"
 
 import {
   faBell,
@@ -24,8 +23,6 @@ type Props = {
 };
 
 const AddClient = (props: Props) => {
-  const context = useFormContext();
-  const { handleSubmit, register } = context;
   return (
     <View style={styles.container}>
       <View style={styles.header}>

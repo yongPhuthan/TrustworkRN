@@ -262,22 +262,23 @@ export type EditProductList = {
 };
 
 export type DefaultContractType = {
-  warantyTimeWork: string;
-  workCheckEnd: string;
-  workCheckDay: string;
-  installingDay: string;
-  adjustPerDay: string;
-  workAfterGetDeposit: string;
-  productWarantyYear: string;
-  skillWarantyYear: string;
-  prepareDay: string;
-  finishedDay: string;
-  [key: string]: string;
+  warantyTimeWork: number;
+  workCheckEnd: number;
+  workCheckDay: number;
+  installingDay: number;
+  adjustPerDay: number;
+  workAfterGetDeposit: number;
+  productWarantyYear: number;
+  skillWarantyYear: number;
+  prepareDay: number;
+  finishedDay: number;
+  [key: string]: number;
 };
 export interface Audit {
   id: string;
   title: string;
   description: string;
+  image: string;
   price: number;
   imageUri: string;
   defaultChecked: boolean;

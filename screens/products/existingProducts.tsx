@@ -12,7 +12,7 @@ import {
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
-import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
+import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {CompanyUser, Service} from '../../types/docType';
@@ -20,7 +20,6 @@ import {ParamListBase, ProductItem} from '../../types/navigationType';
 import * as stateAction from '../../redux/actions';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {useUser} from '../../providers/UserContext';
-import {BACK_END_SERVER_URL} from '@env';
 import {faPlus, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
 import {Store} from '../../redux/store';
 type Props = {
@@ -29,36 +28,6 @@ type Props = {
   // onGoBack: (data: string) => void;
 };
 
-
-const fetchExistingProducts2 = async (company: CompanyUser) => {
-  const user = auth().currentUser;
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
-
-  const idToken = await user.getIdToken();
-  const companyID = company.id;
-  const url = __DEV__
-    ? `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appQueryExistingProduct`
-    : `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appQueryExistingProduct`;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-
-    body: JSON.stringify({id: companyID}),
-  });
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-
-  const data = await response.json();
-  return data;
-};
 
 const ExistingProducts = ({navigation}: Props) => {
   const [products, setProducts] = useState<Service[]>([]);

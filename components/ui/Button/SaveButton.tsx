@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   button: {
-    width: '90%',
+    width: '100%',
     height: 50,
     top: '30%',
     backgroundColor: '#0073BA',
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   disabledButton: {
-    width: '90%',
+    width: '100%',
     top: '30%',
     height: 50,
     backgroundColor: '#d9d9d9',

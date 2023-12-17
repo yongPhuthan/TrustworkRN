@@ -274,7 +274,7 @@ console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
     await dispatch(stateAction.client_address(customer.address));
     await dispatch(stateAction.client_tel(customer.mobilePhone));
     await dispatch(stateAction.client_tax(customer.companyId));
-    await dispatch(stateAction.service_list(services[0]));
+    await dispatch(stateAction.service_list(services));
     dispatch(stateAction.get_companyID(data[0].id));
     setIsLoadingAction(false);
 
@@ -321,7 +321,7 @@ console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
             isVisible={showModal}
             onBackdropPress={handleModalClose}>
             <Text style={styles.title}>
-              ลูกค้า {selectedItem.customer?.name}
+              ลูกค้า {selectedItem?.customer?.name}
             </Text>
             <Pressable
               onPress={() => {
@@ -355,7 +355,7 @@ console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
                 borderBottomWidth: 1,
                 borderBottomColor: '#cccccc',
               }}></View>
-           <Pressable onPress={() => confirmRemoveQuotation(item.id,selectedItem.customer?.name)}>
+               <Pressable onPress={() => confirmRemoveQuotation(item.id,selectedItem?.customer?.name)}>
               <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
             </Pressable>
 
@@ -409,7 +409,7 @@ console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
                 borderBottomWidth: 1,
                 borderBottomColor: '#cccccc',
               }}></View>
-            <Pressable onPress={() => confirmRemoveQuotation(item.id,selectedItem.customer?.name)}>
+            <Pressable onPress={() => confirmRemoveQuotation(item.id,selectedItem?.customer?.name)}>
               <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
             </Pressable>
 

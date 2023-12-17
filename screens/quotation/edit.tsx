@@ -16,11 +16,11 @@ import Modal from 'react-native-modal';
 import DocNumber from '../../components/DocNumber';
 import AddClient from '../../components/AddClient';
 import AddServices from '../../components/AddServices';
-import Summary from '../../components/Summary';
+import SummaryEdit from '../../components/edit/SummaryEdit';
 import Divider from '../../components/styles/Divider';
 import {StackNavigationProp} from '@react-navigation/stack';
 import CardProject from '../../components/CardProject';
-import CardClient from '../../components/CardClient';
+import CardClient from '../../components/edit/customer/CardClient';
 import {ParamListBase} from '../../types/navigationType';
 import DatePickerButton from '../../components/styles/DatePicker';
 import {Store} from '../../redux/store';
@@ -48,6 +48,7 @@ import {useFetchDocument} from '../../hooks/quotation/useFetchDocument';
 import FooterBtn from '../../components/styles/FooterBtn';
 import EditCustomer from '../../components/edit/customer/EditCustomer';
 import EditProductForm from '../../components/edit/products/EditProduct';
+import AddProductForm from '../../components/edit/products/addProduct';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'EditQuotation'>;
   route: RouteProp<ParamListBase, 'EditQuotation'>;
@@ -135,6 +136,8 @@ const EditQuotation = ({navigation}: Props) => {
   const [editCustomerModal, setEditCustomerModal] = useState(false);
   const [serviceIndex, setServiceIndex] = useState(0);
   const [editServicesModal, setEditServicesModal] = useState(false);
+  const [addServicesModal, setAddServicesModal] = useState(false);
+
 
   const [signature, setSignature] = useState('');
   const customerData = {
@@ -161,19 +164,6 @@ const EditQuotation = ({navigation}: Props) => {
     services: quotation.services as any,
     customer: customerData,
   };
-
-  const {
-    handleSubmit,
-    control,
-    watch,
-    setValue,
-
-    reset,
-    formState: {errors, isDirty, dirtyFields, isValid},
-  } = useForm({
-    mode: 'onChange',
-    defaultValues: quotationData,
-  });
 
   const methods = useForm({
     mode: 'onChange',
@@ -220,14 +210,9 @@ const EditQuotation = ({navigation}: Props) => {
     return total;
   }, [serviceList]);
 
-  const handleAddClientForm = () => {
-    // TODO: Add client to quotation
-    navigation.navigate('AddCustomer');
-  };
-
   const handleAddProductForm = () => {
-    // TODO: Add client to quotation
-    navigation.navigate('AddProduct');
+    setAddServicesModal(!addServicesModal);
+    // navigation.navigate('AddProduct');
   };
   const useSignature = () => {
     if (companyUser?.signature) {
@@ -241,13 +226,19 @@ const EditQuotation = ({navigation}: Props) => {
   const handleSignatureSuccess = () => {
     setSignatureModal(false);
   };
-  const handleEditService = (index: number) => {
-    setShowEditServiceModal(!showEditServiceModal);
-    handleModalClose();
-    navigation.navigate('EditProductForm', {item: serviceList[index]});
-  };
-  const handleCustomerAddressChange = (value: string) => {
-    setCustomerAddress(value);
+
+  const onSubmit = () => {
+    const dirtyValues = Object.keys(methods.formState.dirtyFields).reduce(
+      (acc, key) => {
+        acc[key] = methods.getValues(key as keyof typeof quotationData);
+        return acc;
+      },
+      {},
+    );
+    navigation.navigate('EditDefaultContract', {
+      data: dirtyValues,
+      quotationId,
+    } as any);
   };
 
   const handleButtonPress = async () => {
@@ -294,19 +285,15 @@ const EditQuotation = ({navigation}: Props) => {
     }
   };
 
-  const handleInvoiceNumberChange = (text: string) => {
-    setDocnumber(text);
-  };
-
   const handleStartDateSelected = (date: Date) => {
     const formattedDate = thaiDateFormatter(date);
-    setValue('dateOffer', formattedDate, {shouldDirty: true});
+    methods.setValue('dateOffer', formattedDate, {shouldDirty: true});
     console.log('New dateOffer value:', formattedDate);
   };
 
   const handleEndDateSelected = (date: Date) => {
     const formattedEndDate = thaiDateFormatter(date);
-    setValue('dateEnd', formattedEndDate, {shouldDirty: true});
+    methods.setValue('dateEnd', formattedEndDate, {shouldDirty: true});
 
     console.log('New dateOffer value:', formattedEndDate);
   };
@@ -395,11 +382,9 @@ const EditQuotation = ({navigation}: Props) => {
   //   } );
 
   // }, [client_name, client_address, client_tel, client_tax, setValue]);
-
-  const datePickerValue = watch('dateOffer');
-  console.log('watch dateOffer:', watch('dateOffer'));
-  console.log('watch dateEnd:', watch('dateEnd'));
-  console.log('watch docNumber:', methods.formState.isDirty);
+console.log('watch services', methods.watch());
+console.log('serviceList', serviceList)
+console.log('quotationData', quotationData.services)
   return (
     <FormProvider {...methods}>
       <View style={{flex: 1}}>
@@ -445,7 +430,6 @@ const EditQuotation = ({navigation}: Props) => {
               <CardClient handleEditClient={() => setEditCustomerModal(true)} />
             ) : (
               <AddClient handleAddClient={() => setEditCustomerModal(true)} />
-              // <AddClient handleAddClient={handleAddClientForm} />
             )}
 
             <View style={styles.header}>
@@ -457,7 +441,7 @@ const EditQuotation = ({navigation}: Props) => {
               />
               <Text style={styles.label}>บริการ-สินค้า</Text>
             </View>
-            {serviceList.map((item, index) => (
+            {methods.getValues('services')?.map((item, index) => (
               <CardProject
                 handleModalClose={handleModalClose}
                 visibleModalIndex={visibleModalIndex === index}
@@ -466,7 +450,7 @@ const EditQuotation = ({navigation}: Props) => {
                 handleRemoveService={() => handleRemoveServiceCallback(index)}
                 handleEditService={() => handleEditServiceCallback(index)}
                 serviceList={item}
-                key={item.id} // Assuming each item has a unique 'id'
+                key={index} // Assuming each item has a unique 'id'
               />
             ))}
 
@@ -480,7 +464,8 @@ const EditQuotation = ({navigation}: Props) => {
           </Pressable>
         </View> */}
             {/* <Divider /> */}
-            <Summary
+
+            <SummaryEdit
               title={'ยอดรวม'}
               price={totalPrice}
               onValuesChange={handleValuesChange}
@@ -529,15 +514,26 @@ const EditQuotation = ({navigation}: Props) => {
           style={styles.modalServiceFull}
           onBackdropPress={() => setEditServicesModal(false)}>
           <EditProductForm
+            quotationId={quotationId}
             onClose={() => setEditServicesModal(false)}
             serviceIndex={serviceIndex}
+          />
+        </Modal>
+        <Modal
+          isVisible={addServicesModal}
+          style={styles.modalServiceFull}
+          onBackdropPress={() => setAddServicesModal(false)}>
+          <AddProductForm
+            quotationId={quotationId}
+            onClose={() => setAddServicesModal(false)}
+            serviceIndex={2}
           />
         </Modal>
         <View>
           <FooterBtn
             btnText="ดำเนินการต่อ"
             disabled={isDisabled}
-            onPress={handleButtonPress}
+            onPress={methods.handleSubmit(onSubmit)}
           />
         </View>
       </View>

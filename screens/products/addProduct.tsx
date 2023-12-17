@@ -124,8 +124,6 @@ const AddProductForm = ({navigation, route}: Props) => {
     return serviceList[serviceIndex]?.audits?.length > 0;
   }, [serviceList, serviceIndex]);
 
-
-
   const isMaterialsDisabled = useMemo(() => {
     return serviceList[serviceIndex]?.materials?.length > 0;
   }, [serviceList, serviceIndex]);
@@ -382,7 +380,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                       style={styles.card}
                       onPress={() => setModalVisible(true)}>
                       <Text style={styles.cardTitle}>
-                        {item.AuditData.auditShowTitle} 
+                        {item.AuditData.auditShowTitle}
                       </Text>
                       <Icon name="chevron-right" size={24} color="gray" />
                     </TouchableOpacity>
@@ -418,7 +416,7 @@ const AddProductForm = ({navigation, route}: Props) => {
               }}></View>
             <SmallDivider />
             <View>
-              {isMaterialsDisabled? (
+              {isMaterialsDisabled ? (
                 <View style={styles.cardContainer}>
                   <Text
                     style={{
@@ -432,12 +430,14 @@ const AddProductForm = ({navigation, route}: Props) => {
                     วัสดุอุปกรณ์ที่ใช้
                   </Text>
                   {serviceList[serviceIndex]?.materials?.map(
-                    (item: any,index) => (
+                    (item: any, index) => (
                       <TouchableOpacity
                         key={index}
                         style={styles.card}
                         onPress={() => setIsModalMaterialsVisible(true)}>
-                        <Text style={styles.cardTitle}>{item.materialData.name}</Text>
+                        <Text style={styles.cardTitle}>
+                          {item.materialData.name}
+                        </Text>
                         <Icon name="chevron-right" size={24} color="gray" />
                       </TouchableOpacity>
                     ),
@@ -475,6 +475,18 @@ const AddProductForm = ({navigation, route}: Props) => {
                 }),
               }}></View>
             <SmallDivider />
+            <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <SaveButton
+              disabled={!isAuditsDisabled}
+              onPress={handleSubmit(handleFormSubmit)}
+            />
+          </View>
           </View>
           <SelectAudit
             isVisible={isModalVisible}
@@ -494,12 +506,8 @@ const AddProductForm = ({navigation, route}: Props) => {
             serviceImages={serviceImages}
             setServiceImages={setServiceImages}
           />
+
         </ScrollView>
-        <SaveButton
-          disabled={!isAuditsDisabled}
-          onPress={    handleSubmit(handleFormSubmit)
-          }
-        />
       </View>
     </>
   );

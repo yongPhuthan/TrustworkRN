@@ -54,7 +54,7 @@ import ExistingWorkers from '../screens/workers/existing';
 import AddNewWorker from '../screens/workers/addNew';
 import AddNewMaterial from '../screens/products/materials/addNew';
 import RegisterScreen from '../screens/register/registerScreen';
-
+import EditDefaultContract from '../screens/contract/edit/editDefaultContract';
 
 const Theme = {
   ...DefaultTheme,
@@ -430,6 +430,20 @@ const Navigation = ({initialRouteName}) => {
             title: 'รายละเอียดสัญญา',
             headerBackTitleVisible: false,
 
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+        <Stack.Screen
+          name="EditDefaultContract"
+          component={EditDefaultContract}
+          options={{
+            ...commonScreenOptions,
+            headerShown: true,
+            title: 'แก้ไขรายละเอียดสัญญา',
+            headerBackTitleVisible: false,
             headerStyle: {
               backgroundColor: '#ffffff',
             },

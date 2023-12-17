@@ -6,7 +6,10 @@
     "outDir": "lib",
     "sourceMap": true,
     "strict": true,
-    "target": "es2017"
+    "target": "es2017",
+    "paths": {
+      "@env": ["/node_modules/react-native-dotenv"] // this mapping is relative to "baseUrl"
+    }
   },
   "compileOnSave": true,
 

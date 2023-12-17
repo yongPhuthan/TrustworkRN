@@ -9,18 +9,12 @@ import {
   Dimensions,
 } from 'react-native';
 import {
-  faCloudUpload,
-  faEdit,
-  faPlus,
-  faImages,
   faClose,
 } from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {useForm, Controller, useFormContext} from 'react-hook-form';
-
 import CardAudit from '../../../../components/CardAudit';
 import {Store} from '../../../../redux/store';
-
 import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import {useQuery} from '@tanstack/react-query';
 import {Audit, ServiceList, EditProductList} from '../../../../types/docType';
@@ -88,18 +82,6 @@ const SelectAudit = ({
       },
     },
   );
-
-//   const handleSelectAudit = (audit: Audit) => {
-  
-//     const existingAuditInAuditsList = 
-//       service?.audits?.some(auditData => auditData.AuditData.id === audit.id) ?? false;
-  
-//     if (existingAuditInAuditsList) {
-// // remove austData from service.audits
-//     } else {
-// // add auditData to service.audits
-//     }
-//   };
   
   const handleSelectAudit = (audit) => {
     const auditsPath = `services[${serviceIndex}].audits`;
@@ -110,8 +92,7 @@ const SelectAudit = ({
     if (auditIndex >= 0) {
       // Audit exists, so remove it
       const updatedAudits = currentAudits.filter((_, index) => index !== auditIndex);
-      setValue(auditsPath, updatedAudits);
-      console.log('service', watch(`services[${serviceIndex}]`));
+      setValue(auditsPath, updatedAudits, {shouldDirty: true});
     } else {
       // Audit does not exist, so add it
       const newAuditData = {
@@ -121,7 +102,7 @@ const SelectAudit = ({
         
       };
       const updatedAudits = [...currentAudits, newAuditData];
-      setValue(auditsPath, updatedAudits);
+      setValue(auditsPath, updatedAudits,{shouldDirty: true});
       console.log('serviceAFTER', watch(`services[${serviceIndex}]`));
 
     }
@@ -136,7 +117,7 @@ const SelectAudit = ({
   const auditsWithChecked =
     audits?.map(audit => ({
       ...audit,
-      defaultChecked: audits.some(a => a?.image === audit?.image),
+      defaultChecked: audits.some(a => a?.image  === audit?.image),
     })) || [];
 
   useEffect(() => {

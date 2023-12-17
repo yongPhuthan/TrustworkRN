@@ -140,18 +140,13 @@ const AddCustomer = ({navigation, route}: Props) => {
             name="companyId"
           />
 
-          {/* <Pressable
-            disabled={isButtonDisabled}
-            style={[styles.btn, isButtonDisabled && styles.disabledBtn]}
-            onPress={handleSubmit(onSubmit)}>
-            <Text style={styles.label}>บันทึก</Text>
-          </Pressable> */}
-        </ScrollView>
-
-        <SaveButton
+<SaveButton
           onPress={handleSubmit(onSubmit)}
           disabled={isButtonDisabled}
         />
+        </ScrollView>
+
+        
       </KeyboardAvoidingView>
     </View>
   );

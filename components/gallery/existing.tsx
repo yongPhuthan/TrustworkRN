@@ -10,26 +10,11 @@ import {
   Text,
 } from 'react-native';
 import {useUser} from '../../providers/UserContext';
-import {useForm, Controller, useFormContext, set} from 'react-hook-form';
-
-import {StackNavigationProp} from '@react-navigation/stack';
-import {ParamListBase, ProductItem} from '../../types/navigationType';
 import {useQuery, useQueryClient, useMutation} from '@tanstack/react-query';
-import {GlobalStyles} from '../../styles/GlobalStyles';
 import ImageResizer from '@bam.tech/react-native-image-resizer';
-import {RouteProp} from '@react-navigation/native';
-import * as stateAction from '../../redux/actions';
+
 import {Store} from '../../redux/store';
-import {
-  faCloudUpload,
-  faEdit,
-  faPlus,
-  faImages,
-  faPlusCircle,
-  faClose,
-  faCamera,
-  faArrowLeft,
-} from '@fortawesome/free-solid-svg-icons';
+import {faPlus, faCamera, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
 import {CheckBox} from '@rneui/themed';
 import {
   launchImageLibrary,
@@ -37,25 +22,13 @@ import {
   ImageLibraryOptions,
   ImagePickerResponse,
 } from 'react-native-image-picker';
-import storage from '@react-native-firebase/storage';
-
-import {
-  HOST_URL,
-  CLOUDFLARE_WORKER_DEV,
-  PROJECT_FIREBASE,
-  CLOUDFLARE_WORKER,
-  CLOUDFLARE_R2_BUCKET_BASE_URL,
-  BACK_END_SERVER_URL,
-  CLOUDFLARE_R2_PUBLIC_URL,
-} from '@env';
+import {BACK_END_SERVER_URL} from '@env';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faExpand, faExpandArrowsAlt} from '@fortawesome/free-solid-svg-icons';
 import CustomCheckbox from '../../components/CustomCheckbox';
-import useImagesQuery from '../../hooks/utils/image/useImageQuery';
 import {useSlugify} from '../../hooks/utils/useSlugify';
 import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
 import Modal from 'react-native-modal';
-import getStorage from '@react-native-firebase/storage';
 
 type ImageData = {
   id: number;
@@ -95,15 +68,14 @@ const GalleryScreen = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [responseLog, setResponseLog] = useState<string | null>(null);
-  const context = useFormContext();
   const initialGalleryImages = serviceImages?.map((url, index) => ({
-    id: index + 1,  // Assuming IDs should be unique and start from 1
+    id: index + 1, // Assuming IDs should be unique and start from 1
     url: url,
-    defaultChecked: true  // Set to true as initial value
+    defaultChecked: true, // Set to true as initial value
   }));
-  const [galleryImages, setGalleryImages] = useState<ImageData[]>(initialGalleryImages);
+  const [galleryImages, setGalleryImages] =
+    useState<ImageData[]>(initialGalleryImages);
 
-  const {register, control, getValues, watch, setValue} = context;
   const {
     state: {serviceList, code},
     dispatch,
@@ -325,9 +297,6 @@ const GalleryScreen = ({
       </View>
     );
   }
-
-console.log('galleryImages', galleryImages)
-console.log(initialGalleryImages);
 
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>

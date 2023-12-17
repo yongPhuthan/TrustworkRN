@@ -37,6 +37,7 @@ export type ParamListBase = {
   ContractCard: undefined;
   SelectAudit: Audit;
   DefaultContract: undefined;
+  EditDefaultContract: any;
   DashboardQuotation: undefined;
   SelectContract: {id: string};
   EditProductForm: {item: Service};

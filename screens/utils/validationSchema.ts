@@ -52,3 +52,20 @@ export const materialsValidationSchema = yup.object().shape({
   image: yup.string(),
 });
 
+
+export const contractValidationSchema = yup.object().shape({
+
+  warantyTimeWork: yup.number().default(0).required('This field is required'),
+  workCheckEnd: yup.number().default(0).required('This field is required'),
+  workCheckDay: yup.number().default(0).required('This field is required'),
+  installingDay: yup.number().default(0).required('This field is required'),
+  adjustPerDay: yup.number().default(0).required('This field is required'),
+  workAfterGetDeposit: yup.number().default(0).required('This field is required'),
+  prepareDay: yup.number().default(0).required('This field is required'),
+  finishedDay: yup.number().default(0).required('This field is required'),
+  productWarantyYear: yup.number().default(0).required('This field is required'),
+  skillWarantyYear: yup.number().default(0).required('This field is required'),
+
+
+});
+

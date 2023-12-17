@@ -120,6 +120,7 @@ const GalleryScreen = ({
       .filter(img => img.defaultChecked)
       .map(img => img.url);
     setServiceImages(urls);
+
   };
   const getGallery = async () => {
     if (!user) {
@@ -163,13 +164,23 @@ const GalleryScreen = ({
       }
     },
     onSuccess: data => {
-        if (data && Array.isArray(data)) {
+        if (data && Array.isArray(data) ) {
+          if(selectedImage){
             const imageData = data.map((url, index) => ({
               id: index + 1, // Assigning an ID
               url: url,
               defaultChecked: serviceImages.includes(url), // Check if the URL is in serviceImages
             }));
             setGalleryImages(imageData);
+          }else {
+            const imageData = data.map((url, index) => ({
+              id: index + 1, // Assigning an ID
+              url: url,
+              defaultChecked: false
+            }));
+            setGalleryImages(imageData);
+          }
+
           } else {
         console.warn('Data is undefined or not in expected format');
       }
@@ -319,9 +330,6 @@ const GalleryScreen = ({
       </View>
     );
   }
-
-console.log('galleryImages', galleryImages)
-
 
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>

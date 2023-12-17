@@ -106,21 +106,17 @@ const serviceMaterials = watch(`services[${serviceIndex}].materials`);
     const materialIndex = currentMaterials.findIndex(item => item.materialData.id === material.id);
   
     if (materialIndex >= 0) {
-      // Audit exists, so remove it
       const updatedMaterials = currentMaterials.filter((_, index) => index !== materialIndex);
-      setValue(materialsPath, updatedMaterials);
-      console.log('service', watch(`services[${serviceIndex}]`));
+      setValue(materialsPath, updatedMaterials, {shouldDirty: true});
     } else {
-      // Audit does not exist, so add it
       const newMaterialData = {
         materialData: {
-          ...material // Assuming 'audit' has the structure needed for 'AuditData'
+          ...material 
         }
         
       };
       const updatedMaterials = [...currentMaterials, newMaterialData];
-      setValue(materialsPath, updatedMaterials);
-      console.log('serviceAFTER', watch(`services[${serviceIndex}]`));
+      setValue(materialsPath, updatedMaterials,{shouldDirty: true});
 
     }
   };

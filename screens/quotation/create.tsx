@@ -236,9 +236,9 @@ const Quotation = ({navigation}: Props) => {
           customer: clientData,
           vat7: vat7Amount,
           taxValue: vat3Amount,
-          taxName: 'vat3',
+          taxName: '',
           dateEnd,
-          discountValue,
+          discountValue : discountValue ? discountValue : 0,
           discountName: 'percent',
           dateOffer,
           FCMToken: fcnToken,
@@ -258,6 +258,10 @@ const Quotation = ({navigation}: Props) => {
       } else if (vat5Amount > 0) {
         apiData.data.taxName = 'vat5';
         apiData.data.taxValue = vat5Amount;
+      }
+      else{
+        apiData.data.taxName = 'none';
+        apiData.data.taxValue = 0;
       }
       navigation.navigate('DefaultContract', {data: apiData} as any);
 

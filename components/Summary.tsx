@@ -11,6 +11,7 @@ import React, {useState, useContext, useEffect} from 'react';
 import RNPickerSelect from 'react-native-picker-select';
 import Divider from './styles/Divider';
 import SmallDivider from './styles/SmallDivider';
+import {useForm, Controller, useFormContext, set} from 'react-hook-form';
 
 type Props = {
   title: string;
@@ -44,7 +45,7 @@ const Summary = (props: Props) => {
   const data = [
     {label: '0%', value: 0},
     {label: '3%', value: 3},
-    {label: '5%', value: 5},
+    // {label: '5%', value: 5},
   ];
 
   const discountValue = (props.price * parseFloat(discount)) / 100;
@@ -157,7 +158,6 @@ const Summary = (props: Props) => {
               },
               android: {
                 transform: [{scaleX: 1}, {scaleY: 1}],
-
               },
             }),
           ]}
@@ -208,47 +208,39 @@ const styles = StyleSheet.create({
     marginTop: 20,
     justifyContent: 'space-between',
     color: '#19232e',
-
   },
   summaryTotal: {
     flexDirection: 'row',
     marginBottom: 10,
     justifyContent: 'space-between',
     color: '#19232e',
-
   },
   container: {
     // width: windowWidth * 0.7,
-        // alignSelf: 'flex-end',
+    // alignSelf: 'flex-end',
 
-        width: windowWidth * 0.85 ,
-
+    width: windowWidth * 0.85,
   },
   summaryText: {
     fontSize: 16,
     marginVertical: 10,
     color: '#19232e',
-
-
   },
   summaryTaxVat: {
     fontSize: 16,
     marginVertical: 10,
     color: '#19232e',
-
   },
   totalSummary: {
     fontSize: 20,
     fontWeight: 'bold',
     marginVertical: 10,
     color: '#19232e',
-
   },
   summaryPrice: {
     fontSize: 18,
     marginVertical: 10,
     color: '#19232e',
-
   },
   pickerContainer: {
     flex: 1,
@@ -268,7 +260,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     color: '#19232e',
-
   },
   pickerWrapper: {
     flexDirection: 'row',
@@ -277,7 +268,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
     color: '#19232e',
-
   },
   pickerAndroidContainer: {
     borderWidth: 0.2,
@@ -308,7 +298,7 @@ const pickerSelectStyles = StyleSheet.create({
     borderColor: 'gray',
     borderRadius: 4,
     color: 'black',
-    paddingRight: 30, 
+    paddingRight: 30,
   },
 
   inputAndroid: {
