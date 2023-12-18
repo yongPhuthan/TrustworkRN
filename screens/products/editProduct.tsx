@@ -472,6 +472,10 @@ const EditProductForm = ({navigation, route}: Props) => {
                 }),
               }}></View>
             <SmallDivider />
+                    <SaveButton
+          disabled={!isAuditsDisabled}
+          onPress={handleSubmit(handleFormSubmit)}
+        />
           </View>
           <SelectAudit
             isVisible={isModalVisible}
@@ -492,10 +496,7 @@ const EditProductForm = ({navigation, route}: Props) => {
             setServiceImages={setServiceImages}
           />
         </ScrollView>
-        <SaveButton
-          disabled={!isAuditsDisabled}
-          onPress={handleSubmit(handleFormSubmit)}
-        />
+
       </View>
     </>
   );

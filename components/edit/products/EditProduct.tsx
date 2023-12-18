@@ -59,7 +59,6 @@ const EditProductForm = ({
     setValue,
     formState: {isDirty},
   } = context;
-  const serviceID = getValues('id');
   const user = useUser();
   //   const [qty, setQuantity] = useState(item.qty);
   //   const [unitPrice, setPrice] = useState(item.unitPrice);

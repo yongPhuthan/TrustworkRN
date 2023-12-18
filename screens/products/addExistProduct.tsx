@@ -1,4 +1,10 @@
-import React, {useState, useContext, useEffect, useMemo} from 'react';
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react';
 import {
   View,
   TextInput,
@@ -9,15 +15,23 @@ import {
   Image,
   FlatList,
   ActivityIndicator,
+  Dimensions,
+  SafeAreaView,
   TouchableOpacity,
-  Dimensions
+  Pressable,
 } from 'react-native';
-import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
-import {FormData, ServiceList, CompanyUser, Audit} from '../../types/docType';
-
+import {Header as HeaderRNE, HeaderProps} from '@rneui/themed';
 import Divider from '../../components/styles/Divider';
-import {useForm, Controller} from 'react-hook-form';
+import {
+  useForm,
+  FormProvider,
+  useFormContext,
+  Controller,
+  set,
+} from 'react-hook-form';
+
 import {Store} from '../../redux/store';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faCloudUpload,
   faEdit,
@@ -25,27 +39,18 @@ import {
   faImages,
   faPlusCircle,
 } from '@fortawesome/free-solid-svg-icons';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-
 import * as stateAction from '../../redux/actions';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {v4 as uuidv4} from 'uuid';
-
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import SmallDivider from '../../components/styles/SmallDivider';
+import {FormData, ServiceList, CompanyUser, Audit} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
-import {
-  launchImageLibrary,
-  MediaType,
-  ImageLibraryOptions,
-  ImagePickerResponse,
-} from 'react-native-image-picker';
 import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
 import SelectAudit from '../../components/audits/selectAudit';
 import ExistingMaterials from '../../components/materials/existing';
 import GalleryScreen from '../../components/gallery/existing';
-import HeaderRNEComponent from '../../components/ui/Header';
 import SaveButton from '../../components/ui/Button/SaveButton';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'AddExistProduct'>;
@@ -54,100 +59,77 @@ type Props = {
 };
 
 
-type Inputs = FormData;
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
-const AddExistProduct = ({navigation, route}: Props) => {
+const AddProductForm = ({navigation, route}: Props) => {
+  const {item} = route.params;
+  const {control, handleSubmit, watch} = useForm<FormData>(
+    {
+      defaultValues: {
+        title: item.title,
+        description: item.description,
+        qty: item.qty,
+
+      },
+    },
+  );
+
   const [count, setCount] = useState(0);
   const [discountPercent, setDiscountPercent] = useState(0);
-  const {item} = route.params;
   const [qty, setQuantity] = useState(1);
-  const [serviceImageUri, setServiceImage] = useState<string | null>(null);
-  const [unitPrice, setPrice] = useState(item.unitPrice);
-  const [total, setTotalCost] = useState(0);
-  const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
-  const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
+  const [unitPrice, setPrice] = useState(0);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
+  const [serviceImages, setServiceImages] = useState<string[]>([]);
   const [isModalImagesVisible, setModalImagesVisible] = useState(false);
-  const [serviceImages, setServiceImages] = useState<string[]>(item.serviceImages);
-
-  const serviceID = uuidv4();
-  
+  const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
+  const [serviceID, setServiceID] = useState<string>('');
   const {
     state: {serviceList, selectedAudit, code},
     dispatch,
   }: any = useContext(Store);
 
-  // const handleFormSubmit: (data: FormData) => void = (data)=> {
-
-
-  //   const newServiceItem = {
-  //     id: serviceID,
-  //     title: data.title,
-  //     description: data.description,
-  //     unitPrice: data.unitPrice,
-  //     serviceImage: imageUrl,
-  //     qty: qty,
-  //     discountPercent,
-  //     total: totalCost,
-      
-  //   };
-
-  //   dispatch(stateAction.service_list(newServiceItem as any));
-  //   dispatch(stateAction.reset_audit());
-  //   navigation.pop(2);
-
-  //   // navigation.goBack();
-  // };
-  const totalCost = useMemo(
-    () => (qty > 0 ? qty * unitPrice : 0),
-    [qty, unitPrice],
+  const handleFormSubmit = useCallback(
+    (data: FormData) => {
+      const newData = {
+        title: data.title,
+        description: data.description,
+        unitPrice: data.unitPrice,
+        serviceImages,
+        qty: qty,
+        discountPercent,
+        total: (qty * unitPrice).toString(),
+      };
+      dispatch(stateAction.put_serviceList(serviceID, newData));
+      dispatch(stateAction.reset_audit());
+      dispatch(stateAction.reset_service_images());
+      dispatch(stateAction.reset_materials());
+      navigation.pop(2);
+    },
+    [serviceList, qty, unitPrice, serviceID],
   );
+
   const serviceIndex = useMemo(
     () => serviceList.findIndex(service => service.id === serviceID),
     [serviceList, serviceID],
   );
+  const totalCost = useMemo(
+    () => (qty > 0 ? qty * unitPrice : 0),
+    [qty, unitPrice],
+  );
 
-  const handleFormSubmit = (data: FormData) => {
-    const newData = {
-      id: item.id,
-      title: data.title ? data.title : item.title,
-      description: data.description ? data.description : item.description,
-      serviceImages,
-      unitPrice: data.unitPrice
-        ? Number(data.unitPrice.replace(/,/g, ''))
-        : Number(item.unitPrice),
-      qty,
-      total: totalCost,
-    };
-    dispatch(stateAction.put_serviceList(serviceID, newData));
-    navigation.goBack();
-  };
+  useEffect(() => {
+    const newServiceID = uuidv4();
+    console.log('Generated serviceID:', newServiceID); // Add this line
+    setServiceID(newServiceID);
+    setServiceImages(item.serviceImages);
+  }, []);
 
-  // const {
-  //   handleSubmit,
-  //   control,
-  //   watch,
-  //   setValue,
-  //   reset,
-  //   formState: {errors, isDirty, dirtyFields, isValid},
-  // } = useForm<Inputs>({
-  //   mode: 'onChange',
-  //   defaultValues: {
-  //     title: item.title,
-  //     description: item.description,
-  //     unitPrice: item.unitPrice.toString(),
-  //     audits: item.audits,
-  //     materials: item.materials,
-  //     serviceImages: item.serviceImages,
-  //   } as any,
-  // });
   useEffect(() => {
     if (serviceID) {
       dispatch(stateAction.initial_serviceId(serviceID));
     }
   }, [qty, unitPrice, serviceID, discountPercent, serviceList]);
-
   const isAuditsDisabled = useMemo(() => {
     return serviceList[serviceIndex]?.audits?.length > 0;
   }, [serviceList, serviceIndex]);
@@ -408,7 +390,7 @@ const AddExistProduct = ({navigation, route}: Props) => {
                       style={styles.card}
                       onPress={() => setModalVisible(true)}>
                       <Text style={styles.cardTitle}>
-                        {item.AuditData.auditShowTitle} 
+                        {item.AuditData.auditShowTitle}
                       </Text>
                       <Icon name="chevron-right" size={24} color="gray" />
                     </TouchableOpacity>
@@ -444,7 +426,7 @@ const AddExistProduct = ({navigation, route}: Props) => {
               }}></View>
             <SmallDivider />
             <View>
-              {isMaterialsDisabled? (
+              {isMaterialsDisabled ? (
                 <View style={styles.cardContainer}>
                   <Text
                     style={{
@@ -458,12 +440,14 @@ const AddExistProduct = ({navigation, route}: Props) => {
                     วัสดุอุปกรณ์ที่ใช้
                   </Text>
                   {serviceList[serviceIndex]?.materials?.map(
-                    (item: any,index) => (
+                    (item: any, index) => (
                       <TouchableOpacity
                         key={index}
                         style={styles.card}
                         onPress={() => setIsModalMaterialsVisible(true)}>
-                        <Text style={styles.cardTitle}>{item.materialData.name}</Text>
+                        <Text style={styles.cardTitle}>
+                          {item.materialData.name}
+                        </Text>
                         <Icon name="chevron-right" size={24} color="gray" />
                       </TouchableOpacity>
                     ),
@@ -501,6 +485,18 @@ const AddExistProduct = ({navigation, route}: Props) => {
                 }),
               }}></View>
             <SmallDivider />
+            <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <SaveButton
+              disabled={!isAuditsDisabled}
+              onPress={handleSubmit(handleFormSubmit)}
+            />
+          </View>
           </View>
           <SelectAudit
             isVisible={isModalVisible}
@@ -520,17 +516,13 @@ const AddExistProduct = ({navigation, route}: Props) => {
             serviceImages={serviceImages}
             setServiceImages={setServiceImages}
           />
+
         </ScrollView>
-        <SaveButton
-          disabled={!isAuditsDisabled}
-          onPress={    handleSubmit(handleFormSubmit)
-          }
-        />
       </View>
     </>
   );
 };
-export default AddExistProduct;
+export default AddProductForm;
 
 const styles = StyleSheet.create({
   container: {},
@@ -623,6 +615,8 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: imageContainerWidth,
+    borderWidth: 1,
+    borderColor: '#ccc',
     flexDirection: 'column',
     margin: 5,
     position: 'relative',
@@ -646,7 +640,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
       },
       android: {
-        paddingVertical: 0,
+        paddingVertical: 10,
       },
     }),
   },
@@ -753,7 +747,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
   },
   header: {
     flexDirection: 'row',

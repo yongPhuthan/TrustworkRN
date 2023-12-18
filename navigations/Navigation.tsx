@@ -55,6 +55,7 @@ import AddNewWorker from '../screens/workers/addNew';
 import AddNewMaterial from '../screens/products/materials/addNew';
 import RegisterScreen from '../screens/register/registerScreen';
 import EditDefaultContract from '../screens/contract/edit/editDefaultContract';
+import CreateContractScreen from '../screens/contract/createContractScreen';
 
 const Theme = {
   ...DefaultTheme,
@@ -465,6 +466,20 @@ const Navigation = ({initialRouteName}) => {
             headerTintColor: 'black',
           }}
         />
+        <Stack.Screen name="CreateContractScreen" 
+         options={{
+          ...commonScreenOptions,
+          headerShown: true,
+          title: 'เริ่มทำสัญญา',
+          headerBackTitleVisible: false,
+
+          headerStyle: {
+            backgroundColor: '#ffffff',
+          },
+          headerTintColor: 'black',
+        }}
+        component={CreateContractScreen} />
+
         <Stack.Screen
           name="GalleryUploadScreen"
           component={GalleryUploadScreen}

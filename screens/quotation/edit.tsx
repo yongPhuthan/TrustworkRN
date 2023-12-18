@@ -5,10 +5,11 @@ import {
   TextInput,
   ScrollView,
   FlatList,
+  Alert,
   Switch,
   Dimensions,
   Platform,
-  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import {v4 as uuidv4} from 'uuid';
 import React, {useState, useContext, useCallback, useMemo} from 'react';
@@ -26,7 +27,7 @@ import DatePickerButton from '../../components/styles/DatePicker';
 import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useQuery, useMutation} from '@tanstack/react-query';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import axios, {AxiosResponse, AxiosError} from 'axios';
 import {useRoute} from '@react-navigation/native';
@@ -49,6 +50,8 @@ import FooterBtn from '../../components/styles/FooterBtn';
 import EditCustomer from '../../components/edit/customer/EditCustomer';
 import EditProductForm from '../../components/edit/products/EditProduct';
 import AddProductForm from '../../components/edit/products/addProduct';
+import {useUser} from '../../providers/UserContext';
+
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'EditQuotation'>;
   route: RouteProp<ParamListBase, 'EditQuotation'>;
@@ -107,6 +110,8 @@ const EditQuotation = ({navigation}: Props) => {
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const [total, setTotal] = useState(quotation.allTotal);
   const thaiDateFormatter = useThaiDateFormatter();
+  const user = useUser();
+
   const [discountValue, setDiscountValue] = useState(
     quotation.discountValue || 0,
   );
@@ -129,16 +134,13 @@ const EditQuotation = ({navigation}: Props) => {
   const {fetchDocument} = useFetchDocument();
   const [discount, setDiscount] = useState(quotation.discountValue || 0);
   const [vat7, setVat7] = useState(Boolean(quotation.vat7));
-  const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(
-    null,
-  );
+  const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(null);
   const isDisabled = !client_name || serviceList.length === 0;
   const [editCustomerModal, setEditCustomerModal] = useState(false);
   const [serviceIndex, setServiceIndex] = useState(0);
   const [editServicesModal, setEditServicesModal] = useState(false);
   const [addServicesModal, setAddServicesModal] = useState(false);
-
-
+  const queryClient = useQueryClient();
   const [signature, setSignature] = useState('');
   const customerData = {
     id: quotation.customer?.id,
@@ -161,7 +163,7 @@ const EditQuotation = ({navigation}: Props) => {
     dateOffer: quotation.dateOffer,
     dateEnd: quotation.dateEnd,
     docNumber: quotation.docNumber,
-    services: quotation.services as any,
+    services: quotation.services as Service[],
     customer: customerData,
   };
 
@@ -169,7 +171,38 @@ const EditQuotation = ({navigation}: Props) => {
     mode: 'onChange',
     defaultValues: quotationData,
   });
+  const services = useMemo(() => {
+    return methods.getValues('services');
+  }, [methods.getValues('services')]);
+  
+  const removeService = async (data: any) => {
+    if (!user || !user.email) {
+      console.error('User or user email is not available');
+      return;
+    }
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/documents/removeService`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({data}),
+        },
+      );
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Network response was not ok.');
+      }
+    } catch (err) {
+      console.error('Error in updateContractAndQuotation:', err);
+      throw err;
+    }
+  };
   const {mutate} = useMutation(updateQuotation, {
     onSuccess: data => {
       navigation.navigate('WebViewScreen', {id: quotationId});
@@ -181,6 +214,34 @@ const EditQuotation = ({navigation}: Props) => {
       console.log(error.response);
     },
   });
+  const {mutate: mutateRemoveService, isLoading} = useMutation({
+    mutationFn: removeService,
+    onSuccess: (data, variables) => {
+      const { index } = variables;
+  
+      const currentServices = methods.getValues('services');
+  
+      const newServices = currentServices.filter((_, serviceIndex) => serviceIndex !== index);
+  
+      methods.setValue('services', newServices);
+      queryClient.invalidateQueries(['dashboardData']);
+
+  
+    },  
+    onError: (error: any) => {
+      console.error('There was a problem calling the function:', error);
+      let errorMessage = 'An unexpected error occurred';
+
+      if (error.response && error.response.status === 401) {
+        errorMessage = 'Authentication error. Please re-login.';
+      } else if (error.response) {
+        errorMessage = error.response.data.error || errorMessage;
+      }
+
+      Alert.alert('Error', errorMessage);
+    },
+  });
+
   const handleModalClose = () => {
     setVisibleModalIndex(null);
   };
@@ -299,8 +360,30 @@ const EditQuotation = ({navigation}: Props) => {
   };
 
   const handleRemoveService = (index: number) => {
+    const services: Service[] = methods.getValues('services');
+    if (services[index]) {
+      const serviceId = services[index].id;
+      mutateRemoveService({serviceId , index});
+    } else {
+      Alert.alert('Error', 'Service not found');
+    }
+  };
+
+  const confirmRemoveService = (index,title) => {
     setVisibleModalIndex(null);
-    dispatch(stateAction.remove_serviceList(index));
+    Alert.alert(
+      'ยืนยันลบรายการสินค้า',
+      ` ลำดับที่${index+1} ${title}`,
+      [
+        {
+          text: 'ยกเลิก',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {text: 'ตกลง', onPress: () => handleRemoveService(index)},
+      ],
+      {cancelable: false},
+    );
   };
 
   const idContractList = selectedContract.map((obj: IdContractList) => obj.id);
@@ -317,74 +400,16 @@ const EditQuotation = ({navigation}: Props) => {
     [setServiceIndex, handleModalClose, setEditServicesModal],
   );
 
-  const handleRemoveServiceCallback = useCallback(
-    index => {
-      handleRemoveService(index);
-    },
-    [handleRemoveService],
-  );
 
-  // useEffect(() => {
-  //   if (customerData.name !== client_name ) {
-  //     methods.setValue('customer.name', client_name, { shouldDirty: true });
-  //     console.log('New customer name value:', client_name);
-  //   }
-  //   if (customerData.address !== client_address ) {
-  //     methods.setValue('customer.address', client_address, { shouldDirty: true });
-  //     console.log('New customer address value:', client_address);
-  //   }
-  //   if (customerData.officePhone !== client_tel ) {
-  //     methods.setValue('customer.officePhone', client_tel, { shouldDirty: true });
-  //     console.log('New customer officePhone value:', client_tel);
-  //   }
-  //   if (customerData.mobilePhone !== client_tel ) {
-  //     methods.setValue('customer.mobilePhone', client_tel, { shouldDirty: true });
-  //     console.log('New customer mobilePhone value:', client_tel);
-  //   }
-  //   if (customerData.companyId !== client_tax ) {
-  //     methods.setValue('customer.companyId', client_tax, { shouldDirty: true });
-  //     console.log('New customer companyId value:', client_tax);
-  //   }
-  //   quotationData.services.forEach((service, index) => {
-  //     if (serviceList[index].title !== service.title) {
-  //       methods.setValue(`services[${index}].title` as any, serviceList[index].title, { shouldDirty: true });
-  //       console.log('New service title value:', serviceList[index].title);
-  //     }
-  //     if (serviceList[index].unitPrice !== service.unitPrice) {
-  //       methods.setValue(`services[${index}].unitPrice` as any, serviceList[index].unitPrice, { shouldDirty: true });
-  //       console.log('New service price value:', serviceList[index].unitPrice);
-  //     }
-  //     if (serviceList[index].qty !== service.qty) {
-  //       methods.setValue(`services[${index}].qty` as any, serviceList[index].qty, { shouldDirty: true });
-  //       console.log('New service quantity value:', serviceList[index].qty);
-  //     }
-  //     if (serviceList[index].total !== service.total) {
-  //       methods.setValue(`services[${index}].total` as any, serviceList[index].total, { shouldDirty: true });
-  //       console.log('New service total value:', serviceList[index].total);
-  //     }
-  //     const reduxService = serviceList.find(s => s.id === service.id);
-  //     if (reduxService) {
-  //       service.audits.forEach((audit, auditIndex) => {
-  //         const reduxAudit = reduxService.audits.find(a => a.AuditData.id === audit.AuditData.id);
 
-  //         if (reduxAudit) {
-  //           if (audit.title !== reduxAudit.title) {
-  //             setValue(`services[${index}].audits[${auditIndex}].title` as any, reduxAudit.title, { shouldDirty: true });
-  //           }
-  //           if (audit.qty !== reduxAudit.qty) {
-  //             setValue(`services[${index}].audits[${auditIndex}].qty` as any, reduxAudit.qty, { shouldDirty: true });
-  //           }
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large"  />
+      </View>
+    );
+  }
 
-  //         }
-  //       });
-  //     }
-
-  //   } );
-
-  // }, [client_name, client_address, client_tel, client_tax, setValue]);
-console.log('watch services', methods.watch());
-console.log('serviceList', serviceList)
-console.log('quotationData', quotationData.services)
   return (
     <FormProvider {...methods}>
       <View style={{flex: 1}}>
@@ -441,16 +466,16 @@ console.log('quotationData', quotationData.services)
               />
               <Text style={styles.label}>บริการ-สินค้า</Text>
             </View>
-            {methods.getValues('services')?.map((item, index) => (
+            {services.map((item, index) => (
               <CardProject
                 handleModalClose={handleModalClose}
                 visibleModalIndex={visibleModalIndex === index}
                 setVisibleModalIndex={() => setVisibleModalIndex(index)}
                 index={index}
-                handleRemoveService={() => handleRemoveServiceCallback(index)}
+                handleRemoveService={() => confirmRemoveService(index, item.title)}
                 handleEditService={() => handleEditServiceCallback(index)}
                 serviceList={item}
-                key={index} // Assuming each item has a unique 'id'
+                key={index}
               />
             ))}
 

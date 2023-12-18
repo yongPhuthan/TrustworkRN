@@ -54,7 +54,7 @@ const DocViewScreen = ({ navigation, route }: Props) => {
     if (isEmulator) {
       setUrl(`http://${HOST_URL}:3000/doc/${firstPart}`);
     } else {
-      setUrl(`https://www.trustwork.co/doc/${firstPart}`);
+      setUrl(`https://www.trusthwork.com/doc/${firstPart}`);
     }
     setIsLoading(false);
   }, []);

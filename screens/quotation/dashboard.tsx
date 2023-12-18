@@ -59,45 +59,52 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
   const [companyData, setCompanyData] = useState<CompanyUser | null>(null);
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
-  const slideAnim = useState(new Animated.Value(-100))[0];
+  const filterLabels = {
+    ALL: 'ทั้งหมด',
+    PENDING: 'รออนุมัติ',
+    APPROVED: 'อนุมัติแล้ว',
+    CONTRACT: 'สัญญา',
+  };
+
   const [filters, setFilters] = useState([
-    'ทั้งหมด',
-    'รออนุมัติ',
-    'อนุมัติแล้ว',
-    'สัญญา',
-    'กำลังทำงาน',
+    'ALL',
+    'PENDING',
+    'APPROVED',
+    'CONTRACT',
   ]);
-  const [activeFilter, setActiveFilter] = useState('ทั้งหมด');
+  const [activeFilter, setActiveFilter] = useState('ALL');
   const filteredQuotationData = useMemo(() => {
     if (!originalQuotationData) return null;
 
-    if (activeFilter === 'ทั้งหมด') return originalQuotationData;
+    if (activeFilter === 'ALL') return originalQuotationData;
 
     return originalQuotationData.filter(q => q.status === activeFilter);
   }, [originalQuotationData, activeFilter]);
+
   const updateContractData = (filter: string) => {
     setActiveFilter(filter);
-
     if (quotationData) {
       let filteredData = quotationData;
 
       if (filter !== 'ALL') {
         filteredData = quotationData.filter(
           (quotation: Quotation) => quotation.status === filter,
+          setQuotationData(filteredData),
         );
+      } else {
+        console.log('FILTER', filter);
+        filteredData = quotationData;
+        setQuotationData(filteredData);
       }
-
-      setQuotationData(filteredData);
     }
   };
 
   async function fetchDashboardData() {
-
     if (!user || !user.email) {
       console.error('User or user email is not available');
       return;
     }
-console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
+    console.log('BACK_END_SERVER_URL', BACK_END_SERVER_URL);
 
     try {
       const token = await user.getIdToken(true);
@@ -185,7 +192,7 @@ console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
       throw err;
     }
   };
-  const confirmRemoveQuotation = (id,customer) => {
+  const confirmRemoveQuotation = (id, customer) => {
     setShowModal(false);
     Alert.alert(
       'ยืนยันลบใบเสนอราคา',
@@ -282,11 +289,13 @@ console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
   };
 
   const FilterButton = ({filter, isActive, onPress}) => {
+    const displayText = filterLabels[filter] || filter;
+
     return (
       <TouchableOpacity
         style={[styles.filterButton, isActive ? styles.activeFilter : null]}
         onPress={onPress}>
-        <Text style={isActive ? {color: 'white'} : null}>{filter}</Text>
+        <Text style={isActive ? {color: 'white'} : null}>{displayText}</Text>
       </TouchableOpacity>
     );
   };
@@ -334,6 +343,19 @@ console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
               }}>
               <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
             </Pressable>
+            {/* <Pressable
+              onPress={() => {
+                setShowModal(false);
+                navigation.navigate('Installment', {
+                  data: {
+                    total: Number(data.allTotal),
+                    quotationId: data.id,
+                    sellerId: data.sellerId,
+                  },
+                });
+              }}>
+              <Text style={styles.closeButtonText}>ทำสัญญา</Text>
+            </Pressable> */}
             <View
               style={{
                 width: '100%',
@@ -355,7 +377,10 @@ console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
                 borderBottomWidth: 1,
                 borderBottomColor: '#cccccc',
               }}></View>
-               <Pressable onPress={() => confirmRemoveQuotation(item.id,selectedItem?.customer?.name)}>
+            <Pressable
+              onPress={() =>
+                confirmRemoveQuotation(item.id, selectedItem?.customer?.name)
+              }>
               <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
             </Pressable>
 
@@ -409,7 +434,10 @@ console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
                 borderBottomWidth: 1,
                 borderBottomColor: '#cccccc',
               }}></View>
-            <Pressable onPress={() => confirmRemoveQuotation(item.id,selectedItem?.customer?.name)}>
+            <Pressable
+              onPress={() =>
+                confirmRemoveQuotation(item.id, selectedItem?.customer?.name)
+              }>
               <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
             </Pressable>
 
@@ -514,8 +542,7 @@ console.log('BACK_END_SERVER_URL',BACK_END_SERVER_URL)
       )}
 
       <FAB
-    icon={<FontAwesomeIcon icon={faPlus} size={20} color="white" />}
-
+        icon={<FontAwesomeIcon icon={faPlus} size={20} color="white" />}
         color="#012b20"
         // color="#0073BA"
         style={{

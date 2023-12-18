@@ -140,18 +140,27 @@ const GalleryScreen = ({
       }
     },
     onSuccess: data => {
-      if (data && Array.isArray(data)) {
-        // Transforming the data to ImageData format
-        const imageData = data.map((url, index) => ({
-          id: index + 1, // Assuming id starts from 1 and increments for each image
-          url: url,
-          defaultChecked: false, // Set to true or false based on your requirement
-        }));
-        setGalleryImages(imageData);
-      } else {
-        console.warn('Data is undefined or not in expected format');
-      }
-    },
+      if (data && Array.isArray(data) ) {
+        if(serviceImages.length > 0){
+          const imageData = data.map((url, index) => ({
+            id: index + 1, // Assigning an ID
+            url: url,
+            defaultChecked: serviceImages.includes(url), // Check if the URL is in serviceImages
+          }));
+          setGalleryImages(imageData);
+        }else {
+          const imageData = data.map((url, index) => ({
+            id: index + 1, // Assigning an ID
+            url: url,
+            defaultChecked: false
+          }));
+          setGalleryImages(imageData);
+        }
+
+        } else {
+      console.warn('Data is undefined or not in expected format');
+    }
+  },
   });
 
   const handleUploadMoreImages = useCallback(() => {
@@ -297,7 +306,7 @@ const GalleryScreen = ({
       </View>
     );
   }
-
+console.log('gallery', galleryImages)
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       {isImageUpload ? (

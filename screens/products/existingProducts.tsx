@@ -20,14 +20,21 @@ import {ParamListBase, ProductItem} from '../../types/navigationType';
 import * as stateAction from '../../redux/actions';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {useUser} from '../../providers/UserContext';
-import {faPlus, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faDrawPolygon,
+  faCog,
+  faBell,
+  faChevronRight,
+  faCashRegister,
+  faCoins,
+} from '@fortawesome/free-solid-svg-icons';
 import {Store} from '../../redux/store';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ExistingProduct'>;
   route: RouteProp<ParamListBase, 'ExistingProduct'>;
   // onGoBack: (data: string) => void;
 };
-
 
 const ExistingProducts = ({navigation}: Props) => {
   const [products, setProducts] = useState<Service[]>([]);
@@ -57,7 +64,7 @@ const ExistingProducts = ({navigation}: Props) => {
         },
       });
       const data = await response.json();
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -70,7 +77,6 @@ const ExistingProducts = ({navigation}: Props) => {
     () => fetchExistingServices(companyID as CompanyUser).then(res => res),
     {
       onSuccess: data => {
-        
         setProducts(data);
         console.log('existing data', JSON.stringify(data));
       },
@@ -86,7 +92,6 @@ const ExistingProducts = ({navigation}: Props) => {
   const handleAddNewProduct = () => {
     navigation.navigate('AddProduct');
   };
-  console.log('PRODUCT',products)
 
   return (
     <View style={styles.container}>
@@ -100,15 +105,12 @@ const ExistingProducts = ({navigation}: Props) => {
           <>
             <TouchableOpacity
               style={styles.card}
-              onPress={() =>
-               { 
-                
-                dispatch(stateAction.service_images(item.serviceImages))
-
-                navigation.navigate('AddExistProduct', {item: item})}
-              }>
+              onPress={() => {
+                dispatch(stateAction.service_images(item.serviceImages));
+                navigation.navigate('AddExistProduct', {item: item});
+              }}>
               <Image
-                source={{uri: item.serviceImages[0]|| ''}}
+                source={{uri: item.serviceImages[0] || ''}}
                 style={styles.productImage}
               />
               <View style={styles.textContainer}>
@@ -137,18 +139,20 @@ const ExistingProducts = ({navigation}: Props) => {
         keyExtractor={item => item.id}
       />
       {products.length > 0 && (
-
         <TouchableOpacity
           onPress={handleAddNewProduct}
           style={styles.emptyListButton}>
-                   <View style={styles.header}>
-                                <FontAwesomeIcon style={styles.icon} icon={faPlus} size={20} color="white" />
-                   <Text style={styles.emptyListText}>เพิ่มรายการใหม่</Text>
-                   </View>
-
+          <View style={styles.header}>
+            <FontAwesomeIcon
+              style={styles.icon}
+              icon={faPlus}
+              size={20}
+              color="white"
+            />
+            <Text style={styles.emptyListText}>เพิ่มรายการใหม่</Text>
+          </View>
         </TouchableOpacity>
       )}
-
     </View>
   );
 };
@@ -195,12 +199,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'gray',
     fontFamily: 'Sukhumvit set',
-
   },
   emptyListButton: {
     padding: 14,
     borderRadius: 8,
-    backgroundColor:'#012b20',
+    backgroundColor: '#012b20',
     // backgroundColor: '#0073BA',
     alignItems: 'center',
     justifyContent: 'center',
@@ -219,8 +222,8 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center', 
-    justifyContent: 'center', 
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingContainer: {
     flex: 1,
@@ -229,7 +232,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     color: 'white',
-    marginLeft: 8, 
+    marginLeft: 8,
   },
 });
 
