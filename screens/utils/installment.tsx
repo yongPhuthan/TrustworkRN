@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  ActivityIndicator,
   FlatList,
   Alert,
   TextInput,
@@ -16,26 +16,20 @@ import {Button} from 'react-native-paper';
 import RNPickerSelect from 'react-native-picker-select';
 import {useForm, Controller, useFieldArray} from 'react-hook-form';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {HOST_URL, PROJECT_FIREBASE} from '@env';
+import {HOST_URL, BACK_END_SERVER_URL} from '@env';
 import {useRoute} from '@react-navigation/native';
 import {faChevronDown} from '@fortawesome/free-solid-svg-icons';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Or another library of your choice
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery, useMutation} from '@tanstack/react-query';
-import {useNavigation} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
-import {v4 as uuidv4} from 'uuid';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faChevronRight,
-  faCashRegister,
-  faCoins,
-} from '@fortawesome/free-solid-svg-icons';
+import {useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {useUser} from '../../providers/UserContext';
 import SmallDivider from '../../components/styles/SmallDivider';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import ContractFooter from '../../components/styles/ContractFooter';
 import {ParamListBase} from '../../types/navigationType';
 import {RouteProp} from '@react-navigation/native';
 import {useSignatureUpload} from '../../hooks/utils/image/useSignatureUpload';
+import SaveButton from '../../components/ui/Button/SaveButton';
 
 interface InstallmentDetail {
   installment: number;
@@ -55,37 +49,40 @@ interface MyError {
 type UpdateContractInput = {
   data: any;
 };
-const updateContract = async (input: UpdateContractInput): Promise<any> => {
-  const {data} = input;
-  const user = auth().currentUser;
-  console.log('data PUT', JSON.stringify(data));
-  let url;
-  if (__DEV__) {
-    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appUpdateFinalContract`;
-  } else {
-    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appUpdateFinalContract`;
-  }
+// const updateContract = async (input: UpdateContractInput): Promise<any> => {
+//   const {data} = input;
+//   const user = auth().currentUser;
+//   console.log('data PUT', JSON.stringify(data));
+//   let url;
+//   if (__DEV__) {
+//     url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appUpdateFinalContract`;
+//   } else {
+//     url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appUpdateFinalContract`;
+//   }
 
-  const response = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${user?.uid}`,
-    },
-    body: JSON.stringify({data}),
-  });
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-  const responseData = await response.json();
-  return responseData;
-};
+//   const response = await fetch(url, {
+//     method: 'PUT',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       Authorization: `Bearer ${user?.uid}`,
+//     },
+//     body: JSON.stringify({data}),
+//   });
+//   if (!response.ok) {
+//     throw new Error('Network response was not ok');
+//   }
+//   const responseData = await response.json();
+//   return responseData;
+// };
 
 const Installment = ({navigation}: Props) => {
   const route = useRoute();
   const dataProps: any = route.params?.data;
   const totalPrice = dataProps.total;
   const [installments, setInstallments] = useState<number>(0);
+  const user = useUser();
+  const queryClient = useQueryClient();
+
   const {isSignatureUpload, signatureUrl, handleSignatureUpload} =
     useSignatureUpload();
 
@@ -99,6 +96,41 @@ const Installment = ({navigation}: Props) => {
     [key: number]: number;
   }>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const updateQuotation = async (data: any) => {
+    if (!user || !user.email) {
+      console.error('User or user email is not available');
+      return;
+    }
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/documents/updateQuotationPeriod`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({data}),
+        },
+      );
+      if (!response.ok) {
+        if (response.status === 401) {
+          const errorData = await response.json();
+          if (
+            errorData.message ===
+            'Token has been revoked. Please reauthenticate.'
+          ) {
+          }
+          throw new Error(errorData.message);
+        }
+        throw new Error('Network response was not ok.');
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const [installmentDetailsText, setInstallmentDetailsText] = useState<{
     [key: number]: string;
@@ -128,16 +160,26 @@ const Installment = ({navigation}: Props) => {
     name: 'installments',
   });
 
-  const {mutate, isLoading} = useMutation(updateContract, {
+  const {mutate, isLoading, isError} = useMutation({
+    mutationFn: updateQuotation,
     onSuccess: data => {
       const newId = dataProps.quotationId.slice(0, 8);
+      queryClient.invalidateQueries(['dashboardData']);
       navigation.navigate('DocViewScreen', {
         id: newId,
       });
     },
-    onError: (error: MyError) => {
+    onError: (error: any) => {
       console.error('There was a problem calling the function:', error);
-      console.log(error.response);
+      let errorMessage = 'An unexpected error occurred';
+
+      if (error.response && error.response.status === 401) {
+        errorMessage = 'Authentication error. Please re-login.';
+      } else if (error.response) {
+        errorMessage = error.response.data.error || errorMessage;
+      }
+
+      Alert.alert('Error', errorMessage);
     },
   });
   useEffect(() => {
@@ -183,9 +225,11 @@ const Installment = ({navigation}: Props) => {
         data: dataProps,
       });
     } else {
+     await mutate({data: dataProps});
+      
       navigation.navigate('Signature', {
         text: 'signature',
-        data: dataProps, // Passing only serializable data
+        data: dataProps,
       });
     }
 
@@ -197,6 +241,7 @@ const Installment = ({navigation}: Props) => {
     installmentDetailsText,
     dataProps,
   ]);
+
 
   const DropdownIcon = () => (
     <Icon
@@ -227,8 +272,19 @@ const Installment = ({navigation}: Props) => {
     label: `แบ่งชำระ ${value} งวด`,
     value,
   }));
-  console.log('percen lenght:', Object.values(percentages).length);
-  console.log('signatureUrl', signatureUrl);
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
 
   const renderItem = ({item, index}: {item: any; index: number}) => (
     <View style={styles.card}>
@@ -236,10 +292,44 @@ const Installment = ({navigation}: Props) => {
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
-          marginTop: 10,
         }}>
         <View style={styles.inputContainerForm}>
-          <Text style={styles.inputPrefix}>งวดที่ {index + 1}</Text>
+          <TextInput
+            style={{fontWeight: 'bold'}}
+            textAlign="center"
+            aria-disabled>
+            งวดที่ {index + 1}
+          </TextInput>
+          <Controller
+            control={control}
+            render={({field}) => (
+              <TextInput
+                style={{width: 40, textAlign: 'center'}}
+                placeholder="0"
+                onChangeText={value => {
+                  field.onChange(value);
+                  handlePercentageChange(value, index);
+                }}
+                keyboardType="numeric"
+              />
+            )}
+            name={`installments.${index}.percentage`}
+            rules={{required: true}}
+          />
+
+          <TextInput textAlign="center">%</TextInput>
+        </View>
+        {/* <View style={styles.inputContainerForm}>
+          <Text
+            style={{
+              width: 30,
+              height: 45,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            งวดที่ {index + 1}
+          </Text>
           <Controller
             control={control}
             render={({field}) => (
@@ -258,7 +348,7 @@ const Installment = ({navigation}: Props) => {
           />
 
           <Text style={styles.inputSuffix}>%</Text>
-        </View>
+        </View> */}
         <Text style={styles.amountText}>
           {(!isNaN(totalPrice * percentages[index])
             ? (totalPrice * percentages[index]) / 100
@@ -272,69 +362,102 @@ const Installment = ({navigation}: Props) => {
           <Text style={styles.title}>{`รายละเอียดงวดที่ ${index + 1}`}</Text>
           <Controller
             control={control}
+            name={`installments.${index}.details`}
             render={({field}) => (
               <TextInput
                 multiline
                 style={styles.Multilines}
-                placeholder="Address"
+                placeholder={
+                  index === 0 
+                    ? `ตัวอย่าง. ชำระมัดจำเพื่อเริ่มผลิตงาน...`
+                    : `ตัวอย่าง. ชำระเมื่อส่งงานติดตั้งรายการที่ ${index } แล้วเสร็จ...`
+                }
                 onChangeText={value => {
                   field.onChange(value);
                   handleInstallmentDetailsTextChange(value, index);
                 }}
               />
             )}
-            name={`installments[${index}].details`}
             rules={{required: true}}
           />
-          {errors.address && (
-            <Text style={styles.error}>This field is required.</Text>
-          )}
+
+          {/* {errors && (
+            <Text
+              style={{
+                color: 'red',
+                fontSize: 12,
+              }}>
+              กรุณาใส่ข้อมูล
+            </Text>
+          )} */}
         </View>
       </View>
 
-      <View style={{marginTop: 20}}>
+      <View style={{marginTop: 5}}>
         <SmallDivider />
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.innerContainer}>
-        {installments < 1 && (
-          <Text style={styles.header}>โครงการนี้แบ่งจ่ายกี่งวด</Text>
-        )}
-        <Text style={styles.subHeader}>
-          ยอดรวม:{' '}
-          {Number(totalPrice)
-            .toFixed(2)
-            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}{' '}
-          บาท
-        </Text>
-        <RNPickerSelect
-          onValueChange={value => setInstallments(value)}
-          items={pickerItems}
-          placeholder={{label: 'เลือกจำนวนงวด', value: null}}
-          style={pickerSelectStyles}
-          useNativeAndroidPickerStyle={false} // this is necessary to style placeholder and inputText
-          Icon={DropdownIcon}
-        />
-        {installments > 0 && (
-          <FlatList
-            data={Array.from({length: installments})}
-            renderItem={renderItem}
-            keyExtractor={(_, index) => index.toString()}
+    <SafeAreaView style={{flex: 1}}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={
+          Platform.OS === 'ios' ? 0 : -Dimensions.get('window').height
+        }
+        style={styles.container}>
+        <View style={styles.innerContainer}>
+          {installments < 1 && (
+            <Text style={styles.header}>โครงการนี้แบ่งจ่ายกี่งวด</Text>
+          )}
+          <Text style={styles.subHeader}>
+            ยอดรวม:{' '}
+            {Number(totalPrice)
+              .toFixed(2)
+              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}{' '}
+            บาท
+          </Text>
+          <RNPickerSelect
+            onValueChange={value => setInstallments(value)}
+            items={pickerItems}
+            placeholder={{label: 'เลือกจำนวนงวด', value: null}}
+            style={pickerSelectStyles}
+            useNativeAndroidPickerStyle={false}
+            Icon={DropdownIcon as any}
           />
-        )}
-      </View>
-      <ContractFooter
+          {installments > 0 && (
+            <>
+              <FlatList
+                data={Array.from({length: installments})}
+                renderItem={renderItem}
+                keyExtractor={(_, index) => index.toString()}
+              />
+              <View
+                style={{
+                  width: '90%',
+                  alignSelf: 'center',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <SaveButton
+                  onPress={handleSave}
+                  disabled={!isPercentagesValid || !isValid}
+                />
+              </View>
+            </>
+          )}
+        </View>
+
+        {/* <ContractFooter
         isLoading={isLoading}
         finalStep={true}
         // finalStep={step === 3}
         onBack={() => {}}
         onNext={handleSave}
         disabled={!isDirty || !isValid}
-      />
+      /> */}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -419,7 +542,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginVertical: 20,
+    marginVertical: 10,
   },
   cardContent: {
     flexDirection: 'row',
@@ -470,10 +593,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   inputSuffix: {
-    alignSelf: 'flex-end',
+    // alignSelf: 'flex-end',
     alignItems: 'flex-end',
     fontWeight: 'bold',
   },
+
   inputPrefix: {
     alignSelf: 'flex-start',
     alignItems: 'flex-start',
@@ -482,12 +606,15 @@ const styles = StyleSheet.create({
   inputContainerForm: {
     marginBottom: 10,
     borderWidth: 0.5,
-    borderRadius: 8,
+    borderRadius: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    width: 180,
+    paddingHorizontal: 10,
+    backgroundColor: '#FFFFFF', // Keep even rows white
+
+    width: 170,
+    height: Platform.OS === 'android' ? 50 : 50,
+    paddingVertical: Platform.OS === 'android' ? 0 : 15,
   },
 });
 
@@ -501,7 +628,11 @@ const pickerSelectStyles = StyleSheet.create({
     paddingRight: 30, // ensure icon does not overlay text
     marginBottom: 16,
     verticalAlign: 'middle',
-    backgroundPosition: 'right', // Place it on the right
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   inputAndroid: {
     fontSize: 16,
@@ -514,8 +645,6 @@ const pickerSelectStyles = StyleSheet.create({
     paddingRight: 30, // ensure icon does not overlay text
     marginBottom: 16,
     backgroundColor: '#F0F0F0',
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'right', // Place it on the right
   },
 
   installmentDetailContainer: {
@@ -527,6 +656,10 @@ const pickerSelectStyles = StyleSheet.create({
   },
   installmentDetailText: {
     fontSize: 16,
+  },
+  errors: {
+    color: 'red',
+    fontSize: 12,
   },
 });
 export default Installment;

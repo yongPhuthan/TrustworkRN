@@ -44,6 +44,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const {width, height} = Dimensions.get('window');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const queryClient = useQueryClient();
+  const [isModalVisible, setModalVisible] = useState(false);
 
   const [selectedItem, setSelectedItem] = useState(null) as any;
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -72,6 +73,12 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     'APPROVED',
     'CONTRACT',
   ]);
+  const handleShowModalClose = () => {
+    setShowModal(false);
+  };
+  const handleNoResponse = () => {
+    setModalVisible(false);
+  };
   const [activeFilter, setActiveFilter] = useState('ALL');
   const filteredQuotationData = useMemo(() => {
     if (!originalQuotationData) return null;
@@ -97,6 +104,17 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         setQuotationData(filteredData);
       }
     }
+  };
+  const handleYesResponse = ( index) => {
+    if (companyData && quotationData && quotationData.length > 0) {
+      navigation.navigate('ContractOptions', {
+        id: quotationData[index].id,
+        sellerId: companyData.id,
+        allTotal: quotationData[index].allTotal,
+        customerName: quotationData[index].customer?.name as string,
+      });
+    }
+    setModalVisible(false);
   };
 
   async function fetchDashboardData() {
@@ -244,9 +262,8 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     }
   }
 
-  const handleModal = () => {
-    console.log('SHOW');
-    setShowModal(true);
+  const handleModal = (item, index) => {
+    setModalVisible(true); // setShowModal(true);
   };
   const handleModalOpen = (item, index) => {
     console.log('item', item);
@@ -343,19 +360,20 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               }}>
               <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
             </Pressable>
-            {/* <Pressable
+            <Pressable
               onPress={() => {
                 setShowModal(false);
-                navigation.navigate('Installment', {
-                  data: {
-                    total: Number(data.allTotal),
-                    quotationId: data.id,
-                    sellerId: data.sellerId,
-                  },
-                });
+                handleModal(item, index);
+                // navigation.navigate('Installment', {
+                //   data: {
+                //     total: Number(data.allTotal),
+                //     quotationId: data.id,
+                //     sellerId: data.sellerId,
+                //   },
+                // });
               }}>
               <Text style={styles.closeButtonText}>ทำสัญญา</Text>
-            </Pressable> */}
+            </Pressable>
             <View
               style={{
                 width: '100%',
@@ -553,6 +571,28 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         }}
         onPress={() => createNewQuotation()}
       />
+
+      <Modal
+        style={styles.modalContainer}
+        onBackdropPress={handleShowModalClose}
+        isVisible={isModalVisible}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={styles.modalText}>
+            ท่านได้นัดลูกค้าเข้าดูพื้นที่หน้างานโครงการนี้แล้วหรือยัง ?
+          </Text>
+          <TouchableOpacity style={styles.button} onPress={()=>handleYesResponse(selectedIndex)}>
+            <Text style={styles.whiteText}> ดูหน้างานแล้ว</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleNoResponse}>
+            <Text style={styles.whiteText}>ยังไม่ได้ดูหน้างาน</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.RedText}>
+            {' '}
+            *จำเป็นต้องดูหน้างานก่อนเริ่มทำสัญญา
+          </Text>
+        </View>
+      </Modal>
     </>
   );
 };
@@ -669,5 +709,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Sukhumvit Set Bold',
     color: 'gray',
+  },
+  whiteText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+    alignSelf: 'center',
+  },
+  button: {
+    backgroundColor: '#0073BA',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    height: 50,
+    width: 250,
+    borderRadius: 5,
+    marginTop: 20,
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  RedText: {
+    marginTop: 10,
+    fontSize: 14,
+    alignSelf: 'center',
   },
 });

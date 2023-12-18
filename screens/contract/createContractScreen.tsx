@@ -170,20 +170,25 @@ console.log('PROPS',props)
         {step1 && (
           <>
             <View style={styles.card}>
-              <View style={{flexDirection: 'row'}}>
-                <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
-                  โครงการ:
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: '400',
-                    marginTop: 10,
-                    marginLeft: 20,
-                  }}>
-                  {props.projectName}
-                </Text>
-              </View>
+            <View style={styles.inputContainer}>
+                    <Text style={styles.label}>ตั้งชื่อโครงการ</Text>
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value}
+                          style={styles.inputForm}
+                          placeholder="โครงการติดตั้ง..."
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="projectName"
+                      rules={{required: true}} // This line sets the field to required
+                    />
+                    {errors.projectName && <Text>{textRequired}</Text>}
+                  </View>
               <View style={{flexDirection: 'row'}}>
                 <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
                   ลูกค้า:
@@ -227,7 +232,7 @@ console.log('PROPS',props)
                 }}>
                 <Text style={styles.title}>วันที่ทำสัญญา:</Text>
                 <View style={{marginTop: 10}}>
-                  <DatePickerContract
+                  <DatePickerButton
                     label=""
                     date="today"
                     onDateSelected={props.handleDateSigne}
@@ -243,7 +248,7 @@ console.log('PROPS',props)
                 <Text style={styles.title}>วันที่วัดหน้างาน:</Text>
 
                 <View style={{marginTop: 10}}>
-                  <DatePickerContract
+                  <DatePickerButton
                     label=""
                     date="today"
                     onDateSelected={props.handleDateServay}

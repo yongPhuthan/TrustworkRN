@@ -8,6 +8,7 @@ import {
   Platform,
   View,
   ActivityIndicator,
+  Dimensions,
   KeyboardAvoidingView,
   ScrollView,
   TouchableOpacity,
@@ -19,7 +20,7 @@ import {Contract} from '../../types/docType';
 
 import axios, {AxiosResponse, AxiosError} from 'axios';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {HOST_URL, PROJECT_FIREBASE} from '@env';
+import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import {v4 as uuidv4} from 'uuid';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
@@ -40,6 +41,9 @@ import SmallDivider from '../../components/styles/SmallDivider';
 import ContractFooter from '../../components/styles/ContractFooter';
 import CreateContractScreen from './createContractScreen';
 import Installment from '../utils/installment';
+import {useUser} from '../../providers/UserContext';
+import SaveButton from '../../components/ui/Button/SaveButton';
+
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ContractOptions'>;
   route: RouteProp<ParamListBase, 'ContractOptions'>;
@@ -55,69 +59,27 @@ interface MyError {
   response: object;
   // add other properties if necessary
 }
-const fetchContractByID = async (id: string) => {
-  const user = auth().currentUser;
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
 
-  const idToken = await user.getIdToken();
-  let url;
-  if (__DEV__) {
-    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appQueryContract`;
-  } else {
-    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appQueryContract`;
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-    body: JSON.stringify({id}),
-    credentials: 'include',
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-
-  return data;
-};
 const ContractOption = ({navigation}: Props) => {
   const route = useRoute();
-  const {id, sellerId, allTotal, customerName} = route?.params;
+  const {id} = route?.params as any;
 
-  const [projectName, setProjectName] = useState('');
   const [signDate, setDateSign] = useState('');
   const [servayDate, setDateServay] = useState('');
-  const [warantyTimeWork, setWarantyTimeWork] = useState(0);
-  const [workingDays, setWorkingDays] = useState(0);
-  const [workCheckEnd, setWorkCheckEnd] = useState(0);
-  const [workCheckDay, setWorkCheckDay] = useState(0);
-  const [installingDay, setInstallingDay] = useState(0);
-  const [fcnToken, setFtmToken] = useState('');
-  const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const [step, setStep] = useState(1);
   const [stepData, setStepData] = useState({});
   const textRequired = 'จำเป็นต้องระบุ';
-  const [workAfterGetDeposit, setWorkAfterGetDeposit] = useState(0);
-  const [prepareDay, setPrepareDay] = useState(0);
-  const [finishedDay, setFinishedDay] = useState(0);
-  const [adjustPerDay, setAdjustPerDay] = useState(0);
+
   const [contract, setContract] = useState<Contract>();
+  const user = useUser();
 
   const [showSecondPage, setShowSecondPage] = useState(false);
   // const {updatedData, contract}: any = route.params;
-  const [address, setAddress] = useState('');
   const {
     handleSubmit,
     control,
     watch,
-    register,
+    getValues,
     setValue,
     reset,
     formState: {errors, isDirty, dirtyFields, isValid},
@@ -128,19 +90,57 @@ const ContractOption = ({navigation}: Props) => {
       signDate: '',
       servayDate: '',
       warantyTimeWork: 0,
-      workingDays: 0,
-      workCheckEnd: 0,
-      workCheckDay: 0,
-      installingDay: 0,
-      adjustPerDay: 0,
-      workAfterGetDeposit: 0,
-      productWarantyYear: 0,
-      prepareDay: 0,
-      finishedDay: 0,
-      signAddress: 0,
-      skillWarantyYear: 0,
+      customer: {
+        name: '',
+        address: '',
+        phone: '',
+      },
+      allTotal: 0,
+      signAddress: '',
     },
   });
+  async function queryContractByQuotation() {
+    if (!user || !user.email) {
+      console.error('User or user email is not available');
+      return;
+    }
+
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/documents/getQuotation?quotationId=${encodeURIComponent(
+          id,
+        )}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          const errorData = await response.json();
+          if (
+            errorData.message ===
+            'Token has been revoked. Please reauthenticate.'
+          ) {
+          }
+          throw new Error(errorData.message);
+        }
+        throw new Error('Network response was not ok.');
+      }
+
+      const data = await response.json();
+
+      return data;
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      throw err;
+    }
+  }
 
   const handleAddressChange = (newAddress: string) => {
     setValue('signAddress', newAddress);
@@ -158,7 +158,7 @@ const ContractOption = ({navigation}: Props) => {
   };
   const {data, isLoading, isError} = useQuery(
     ['ContractID', id],
-    () => fetchContractByID(id),
+    () => queryContractByQuotation(),
     {
       onSuccess: data => {
         console.log('data Query', data);
@@ -167,16 +167,11 @@ const ContractOption = ({navigation}: Props) => {
           setContract(data.contract as Contract);
           console.log(data);
           reset({
-            warantyTimeWork: data.contract.warantyTimeWork,
-            workCheckEnd: data.contract.workCheckEnd,
-            workCheckDay: data.contract.workCheckDay,
-            installingDay: data.contract.installingDay,
-            adjustPerDay: data.contract.adjustPerDay,
-            workAfterGetDeposit: data.contract.workAfterGetDeposit,
-            prepareDay: data.contract.prepareDay,
-            finishedDay: data.contract.finishedDay,
-            productWarantyYear: data.contract.productWarantyYear,
-            skillWarantyYear: data.contract.skillWarantyYear,
+            projectName: data.projectName,
+            signDate: data.signDate,
+            servayDate: data.servayDate,
+            customer: data.customer,
+            allTotal: data.allTotal,
           });
         }
       },
@@ -221,31 +216,6 @@ const ContractOption = ({navigation}: Props) => {
   };
 
   useEffect(() => {
-    async function requestUserPermission() {
-      const authStatus = await messaging().requestPermission();
-      const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-      if (enabled) {
-        console.log('Authorization status:', authStatus);
-        getFCMToken();
-      }
-    }
-
-    async function getFCMToken() {
-      const fcmToken = await messaging().getToken();
-      if (fcmToken) {
-        console.log('Your Firebase Token  document:', fcmToken);
-        setFtmToken(fcmToken);
-      } else {
-        console.log('Failed to get Firebase Token');
-      }
-    }
-    requestUserPermission();
-  }, [selectedContract]);
-
-  useEffect(() => {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -255,30 +225,22 @@ const ContractOption = ({navigation}: Props) => {
   }, []);
 
   const handleNextPress = () => {
-    if (step < 2) {
-      setStep(step + 1);
-    } else  {
-      console.log("Navigating to Installment");
-
-      navigation.navigate('Installment', {
-        data: {
-          projectName: watch('projectName'),
-          signDate,
-          servayDate,
-          total: Number(data.allTotal),
-          signAddress: watch('signAddress'),
-          quotationId: data.id,
-          sellerId: data.sellerId,
-          contract: dirtyData,
-          contractID: contract?.id,
-        },
-      });
-    }
-    // Validate the inputs for step 2 and step 3 here in a similar way.
+    navigation.navigate('Installment', {
+      data: {
+        projectName: getValues('projectName'),
+        signDate,
+        servayDate,
+        total: Number(getValues('allTotal')),
+        signAddress: watch('signAddress'),
+        quotationId: data.id,
+        sellerId: data.sellerId,
+        contract: dirtyData,
+        contractID: contract?.id,
+      },
+    });
   };
 
   const handleBackPress = () => {
-    // If it's not the first step, decrement the step.
     if (step > 1) {
       setStep(step - 1);
     } else {
@@ -286,17 +248,13 @@ const ContractOption = ({navigation}: Props) => {
         projectName: '',
         signDate: '',
         servayDate: '',
-        warantyTimeWork: 0,
-        workingDays: 0,
-        workCheckEnd: 0,
-        workCheckDay: 0,
-        installingDay: 0,
-        fcnToken: '',
-        adjustPerDay: 0,
-        workAfterGetDeposit: 0,
-        prepareDay: 0,
-        finishedDay: 0,
-        address: '',
+        customer: {
+          name: '',
+          address: '',
+          phone: '',
+        },
+        allTotal: 0,
+        signAddress: '',
       });
       navigation.goBack();
     }
@@ -373,20 +331,27 @@ const ContractOption = ({navigation}: Props) => {
       workCheckEnd: Number(watch('workCheckEnd')),
     }).filter(([key]) => dirtyFields[key]),
   );
-  console.log('step',step);
+
+  console.log('step', step);
+  if (isLoading) return <ActivityIndicator size="large" color="#0000ff" />;
+  if (isError) return <Text>{'errors'}</Text>;
   return (
     <>
-      {contract && (
+      {data && (
         <SafeAreaView style={{flex: 1}}>
-          {step === 1 && (
-            <View style={styles.formInput}>
-              <KeyboardAvoidingView
-                style={{flex: 1}}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
-                <ScrollView style={styles.containerForm}>
+          <View style={styles.formInput}>
+            <KeyboardAvoidingView
+              style={{flex: 1}}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={
+                Platform.OS === 'ios' ? 0 : -Dimensions.get('window').height
+              }
+              
+              >
+              <ScrollView style={styles.containerForm}>
+                <View style={styles.card}>
                   <View style={styles.inputContainer}>
-                    <Text style={styles.label}>ชื่อโครงการ</Text>
+                    <Text style={styles.title}>ตั้งชื่อโครงการ</Text>
                     <Controller
                       control={control}
                       render={({field: {onChange, onBlur, value}}) => (
@@ -404,81 +369,122 @@ const ContractOption = ({navigation}: Props) => {
                     />
                     {errors.projectName && <Text>{textRequired}</Text>}
                   </View>
-                  <View style={styles.formInput}>
-                    {renderTextInput(
-                      'productWarantyYear',
-                      'รับประกันวัสดุอุปกรณ์กี่ปี',
-                      safeToString(contract.productWarantyYear),
-                    )}
-                    {renderTextInput(
-                      'skillWarantyYear',
-                      'รับประกันงานติดตั้งกี่ปี',
-                      safeToString(contract.skillWarantyYear),
-                    )}
-                    {renderTextInput(
-                      'installingDay',
-                      'Installing Day',
-                      safeToString(contract.installingDay),
-                    )}
-                    {renderTextInput(
-                      'workAfterGetDeposit',
-                      'Work After Get Deposit',
-                      safeToString(contract.workAfterGetDeposit),
-                    )}
-                    {renderTextInput(
-                      'prepareDay',
-                      'Prepare Days',
-                      safeToString(contract.prepareDay),
-                    )}
-                    {renderTextInput(
-                      'finishedDay',
-                      'Finished Days',
-                      safeToString(contract.finishedDay),
-                    )}
-                    {renderTextInput(
-                      'workCheckDay',
-                      'Work Check Day',
-                      safeToString(contract.workCheckDay),
-                    )}
-                    {renderTextInput(
-                      'workCheckEnd',
-                      'Work Check End',
-                      safeToString(contract.workCheckEnd),
-                    )}
-                    {renderTextInput(
-                      'adjustPerDay',
-                      'Adjust Per Days',
-                      safeToString(contract.adjustPerDay),
-                    )}
-
-                    <SmallDivider />
+                  <View style={{flexDirection: 'row'}}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                        marginTop: 10,
+                      }}>
+                      ลูกค้า:
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: '400',
+                        marginTop: 10,
+                        marginLeft: 40,
+                      }}>
+                      {getValues('customer.name')}
+                    </Text>
                   </View>
-                </ScrollView>
-              </KeyboardAvoidingView>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                        marginTop: 10,
+                      }}>
+                      ยอดรวม:
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: '400',
+                        marginTop: 10,
+                        marginLeft: 22,
+                      }}>
+                      {Number(getValues('allTotal'))
+                        .toFixed(2)
+                        .replace(/\d(?=(\d{3})+\.)/g, '$&,')}{' '}
+                      บาท
+                    </Text>
+                  </View>
+                </View>
 
-              <SmallDivider />
-            </View>
-          )}
-          {step === 2 && (
-            <>
-              <CreateContractScreen
-                handleAddressChange={handleAddressChange}
-                handleDateServay={handleDateServay}
-                handleDateSigne={handleDateSigne}
-                signDate={servayDate}
-                servayDate={servayDate}
-                projectName={watch('projectName')}
-                customerName={data.customer.name}
-                allTotal={data.allTotal}
-                address={watch('address')}
-              />
-            </>
-          )}
+                <View style={styles.stepContainer}>
+                  <SmallDivider />
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      width: '70%',
+                    }}>
+                    <Text style={styles.titleDate}>วันที่ทำสัญญา:</Text>
+                    <View style={{marginTop: 10}}>
+                      <DatePickerButton
+                        label=""
+                        date="today"
+                        onDateSelected={handleDateSigne}
+                      />
+                    </View>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      width: '70%',
+                    }}>
+                    <Text style={styles.titleDate}>วันที่วัดหน้างาน:</Text>
 
-          {step !== 3 && (
+                    <View style={{marginTop: 10}}>
+                      <DatePickerButton
+                        label=""
+                        date="today"
+                        onDateSelected={handleDateServay}
+                      />
+                    </View>
+                  </View>
+                  <View style={{marginTop: 10}}></View>
+                  <SmallDivider />
+                  <View style={{alignSelf: 'flex-start'}}>
+                    <Text style={styles.title}>สถาณที่ติดตั้งงาน:</Text>
+                    <Controller
+                      control={control}
+                      name="signAddress"
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          multiline
+                          numberOfLines={4}
+                          style={styles.input}
+                          placeholder="เช่นบ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด"
+                          onBlur={onBlur}
+                          keyboardType="default"
+                          onChangeText={onChange}
+                          value={value}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                <View
+                  style={{
+                    width: '90%',
+                    marginTop: 20,
+                    alignSelf: 'center',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  <SaveButton onPress={handleNextPress} disabled={!isValid} />
+                </View>
+              </ScrollView>
+            </KeyboardAvoidingView>
+          </View>
+
+          {/* {step !== 2 && (
             <ContractFooter
               finalStep={false}
-              // finalStep={step === 3}
               onBack={handleBackPress}
               onNext={handleNextPress}
               isLoading={false}
@@ -486,19 +492,19 @@ const ContractOption = ({navigation}: Props) => {
                 step === 1 ? !isDirty || !isValid : watch('signAddress') === ''
               }
             />
-          )}
+          )} */}
         </SafeAreaView>
       )}
     </>
   );
 };
+const {width} = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   containerForm: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 5,
   },
   headerForm: {
     flexDirection: 'row',
@@ -513,7 +519,7 @@ const styles = StyleSheet.create({
   },
   formInput: {
     flex: 1,
-    marginTop: 30,
+    marginTop: 5,
   },
   rowForm: {
     flexDirection: 'row',
@@ -531,7 +537,7 @@ const styles = StyleSheet.create({
     color: '#0073BA',
   },
   roundedButton: {
-    marginTop: 40,
+    marginTop: 10,
   },
   whiteText: {
     color: '#FFFFFF',
@@ -561,7 +567,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 10,
     paddingVertical: 15,
-    width: 80,
+    width: 100,
   },
   label: {
     // fontFamily: 'sukhumvit set',
@@ -572,8 +578,9 @@ const styles = StyleSheet.create({
   },
   inputForm: {
     // backgroundColor: '#F5F5F5',
-    borderRadius: 8,
+    borderRadius: 5,
     borderWidth: 0.5,
+    width: width * 0.85,
 
     height: 50,
 
@@ -595,7 +602,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     minHeight: 50,
     minWidth: 200,
-    height: 500,
 
     width: 50,
   },
@@ -664,6 +670,21 @@ const styles = StyleSheet.create({
   smallInput: {
     width: '30%',
   },
+  stepContainer: {
+    paddingHorizontal: 20,
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 5,
+    // elevation: 3,
+    // shadowColor: '#000',
+    // shadowOffset: {width: 0, height: 2},
+    // shadowOpacity: 0.3,
+    // shadowRadius: 3,
+    padding: 20,
+    width: '80%',
+    alignSelf: 'baseline',
+  },
   iconForm: {
     color: 'white',
     marginLeft: 10,
@@ -674,6 +695,24 @@ const styles = StyleSheet.create({
     color: '#0073BA',
 
     marginLeft: 10,
+  },
+  input: {
+    borderWidth: 0.5,
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: 'white',
+    width: width * 0.85,
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  titleDate: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginVertical: 20,
   },
 });
 

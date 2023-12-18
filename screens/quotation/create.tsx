@@ -42,16 +42,12 @@ import Signature from 'react-native-signature-canvas';
 
 import axios, {AxiosResponse, AxiosError} from 'axios';
 import {useUser} from '../../providers/UserContext';
-import messaging from '@react-native-firebase/messaging';
-import Lottie from 'lottie-react-native';
+
 import {Audit, IdContractList, CompanyUser} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
-import {useFetchCompanyUser} from '../../hooks/company/useFetchCompany';
 import SignatureComponent from '../../components/utils/signature';
 import SmallDivider from '../../components/styles/SmallDivider';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import { faBriefcase } from '@fortawesome/free-solid-svg-icons';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
 }
@@ -73,9 +69,7 @@ const Quotation = ({navigation}: Props) => {
   // const { data, isLoading } = useQuery('data', fetchData);
   const [email, setEmail] = useState('');
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
-  const [showAddClient, setShowAddClient] = useState(true);
-  const [allDiscount, setAllDiscount] = useState(0);
-  const [status, setStatus] = useState('');
+
   const [total, setTotal] = useState(0);
   const [companyUser, setCompanyUser] = useState<CompanyUser>();
   const [discountValue, setDiscountValue] = useState(0);
@@ -104,7 +98,6 @@ const Quotation = ({navigation}: Props) => {
     null,
   );
   const dataSignature = {};
-  const [vat7, setVat7] = useState(false);
   const fetchCompanyUser = async () => {
     if (!user) {
       throw new Error('User not authenticated');
