@@ -333,7 +333,6 @@ const ContractOption = ({navigation}: Props) => {
   );
 
   console.log('step', step);
-  if (isLoading) return <ActivityIndicator size="large" color="#0000ff" />;
   if (isError) return <Text>{'errors'}</Text>;
   return (
     <>
@@ -482,17 +481,7 @@ const ContractOption = ({navigation}: Props) => {
             </KeyboardAvoidingView>
           </View>
 
-          {/* {step !== 2 && (
-            <ContractFooter
-              finalStep={false}
-              onBack={handleBackPress}
-              onNext={handleNextPress}
-              isLoading={false}
-              disabled={
-                step === 1 ? !isDirty || !isValid : watch('signAddress') === ''
-              }
-            />
-          )} */}
+  
         </SafeAreaView>
       )}
     </>

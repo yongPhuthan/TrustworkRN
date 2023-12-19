@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   FlatList,
   Alert,
+  ScrollView,
   TextInput,
   KeyboardAvoidingView,
   SafeAreaView,
@@ -21,7 +22,7 @@ import {useRoute} from '@react-navigation/native';
 import {faChevronDown} from '@fortawesome/free-solid-svg-icons';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Or another library of your choice
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {useUser} from '../../providers/UserContext';
 import SmallDivider from '../../components/styles/SmallDivider';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -86,15 +87,9 @@ const Installment = ({navigation}: Props) => {
   const {isSignatureUpload, signatureUrl, handleSignatureUpload} =
     useSignatureUpload();
 
-  const [installmentDetails, setInstallmentDetails] = useState<
-    InstallmentDetail[]
-  >([]);
-
   const [percentages, setPercentages] = useState<{[key: number]: number}>({});
   const [isPercentagesValid, setIsPercentagesValid] = useState<boolean>(true);
-  const [percentageValid, setPercentageValid] = useState<{
-    [key: number]: number;
-  }>({});
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const updateQuotation = async (data: any) => {
@@ -165,9 +160,13 @@ const Installment = ({navigation}: Props) => {
     onSuccess: data => {
       const newId = dataProps.quotationId.slice(0, 8);
       queryClient.invalidateQueries(['dashboardData']);
-      navigation.navigate('DocViewScreen', {
-        id: newId,
+      navigation.navigate('Signature', {
+        text: 'signature',
+        data: dataProps,
       });
+      // navigation.navigate('DocViewScreen', {
+      //   id: newId,
+      // });
     },
     onError: (error: any) => {
       console.error('There was a problem calling the function:', error);
@@ -225,8 +224,7 @@ const Installment = ({navigation}: Props) => {
         data: dataProps,
       });
     } else {
-     await mutate({data: dataProps});
-      
+      // await mutate({data: dataProps});
       navigation.navigate('Signature', {
         text: 'signature',
         data: dataProps,
@@ -241,7 +239,6 @@ const Installment = ({navigation}: Props) => {
     installmentDetailsText,
     dataProps,
   ]);
-
 
   const DropdownIcon = () => (
     <Icon
@@ -284,7 +281,6 @@ const Installment = ({navigation}: Props) => {
       </View>
     );
   }
-
 
   const renderItem = ({item, index}: {item: any; index: number}) => (
     <View style={styles.card}>
@@ -368,9 +364,9 @@ const Installment = ({navigation}: Props) => {
                 multiline
                 style={styles.Multilines}
                 placeholder={
-                  index === 0 
+                  index === 0
                     ? `ตัวอย่าง. ชำระมัดจำเพื่อเริ่มผลิตงาน...`
-                    : `ตัวอย่าง. ชำระเมื่อส่งงานติดตั้งรายการที่ ${index } แล้วเสร็จ...`
+                    : `ตัวอย่าง. ชำระเมื่อส่งงานติดตั้งรายการที่ ${index} แล้วเสร็จ...`
                 }
                 onChangeText={value => {
                   field.onChange(value);
@@ -401,63 +397,59 @@ const Installment = ({navigation}: Props) => {
 
   return (
     <SafeAreaView style={{flex: 1}}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={
-          Platform.OS === 'ios' ? 0 : -Dimensions.get('window').height
-        }
-        style={styles.container}>
-        <View style={styles.innerContainer}>
-          {installments < 1 && (
-            <Text style={styles.header}>โครงการนี้แบ่งจ่ายกี่งวด</Text>
-          )}
-          <Text style={styles.subHeader}>
-            ยอดรวม:{' '}
-            {Number(totalPrice)
-              .toFixed(2)
-              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}{' '}
-            บาท
-          </Text>
-          <RNPickerSelect
-            onValueChange={value => setInstallments(value)}
-            items={pickerItems}
-            placeholder={{label: 'เลือกจำนวนงวด', value: null}}
-            style={pickerSelectStyles}
-            useNativeAndroidPickerStyle={false}
-            Icon={DropdownIcon as any}
-          />
-          {installments > 0 && (
-            <>
-              <FlatList
-                data={Array.from({length: installments})}
-                renderItem={renderItem}
-                keyExtractor={(_, index) => index.toString()}
+      <View style={{flex: 1, marginTop: 5}}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={
+            Platform.OS === 'ios' ? 0 : -Dimensions.get('window').height
+          }
+          style={styles.container}>
+          <ScrollView
+            style={{flex: 1, backgroundColor: '#FFFFFF', paddingHorizontal: 5}}>
+            <View style={styles.innerContainer}>
+              {installments < 1 && (
+                <Text style={styles.header}>โครงการนี้แบ่งจ่ายกี่งวด</Text>
+              )}
+              <Text style={styles.subHeader}>
+                ยอดรวม:{' '}
+                {Number(totalPrice)
+                  .toFixed(2)
+                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}{' '}
+                บาท
+              </Text>
+              <RNPickerSelect
+                onValueChange={value => setInstallments(value)}
+                items={pickerItems}
+                placeholder={{label: 'เลือกจำนวนงวด', value: null}}
+                style={pickerSelectStyles}
+                useNativeAndroidPickerStyle={false}
+                Icon={DropdownIcon as any}
               />
-              <View
-                style={{
-                  width: '90%',
-                  alignSelf: 'center',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                <SaveButton
-                  onPress={handleSave}
-                  disabled={!isPercentagesValid || !isValid}
-                />
-              </View>
-            </>
-          )}
-        </View>
-
-        {/* <ContractFooter
-        isLoading={isLoading}
-        finalStep={true}
-        // finalStep={step === 3}
-        onBack={() => {}}
-        onNext={handleSave}
-        disabled={!isDirty || !isValid}
-      /> */}
-      </KeyboardAvoidingView>
+              {installments > 0 && (
+                <>
+                  <FlatList
+                    data={Array.from({length: installments})}
+                    renderItem={renderItem}
+                    keyExtractor={(_, index) => index.toString()}
+                  />
+                  <View
+                    style={{
+                      width: '100%',
+                      alignSelf: 'center',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    <SaveButton
+                      onPress={handleSave}
+                      disabled={!isPercentagesValid || !isValid}
+                    />
+                  </View>
+                </>
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 };

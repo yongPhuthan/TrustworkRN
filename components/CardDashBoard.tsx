@@ -46,11 +46,11 @@ const CardDashBoard = (props: Props) => {
       <View
         style={{
           backgroundColor:
-            props.status === 'pending'
+            props.status === 'PENDING'
               ? '#ccc'
               : props.status === 'APPROVED'
               ? '#43a047'
-              : props.status === 'contract'
+              : props.status === 'CONTRACT'
               ? '#1079ae'
               : '#ccc',
           borderRadius: 4,
@@ -66,11 +66,11 @@ const CardDashBoard = (props: Props) => {
             fontWeight: 'bold',
             textTransform: 'uppercase',
           }}>
-          {props.status === 'pending'
+          {props.status === 'PENDING'
             ? 'รออนุมัติ'
             : props.status === 'APPROVED'
             ? 'อนุมัติแล้ว'
-            : props.status === 'contract'
+            : props.status === 'CONTRACT'
             ? 'ทำสัญญาแล้ว'
             : props.status === 'signed'
             ? 'เซ็นเอกสารแล้ว'

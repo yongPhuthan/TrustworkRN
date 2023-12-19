@@ -489,11 +489,6 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>react-native-config.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
 		<key>react-native-get-random-values.xcscheme</key>
 		<dict>
 			<key>isShown</key>

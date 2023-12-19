@@ -22,11 +22,6 @@ import {
   MultipleSelectList,
   SelectList,
 } from 'react-native-dropdown-select-list';
-import firestore from '@react-native-firebase/firestore';
-import firebase, {
-  testFirebaseConnection,
-  testFunctionsConnection,
-} from '../../firebase';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faCloudUpload, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
 import {
@@ -53,9 +48,7 @@ import {
   BACK_END_SERVER_URL,
 } from '@env';
 import {ParamListBase} from '../../types/navigationType';
-import RNFS from 'react-native-fs';
 import {StackNavigationProp} from '@react-navigation/stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useUser} from '../../providers/UserContext';
 
 interface Props {
@@ -319,7 +312,8 @@ const CreateCompanyScreen = ({navigation}: Props) => {
       const uploadResponse: Response = await fetch(signedUrl, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'image/jpeg', // Match this with the contentType above
+          'Content-Type': 'image/jpeg', 
+          
         },
         body: blob,
       });
@@ -404,8 +398,6 @@ const CreateCompanyScreen = ({navigation}: Props) => {
     }
   };
 
-
-console.log('email', user?.email);
   const renderPage = () => {
     switch (page) {
       case 1:

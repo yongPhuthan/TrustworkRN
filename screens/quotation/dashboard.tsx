@@ -5,7 +5,6 @@ import {
   FlatList,
   Dimensions,
   ActivityIndicator,
-  Animated,
   TouchableOpacity,
   Alert,
   Platform,
@@ -39,16 +38,14 @@ import {useUser} from '../../providers/UserContext';
 import {set} from 'react-hook-form';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(true);
   const user = useUser();
   const {width, height} = Dimensions.get('window');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const queryClient = useQueryClient();
   const [isModalVisible, setModalVisible] = useState(false);
-
   const [selectedItem, setSelectedItem] = useState(null) as any;
   const [selectedIndex, setSelectedIndex] = useState(null);
-
   const [originalQuotationData, setOriginalQuotationData] = useState<
     Quotation[] | null
   >(null);
@@ -73,9 +70,11 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     'APPROVED',
     'CONTRACT',
   ]);
+
   const handleShowModalClose = () => {
     setShowModal(false);
   };
+
   const handleNoResponse = () => {
     setModalVisible(false);
   };
@@ -105,7 +104,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       }
     }
   };
-  const handleYesResponse = ( index) => {
+  const handleYesResponse = index => {
     if (companyData && quotationData && quotationData.length > 0) {
       navigation.navigate('ContractOptions', {
         id: quotationData[index].id,
@@ -263,28 +262,27 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   }
 
   const handleModal = (item, index) => {
-    setModalVisible(true); // setShowModal(true);
+    console.log('index Modal', index);
+    setShowModal(false);
+    setModalVisible(true);
   };
   const handleModalOpen = (item, index) => {
     console.log('item', item);
     console.log('index', index);
     setSelectedItem(item);
     setSelectedIndex(index);
-    setShowModal(true);
+    handleModal(item, index);
+    // setShowModal(true);
   };
 
-  // Function to handle closing the modal
   const handleModalClose = () => {
     setSelectedItem(null);
     setSelectedIndex(null);
     setShowModal(false);
   };
-
   const handleFilterClick = filter => {
     setActiveFilter(filter);
   };
-  // versionแรก ยังไม่มีการแก้ไข
-
   const editQuotation = async (services, customer, quotation) => {
     setIsLoadingAction(true);
     await dispatch(stateAction.reset_service_list());
@@ -304,7 +302,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
     navigation.navigate('EditQuotation', {quotation, company: data[0]});
   };
-
   const FilterButton = ({filter, isActive, onPress}) => {
     const displayText = filterLabels[filter] || filter;
 
@@ -362,7 +359,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             </Pressable>
             <Pressable
               onPress={() => {
-                setShowModal(false);
                 handleModal(item, index);
                 // navigation.navigate('Installment', {
                 //   data: {
@@ -445,6 +441,19 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               }}>
               <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
             </TouchableOpacity>
+            <Pressable
+              onPress={() => {
+                handleModal(item, index);
+                // navigation.navigate('Installment', {
+                //   data: {
+                //     total: Number(data.allTotal),
+                //     quotationId: data.id,
+                //     sellerId: data.sellerId,
+                //   },
+                // });
+              }}>
+              <Text style={styles.closeButtonText}>ทำสัญญา</Text>
+            </Pressable>
             <View
               style={{
                 width: '100%',
@@ -482,6 +491,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     // navigation.navigate('GalleryScreen', {code: companyData?.code});
     navigation.navigate('CreateQuotation');
   };
+  console.log('isModalVisible', isModalVisible);
   return (
     <>
       <View>
@@ -571,22 +581,24 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         }}
         onPress={() => createNewQuotation()}
       />
-
+      {/* modal popup */}
       <Modal
         style={styles.modalContainer}
-        onBackdropPress={handleShowModalClose}
+        backdropTransitionOutTiming={100}
+        onBackdropPress={handleNoResponse}
         isVisible={isModalVisible}>
         <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
           <Text style={styles.modalText}>
             ท่านได้นัดลูกค้าเข้าดูพื้นที่หน้างานโครงการนี้แล้วหรือยัง ?
           </Text>
-          <TouchableOpacity style={styles.button} onPress={()=>handleYesResponse(selectedIndex)}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleYesResponse(selectedIndex)}>
             <Text style={styles.whiteText}> ดูหน้างานแล้ว</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={handleNoResponse}>
             <Text style={styles.whiteText}>ยังไม่ได้ดูหน้างาน</Text>
           </TouchableOpacity>
-
           <Text style={styles.RedText}>
             {' '}
             *จำเป็นต้องดูหน้างานก่อนเริ่มทำสัญญา

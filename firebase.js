@@ -4,7 +4,6 @@ import functions from '@react-native-firebase/functions';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import { getStorage, isAvailable } from '@react-native-firebase/storage';
-import config from 'react-native-config';
 
 import auth from '@react-native-firebase/auth'
 const firebaseConfig = {
@@ -28,10 +27,10 @@ if (__DEV__) {
     emulatorHost = 'http://127.0.0.1'; 
   }
 
-  firebase.functions().useEmulator(emulatorHost, 5001);
+  // firebase.functions().useEmulator(emulatorHost, 5001);
   firebase.auth().useEmulator(`${emulatorHost}:9099`);
-  firebase.firestore().useEmulator(emulatorHost, 8080)
-  firebase.storage().useEmulator(emulatorHost,9199)
+  // firebase.firestore().useEmulator(emulatorHost, 8080)
+  // firebase.storage().useEmulator(emulatorHost,9199)
   // firebase.firestore().settings({
   //   host: `${emulatorHost}:8080`,
   //   ssl: false
@@ -44,27 +43,6 @@ console.log('Firebase App name: ', firebase.app().name);
 
 // Testing Firestore Functions
 
-export const testFirestoreWrite = async () => {
-  console.log('Inside testFirestoreWrite - Start');
-  
-  let emulatorHost = 'http://localhost';
-  if (Platform.OS === 'android') {
-    emulatorHost = '127.0.0.1';
-  }
-
-  const db = firestore();
-  const storage = getStorage();
-
-  const docRef = db.collection('testCollection').doc('testDoc');
-  console.log('Document reference created.');
-  try {
-    await docRef.set({ testField: 'Hello, Firestore!' });
-    console.log('Data written successfully.');
-  } catch (error) {
-    console.error('Error writing to Firestore: ', error);
-  }
-  
-};
 
 
 export default firebase;
