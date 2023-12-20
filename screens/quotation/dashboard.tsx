@@ -271,8 +271,8 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     console.log('index', index);
     setSelectedItem(item);
     setSelectedIndex(index);
-    handleModal(item, index);
-    // setShowModal(true);
+    // handleModal(item, index);
+    setShowModal(true);
   };
 
   const handleModalClose = () => {
@@ -329,7 +329,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             customerName={item.customer?.name as string}
             description={'quotation.'}
             unit={'quotation.'}
-            // onCardPress={handleModal}
+            // onCardPress={()=>handleModal(item, index)}
             onCardPress={() => handleModalOpen(item, index)}
           />
         </View>
@@ -408,7 +408,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           </Modal>
         ) : (
           <Modal
-            backdropTransitionOutTiming={100}
             style={styles.modalContainer}
             isVisible={showModal}
             onBackdropPress={() => setShowModal(false)}
@@ -443,7 +442,9 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             </TouchableOpacity>
             <Pressable
               onPress={() => {
-                handleModal(item, index);
+                setShowModal(false);
+                handleYesResponse(index);
+                // handleModal(item, index);
                 // navigation.navigate('Installment', {
                 //   data: {
                 //     total: Number(data.allTotal),

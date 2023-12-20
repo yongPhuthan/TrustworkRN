@@ -88,6 +88,7 @@ const ContractOption = ({navigation}: Props) => {
     defaultValues: {
       projectName: '',
       signDate: '',
+      sellerId: '',
       servayDate: '',
       warantyTimeWork: 0,
       customer: {
@@ -97,6 +98,7 @@ const ContractOption = ({navigation}: Props) => {
       },
       allTotal: 0,
       signAddress: '',
+      contractId:'',
     },
   });
   async function queryContractByQuotation() {
@@ -172,6 +174,8 @@ const ContractOption = ({navigation}: Props) => {
             servayDate: data.servayDate,
             customer: data.customer,
             allTotal: data.allTotal,
+            sellerId: data.companyUser.id,
+            contractId: data.contract?.id,
           });
         }
       },
@@ -233,7 +237,7 @@ const ContractOption = ({navigation}: Props) => {
         total: Number(getValues('allTotal')),
         signAddress: watch('signAddress'),
         quotationId: data.id,
-        sellerId: data.sellerId,
+        sellerId:  getValues('sellerId'),
         contract: dirtyData,
         contractID: contract?.id,
       },
@@ -332,7 +336,7 @@ const ContractOption = ({navigation}: Props) => {
     }).filter(([key]) => dirtyFields[key]),
   );
 
-  console.log('step', step);
+  console.log('DATA DEFAULT', data);
   if (isError) return <Text>{'errors'}</Text>;
   return (
     <>
@@ -687,6 +691,9 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 0.5,
+    paddingTop: Platform.OS === 'ios' ? 10 : 0,
+    minHeight: Platform.OS === 'ios' ? 80 : 40, // Adjust as needed
+    textAlignVertical: 'top', // Ensure text aligns to the top
     borderRadius: 5,
     padding: 10,
     backgroundColor: 'white',

@@ -1,28 +1,104 @@
+data {
+    "contract": {
+        "id": undefined,
+        "projectName": "AWS CLOUD PROJECT",
+        "servayDate": "20-12-2023",
+        "signAddress": "ADDRESA",
+        "signDate": "20-12-2023"
+    },
+    "contractID": undefined,
+    "periodPercent": [{
+        "amount": 8485,
+        "details": "ADDRESS",
+        "installment": 1,
+        "percentage": 50
+    }, {
+        "amount": 8485,
+        "details": "ADDRESS",
+        "installment": 2,
+        "percentage": 50
+    }],
+    "projectName": "AWS CLOUD PROJECT",
+    "quotationId": "a12a9a8c-a939-493c-8338-b0e7c0dcb194",
+    "sellerId": undefined,
+    "servayDate": "20-12-2023",
+    "signAddress": "ADDRESA",
+    "signDate": "20-12-2023",
+    "total": 16970
+}
+
+{
+    "FCMToken": "",
+    "allTotal": "16970",
+    "companyUser": {
+        "address": "7/44 หมู่2 ต.อ้อมใหญ่ อ.สามพราน จ.นครปฐาน 73160",
+        "bankaccount": {},
+        "bizName": "สยามเซฟตี้เอ็นจิเนียริ่งกรุ๊ป",
+        "bizType": "individual",
+        "code": "122772",
+        "companyNumber": "1100800667422",
+        "id": "252f6cf1-7abf-48e6-b788-6265434a6200",
+        "logo": "https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/Test%2F215718%2Flogo%2F60E03155-9039-4A40-A5B5-DEAA5C9AAC4F.jpg?alt=media",
+        "mobileTel": "0959962030",
+        "officeTel": "053306426",
+        "rules": ["อลูมิเนียม"],
+        "signature": "none",
+        "userEmail": "companypro@gmail.com",
+        "userLastName": "คันธบุษบง",
+        "userName": "ภูฐาน",
+        "userPosition": "none",
+        "walletId": "905b6f81-632c-44d3-9547-f79f0085cd11"
+    },
+    "contract": null,
+    "customer": {
+        "address": "7/44 moo3 t Amyai",
+        "companyId": "11522256565",
+        "companyUserId": "252f6cf1-7abf-48e6-b788-6265434a6200",
+        "customerDateSign": "none",
+        "customerImage": "none",
+        "customerNameSign": "none",
+        "customerPosition": "none",
+        "customerSignature": "none",
+        "customerType": "none",
+        "emailCustomerApproved": "none",
+        "id": "8a15cf0a-de44-42b9-91b2-39716da4eb28",
+        "mobilePhone": "053306426",
+        "name": "BerDondo",
+        "officePhone": "053306426"
+    },
+    "dateEnd": "24-12-2023",
+    "dateOffer": "17-12-2023",
+    "docNumber": "20231217405",
+    "id": "a12a9a8c-a939-493c-8338-b0e7c0dcb194",
+    "status": "PENDING"
+}
+///////
 {
     "contract": {
         "id": "8a6da47a-0a78-49eb-adf9-84e6f55de0d7",
-        "projectName": "MOOCHING",
-        "servayDate": "30/12/2023",
-        "signAddress": "YOUMAING",
-        "signDate": "27/12/2023"
+        "projectName": "AWS PROJET",
+        "servayDate": "20-12-2023",
+        "signAddress": "ADDRESS",
+        "signDate": "20-12-2023"
     },
     "contractID": "8a6da47a-0a78-49eb-adf9-84e6f55de0d7",
     "periodPercent": [{
         "amount": 2995,
-        "details": "MAINTIME",
+        "details": "AESDSD",
         "installment": 1,
         "percentage": 50
     }, {
         "amount": 2995,
-        "details": "mANINGO",
+        "details": "ASEA",
         "installment": 2,
         "percentage": 50
     }],
-    "projectName": "MOOCHING",
+    "projectName": "AWS PROJET",
     "quotationId": "82939044-ef08-4ff7-a364-784bd0617c5b",
-    "sellerId": undefined,
-    "servayDate": "30/12/2023",
-    "signAddress": "YOUMAING",
-    "signDate": "27/12/2023",
+    "sellerId": "252f6cf1-7abf-48e6-b788-6265434a6200",
+    "sellerSignature": "https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/Test%2F122772%2Fsignature%2Fsignature122772.png?alt=media",
+    "servayDate": "20-12-2023",
+    "signAddress": "ADDRESS",
+    "signDate": "20-12-2023",
     "total": 5990
 }
