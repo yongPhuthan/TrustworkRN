@@ -56,6 +56,8 @@ import AddNewMaterial from '../screens/products/materials/addNew';
 import RegisterScreen from '../screens/register/registerScreen';
 import EditDefaultContract from '../screens/contract/edit/editDefaultContract';
 import CreateContractScreen from '../screens/contract/createContractScreen';
+import Selectworks from '../screens/submit/selectworks';
+import SendWorks from '../screens/submit/sendWorks';
 
 const Theme = {
   ...DefaultTheme,
@@ -143,6 +145,34 @@ const Navigation = ({initialRouteName}) => {
             ...commonScreenOptions,
             headerShown: true,
             title: 'เพิ่มลายเซ็นเอกสาร',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+         <Stack.Screen
+          name="SelectWorks" 
+          component={Selectworks}
+          options={{
+            ...commonScreenOptions,
+            headerShown: true,
+            title: 'แจ้งส่งงานลูกค้า',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+         <Stack.Screen
+          name="SendWorks" 
+          component={SendWorks}
+          options={{
+            ...commonScreenOptions,
+            headerShown: true,
+            title: 'แจ้งส่งงานลูกค้า',
             headerBackTitleVisible: false,
             headerStyle: {
               backgroundColor: '#ffffff',

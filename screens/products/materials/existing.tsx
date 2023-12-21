@@ -110,7 +110,6 @@ const ExistingMaterials = ({navigation}: Props) => {
   const handleAddNewProduct = () => {
     navigation.navigate('AddNewMaterial');
   };
-console.log('route', route.params)
   return (
     <View style={styles.container}>
       {products.length > 0 && (

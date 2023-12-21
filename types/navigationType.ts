@@ -1,12 +1,11 @@
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {StackNavigationProp} from '@react-navigation/stack';
-import { CompanyUser, Service,Quotation,AuditData } from './docType';
-
+import {CompanyUser, Service, Quotation, AuditData} from './docType';
 
 export type Audit = {
   title: string;
   description: string;
-  
+
   serviceID: string;
 };
 
@@ -32,7 +31,7 @@ export type ParamListBase = {
   LayoutScreen: undefined;
   CreateContractScreen: {id: string};
   HomeScreen: undefined;
-  CreateQuotation:undefined;
+  CreateQuotation: undefined;
   Dashboard: undefined;
   ContractCard: undefined;
   SelectAudit: Audit;
@@ -47,14 +46,14 @@ export type ParamListBase = {
   SettingsScreen: undefined;
   WebViewScreen: {id: string};
   DocViewScreen: {id: any};
-  EditSetting:{company:CompanyUser}
+  EditSetting: {company: CompanyUser};
   SignUpScreen: undefined;
   LoginScreen: undefined;
   CompanyUserFormScreen: undefined;
-  ExistingSignature:any;
+  ExistingSignature: any;
   ContactInfoScreen: undefined;
   ExistingCategories: undefined;
-  GalleryScreen: {code:string | undefined};
+  GalleryScreen: {code: string | undefined};
   SettingCompany: undefined;
   GalleryUploadScreen: undefined;
   ExistingProduct: {id: string};
@@ -64,9 +63,37 @@ export type ParamListBase = {
   AddNewWorker: undefined;
   CreateCompanyScreen: undefined;
   FirstAppScreen: undefined;
+  SelectWorks: {quotationId: string};
+  SendWorks: {
+    id: string;
+    companyUser: CompanyUser;
+    workStatus: string;
+    title: string;
+    signAddress:string;
+    contract:{
+      id:string;
+      projectName:string;
+      description:string;
+      signAddress:string;
+    }
+    customer :{
+      id:string;
+      name:string;
+      email:string;
+      phone:string;
+      address:string;
+    }
+    description: string;
+    services: {
+      id: string;
+      title: string;
+      description: string;
+    }[];
+  };
   Signature: {
     text: string;
-    data:Quotation  };
+    data: Quotation;
+  };
   EditQuotation: {quotation: Quotation; company: CompanyUser};
   EditQuotationScreen: {id: string};
   EditContractOption: {id: string};
@@ -81,21 +108,18 @@ export type ParamListBase = {
   Installment: any;
 };
 
-
-
 export type ScreenItem = {
   name: keyof ParamListBase;
   component: React.ComponentType<any>;
 };
 
 export interface NavigationScreen {
-    navigation: NativeStackNavigationProp<ParamListBase, 'NavigationScreen'>;
-  }
-  
+  navigation: NativeStackNavigationProp<ParamListBase, 'NavigationScreen'>;
+}
 
- export interface DashboardScreenProps {
-    navigation: StackNavigationProp<ParamListBase, 'Dashboard'>;
-  }
+export interface DashboardScreenProps {
+  navigation: StackNavigationProp<ParamListBase, 'Dashboard'>;
+}
 
 export type ScreenName =
   | 'SignUpScreen'
@@ -107,3 +131,4 @@ export type ScreenName =
   | 'LoginScreen'
   | 'DashboardQuotation'
   | 'CreateCompanyScreen'
+  | 'SelectWorks';

@@ -455,6 +455,16 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               }}>
               <Text style={styles.closeButtonText}>ทำสัญญา</Text>
             </Pressable>
+            <Pressable
+              onPress={() => {
+                setShowModal(false);
+
+                navigation.navigate('SelectWorks', {
+                  quotationId: item.id,
+                });
+              }}>
+              <Text style={styles.closeButtonText}>ส่งงาน</Text>
+            </Pressable>
             <View
               style={{
                 width: '100%',
@@ -492,7 +502,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     // navigation.navigate('GalleryScreen', {code: companyData?.code});
     navigation.navigate('CreateQuotation');
   };
-  console.log('isModalVisible', isModalVisible);
   return (
     <>
       <View>
