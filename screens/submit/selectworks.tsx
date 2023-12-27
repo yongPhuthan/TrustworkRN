@@ -80,7 +80,7 @@ const Selectworks = (props: Props) => {
     },
   });
   async function fetchContractByQuotation() {
-    console.log('WORK!', quotationId);
+
     if (!user || !user.email) {
       console.error('User or user email is not available');
       return;

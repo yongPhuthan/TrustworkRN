@@ -42,7 +42,7 @@ import Signature from 'react-native-signature-canvas';
 
 import axios, {AxiosResponse, AxiosError} from 'axios';
 import {useUser} from '../../providers/UserContext';
-
+import messaging from '../../firebase';
 import {Audit, IdContractList, CompanyUser} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
@@ -91,7 +91,8 @@ const Quotation = ({navigation}: Props) => {
   const [singatureModal, setSignatureModal] = useState(false);
   const [signature, setSignature] = useState('');
   const quotationId = uuidv4();
-  const [fcnToken, setFtmToken] = useState('');
+  const [fcmToken, setFtmToken] = useState('');
+
   const [discount, setDiscount] = useState('0');
   const [showEditServiceModal, setShowEditServiceModal] = useState(false);
   const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(
@@ -118,7 +119,8 @@ const Quotation = ({navigation}: Props) => {
         },
       });
       const data = await response.json();
-
+      const fcmToken = await  firebase.messaging().getToken();
+      setFtmToken(fcmToken);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -141,7 +143,9 @@ const Quotation = ({navigation}: Props) => {
     {
       onSuccess: data => {
         setCompanyUser(data);
+
         dispatch(stateAction.get_companyID(data.user.id));
+        
       },
     },
   );
@@ -185,7 +189,6 @@ const Quotation = ({navigation}: Props) => {
   };
   const handleModalClose = () => {
     setVisibleModalIndex(null);
-
   };
 
   const handleAddProductForm = async () => {
@@ -209,17 +212,14 @@ const Quotation = ({navigation}: Props) => {
     setCustomerAddress(value);
   };
   const handleButtonPress = async () => {
-
     setIsLoadingMutation(true);
     try {
-
       const clientData = {
         id: uuidv4(),
         name: client_name,
         address: client_address,
         companyId: client_tax,
-        officePhone: client_tel,
-        mobilePhone: client_tel,
+        phone: client_tel,
       };
       const apiData = {
         data: {
@@ -231,10 +231,10 @@ const Quotation = ({navigation}: Props) => {
           taxValue: vat3Amount,
           taxName: '',
           dateEnd,
-          discountValue : discountValue ? discountValue : 0,
+          discountValue: discountValue ? discountValue : 0,
           discountName: 'percent',
           dateOffer,
-          FCMToken: fcnToken,
+          FCMToken: fcmToken,
           docNumber,
           skillWarantyYear,
           productWarantyYear,
@@ -251,8 +251,7 @@ const Quotation = ({navigation}: Props) => {
       } else if (vat5Amount > 0) {
         apiData.data.taxName = 'vat5';
         apiData.data.taxValue = vat5Amount;
-      }
-      else{
+      } else {
         apiData.data.taxName = 'none';
         apiData.data.taxValue = 0;
       }
@@ -278,8 +277,7 @@ const Quotation = ({navigation}: Props) => {
     const formattedEndDate = thaiDateFormatter(date);
     setDateEnd(formattedEndDate);
   };
-
-  const { docnumber ,initialDateOffer, initialDateEnd }  = useMemo(() => {
+  const {docnumber, initialDateOffer, initialDateEnd} = useMemo(() => {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -295,7 +293,7 @@ const Quotation = ({navigation}: Props) => {
     const endDay = String(endDate.getDate()).padStart(2, '0');
     const dateEnd = `${endDay}-${endMonth}-${endYear}`;
 
-    return { initialDateOffer: dateOffer, initialDateEnd: dateEnd, docnumber };
+    return {initialDateOffer: dateOffer, initialDateEnd: dateEnd, docnumber};
   }, []) as any;
 
   const [dateOffer, setDateOffer] = useState<String>(initialDateOffer);
@@ -306,7 +304,6 @@ const Quotation = ({navigation}: Props) => {
     setDateOffer(dateOffer);
     setDateEnd(dateEnd);
   }, [serviceList, navigation, docnumber, dateOffer, dateEnd]);
-  
 
   if (isLoading) {
     return (
@@ -321,7 +318,7 @@ const Quotation = ({navigation}: Props) => {
     setVisibleModalIndex(null);
     dispatch(stateAction.remove_serviceList(index));
   };
-
+console.log('fcmToken',fcmToken)
   return (
     <View style={{flex: 1}}>
       <ScrollView style={styles.container}>
@@ -350,7 +347,7 @@ const Quotation = ({navigation}: Props) => {
           )}
 
           <View style={styles.header}>
-          <Icon
+            <Icon
               style={styles.icon}
               name="briefcase"
               size={20}
@@ -362,13 +359,13 @@ const Quotation = ({navigation}: Props) => {
             <CardProject
               handleModalClose={handleModalClose}
               visibleModalIndex={visibleModalIndex === index}
-              setVisibleModalIndex={()=>setVisibleModalIndex(index)}
+              setVisibleModalIndex={() => setVisibleModalIndex(index)}
               index={index}
               handleRemoveService={() => handleRemoveService(index)}
               handleEditService={() => handleEditService(index)}
               serviceList={item}
               key={index}
-            /> 
+            />
           ))}
 
           <AddServices handleAddProductFrom={handleAddProductForm} />
@@ -417,11 +414,14 @@ const Quotation = ({navigation}: Props) => {
               />
             </View>
           </Modal>
-
         </View>
       </ScrollView>
       <View>
-        <FooterBtn btnText='ดำเนินการต่อ' disabled={isDisabled} onPress={handleButtonPress} />
+        <FooterBtn
+          btnText="ดำเนินการต่อ"
+          disabled={isDisabled}
+          onPress={handleButtonPress}
+        />
       </View>
     </View>
   );
@@ -610,7 +610,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#19232e',
-
   },
   summaryTotal: {
     flexDirection: 'row',
@@ -677,4 +676,3 @@ const styles = StyleSheet.create({
     fontFamily: 'Sukhumvit set',
   },
 });
-

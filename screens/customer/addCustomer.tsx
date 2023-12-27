@@ -46,7 +46,7 @@ const AddCustomer = ({navigation, route}: Props) => {
     defaultValues: {
       name: '',
       address: '',
-      mobilePhone: '',
+      phone: '',
       companyId: '',
     },
   });
@@ -56,7 +56,7 @@ const AddCustomer = ({navigation, route}: Props) => {
     console.log(data);
     dispatch(stateAction.client_name(data.name));
     dispatch(stateAction.client_address(data.address));
-    dispatch(stateAction.client_tel(data.mobilePhone));
+    dispatch(stateAction.client_tel(data.phone));
     dispatch(stateAction.client_tax(data.companyId));
     navigation.goBack();
   };
@@ -64,7 +64,6 @@ const AddCustomer = ({navigation, route}: Props) => {
   const address = watch('address');
 
   const isButtonDisabled = !name || !address;
-
   return (
     <View style={{flex: 1}}>
       <KeyboardAvoidingView
@@ -121,7 +120,7 @@ const AddCustomer = ({navigation, route}: Props) => {
                 value={value}
               />
             )}
-            name="mobilePhone"
+            name="phone"
           />
           <Text style={styles.priceTitle}>เลขภาษี (ถ้ามี)</Text>
 
@@ -140,13 +139,11 @@ const AddCustomer = ({navigation, route}: Props) => {
             name="companyId"
           />
 
-<SaveButton
-          onPress={handleSubmit(onSubmit)}
-          disabled={isButtonDisabled}
-        />
+          <SaveButton
+            onPress={handleSubmit(onSubmit)}
+            disabled={isButtonDisabled}
+          />
         </ScrollView>
-
-        
       </KeyboardAvoidingView>
     </View>
   );

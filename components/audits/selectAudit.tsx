@@ -134,7 +134,7 @@ const SelectAudit = ({
   if (isError) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>ERROR</Text>
+        <Text>ERROR Audit</Text>
       </View>
     );
   }

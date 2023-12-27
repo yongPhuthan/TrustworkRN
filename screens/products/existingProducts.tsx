@@ -92,6 +92,13 @@ const ExistingProducts = ({navigation}: Props) => {
   const handleAddNewProduct = () => {
     navigation.navigate('AddProduct');
   };
+  if (isError) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>เกิดข้อผิดพลาด</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

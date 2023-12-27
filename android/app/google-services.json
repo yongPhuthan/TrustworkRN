@@ -1,48 +1,76 @@
 {
   "project_info": {
-    "project_number": "45749402805",
-    "project_id": "trustwork-app",
-    "storage_bucket": "trustwork-app.appspot.com"
+    "project_number": "74243864435",
+    "project_id": "workerfirebase-f1005",
+    "storage_bucket": "workerfirebase-f1005.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:45749402805:android:fbd5c65f7d000dfa3692fc",
+        "mobilesdk_app_id": "1:74243864435:android:42a7bd779fcb90c76cf706",
         "android_client_info": {
-          "package_name": "com.trustwork"
+          "package_name": "com.mobile.trustwork"
         }
       },
       "oauth_client": [
         {
-          "client_id": "45749402805-dluhsvn9hr2f6us6cj08a3dsnl6j1tgq.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.trustwork",
-            "certificate_hash": "9d20cc578eccbc7c3357c04c4e09566c935f41ae"
-          }
-        },
-        {
-          "client_id": "45749402805-s5ujcsku33i8t2l2lmot4f5fcsq9coab.apps.googleusercontent.com",
+          "client_id": "74243864435-ru5lii0kjqsqn9henfcn6v6unlg53le2.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBkDhu0L8ciRbXWQj3aaNvVIKruBphzmzc"
+          "current_key": "AIzaSyDPVjlSxwURvthNn3yJWki4DtkvR0gKWbk"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "45749402805-3cap0mgv7e41aptp26l5v3j9v4bu6hd4.apps.googleusercontent.com",
+              "client_id": "74243864435-qne1vsc8riejp19er266ohbmmu7our10.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "45749402805-8m7a7gpaee5322d4s8sgnfaun7rmeoa0.apps.googleusercontent.com",
+              "client_id": "74243864435-0f0786vehsi9gd00a0nnoi082ih51r15.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.trustwork"
+                "bundle_id": "com.mobile.trustwork"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:74243864435:android:a82cf8e99cb1f71f6cf706",
+        "android_client_info": {
+          "package_name": "com.trustwork"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "74243864435-ru5lii0kjqsqn9henfcn6v6unlg53le2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPVjlSxwURvthNn3yJWki4DtkvR0gKWbk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "74243864435-qne1vsc8riejp19er266ohbmmu7our10.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "74243864435-0f0786vehsi9gd00a0nnoi082ih51r15.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mobile.trustwork"
               }
             }
           ]

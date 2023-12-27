@@ -4,7 +4,7 @@ import functions from '@react-native-firebase/functions';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import { getStorage, isAvailable } from '@react-native-firebase/storage';
-
+import messaging from '@react-native-firebase/messaging';
 import auth from '@react-native-firebase/auth'
 const firebaseConfig = {
   apiKey: "AIzaSyAlFmHGPiZC-XXlfQN37zbz5gV6dYDAsrU",

@@ -121,6 +121,13 @@ const ExistingMaterials = ({
       </View>
     );
   }
+  if(isError) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>เกิดข้อผิดพลาด Material</Text>
+      </View>
+    );
+  }
   const handleDonePress = () => {
     if (serviceList[servicListIndex]?.materials?.length > 0) {
       // dispatch here

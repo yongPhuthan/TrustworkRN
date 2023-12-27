@@ -12,10 +12,9 @@ import {
 } from 'react-native';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
 import CardDashBoard from '../../components/CardDashBoard';
-import {HOST_URL, BACK_END_SERVER_URL, PROJECT_FIREBASE} from '@env';
+import {HOST_URL, BACK_END_SERVER_URL , PROJECT_FIREBASE} from '@env';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Header as HeaderRNE, HeaderProps, Icon, FAB} from '@rneui/themed';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -35,7 +34,7 @@ import * as stateAction from '../../redux/actions';
 import {DashboardScreenProps} from '../../types/navigationType';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useUser} from '../../providers/UserContext';
-import {set} from 'react-hook-form';
+import { check, PERMISSIONS, RESULTS,checkNotifications,requestNotifications } from 'react-native-permissions';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(true);
@@ -54,7 +53,15 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     state: {isEmulator, client_name, client_address, client_tax, client_tel},
     dispatch,
   }: any = useContext(Store);
-
+  const requestNotificationPermission = async () => {
+    const { status } = await requestNotifications(['alert', 'badge', 'sound']);
+    console.log('Notification permission request status:', status);
+  };
+  const checkNotificationPermission = async () => {
+    const { status, settings } = await checkNotifications();
+    console.log('Notification permission status:', status);
+    console.log('Notification settings:', settings);
+  };
   const [companyData, setCompanyData] = useState<CompanyUser | null>(null);
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
   const filterLabels = {
@@ -242,7 +249,20 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       dispatch(stateAction.code_company(data[0].code));
     },
   });
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
+  useEffect(() => {
+    
+    if (user) {
+      const unsubscribe = messaging().setBackgroundMessageHandler(async remoteMessage => {
+        console.log('Message handled in the background!', remoteMessage);
+      });
 
+      return unsubscribe;
+    }
+  }, [user]);
+  
   if (isQuery || !data) {
     return (
       <View style={styles.loadingContainer}>
@@ -383,6 +403,16 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                 navigation.navigate('DocViewScreen', {id: item.id});
               }}>
               <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setShowModal(false);
+
+                navigation.navigate('SelectWorks', {
+                  quotationId: item.id,
+                });
+              }}>
+              <Text style={styles.closeButtonText}>ส่งงาน</Text>
             </Pressable>
             <View
               style={{

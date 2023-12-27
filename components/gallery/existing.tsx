@@ -103,7 +103,8 @@ const GalleryScreen = ({
       throw new Error('User not authenticated');
     } else {
       const idToken = await user.getIdToken(true);
-
+        console.log('code', code);
+        console.log('idToken', idToken);
       try {
         let url = `${BACK_END_SERVER_URL}/api/services/getGallery?code=${encodeURIComponent(
           code,
