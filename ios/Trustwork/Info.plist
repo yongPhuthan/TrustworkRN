@@ -73,5 +73,10 @@
         <string>Zocial.ttf</string>
         <string>Fontisto.ttf</string>
     </array>
+	 <key>NSPhotoLibraryUsageDescription</key>
+  <string>ขออนุญาติเข้าถึง</string>
+  <key>NSUserTrackingUsageDescription</key>
+<string>This app requires notification permissions to function properly.</string>
+
 </dict>
 </plist>

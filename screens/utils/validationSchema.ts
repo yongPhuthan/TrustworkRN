@@ -2,22 +2,56 @@ import * as yup from 'yup';
 
 export const customersValidationSchema = yup.object().shape({
   id: yup.string(),
-  customerName: yup.string().required('Name is required'),
-  customerAddress: yup.string().required('Address is required'),
+  name: yup.string().required('ระบุชื่อลูกค้า'),
+  address: yup.string().required('ระบุที่อยู่ลูกค้า'),
   companyId: yup.string(),
-  customerType: yup.string().default('none'),
-  officePhone: yup.string(),
-  mobilePhone: yup.string(),
-  emailCustomerApproved: yup.string().default('none'),
-  customerPosition: yup.string().default('none'),
-  customerNameSign: yup.string().default('none'),
-  customerSignature: yup.string().default('none'),
-  customerDateSign: yup.string().default('none'),
-  customerImage: yup.string().default('none'),
+  phone: yup.string(),
 });
 
+
+const selectedAuditDataSchema = yup.object().shape({
+  AuditData: yup.object().shape({
+    id: yup.number().required(),
+    number: yup.number().required(),
+    image: yup.string().required(),
+    title: yup.string().required(),
+    content: yup.string().required(),
+    auditEffectDescription: yup.string().required(),
+    auditEffectImage: yup.string().required(),
+    auditShowTitle: yup.string().required(),
+    category: yup.string().required(),
+    subCategory: yup.string().required(),
+    defaultChecked: yup.boolean().required(),
+  }),
+});
+const selectedMaterialDataSchema = yup.object().shape({
+  materialData: yup.object().shape({
+    id: yup.number().required(),
+    name: yup.string().required(),
+    description: yup.string().required(),
+    image: yup.string().required(),
+  }),
+});
+
+export const servicesValidationSchema = yup.object().shape({
+  id: yup.string().required(),
+  title: yup.string().required(),
+  description: yup.string().required(),
+  unitPrice: yup.number().required(),
+  qty: yup.number().positive().integer().required(),
+  discountPercent: yup.number().required(),
+  total: yup.number().required(),
+  unit: yup.string().required(),
+  serviceImage: yup.string().required(),
+  serviceImages: yup.array().of(yup.string()).required(),
+  quotations: yup.mixed(), // Adjust based on Quotation type
+  quotationId: yup.string(),
+  audits: yup.array().of(selectedAuditDataSchema).required('ต้องเลือกมาตรฐานอย่างน้อย 1 รายการ'),
+  materials: yup.array().of(selectedMaterialDataSchema).required('ต้องเลือกวัสดุอุปกรณ์อย่างน้อย 1 รายการ'),
+});
 export const quotationsValidationSchema = yup.object().shape({
   id: yup.string().required('ID is required'),
+  customer:customersValidationSchema,
   vat7: yup.number(),
   taxName: yup.string().default('notax'),
   taxValue: yup.number(),
@@ -31,41 +65,8 @@ export const quotationsValidationSchema = yup.object().shape({
   docNumber: yup.string(),
   FCMToken: yup.string().default('none'),
   sellerSignature: yup.string().default('none'),
-  dateApproved: yup.string().default('none'),
-});
-
-export const servicesValidationSchema = yup.object().shape({
-  id: yup.string().required('ID is required'),
-  
-  title: yup.string().required('Title is required'),
-  description: yup.string().required('Description is required'),
-  unitPrice: yup.number(),
-  qty: yup.number().default(1),
-  unit: yup.string().default('none'),
-  total: yup.number(),
-});
-
-export const materialsValidationSchema = yup.object().shape({
-  id: yup.number().required('ID is required'),
-  name: yup.string().required('Name is required'),
-  description: yup.string(),
-  image: yup.string(),
-});
-
-
-export const contractValidationSchema = yup.object().shape({
-
-  warantyTimeWork: yup.number().default(0).required('This field is required'),
-  workCheckEnd: yup.number().default(0).required('This field is required'),
-  workCheckDay: yup.number().default(0).required('This field is required'),
-  installingDay: yup.number().default(0).required('This field is required'),
-  adjustPerDay: yup.number().default(0).required('This field is required'),
-  workAfterGetDeposit: yup.number().default(0).required('This field is required'),
-  prepareDay: yup.number().default(0).required('This field is required'),
-  finishedDay: yup.number().default(0).required('This field is required'),
-  productWarantyYear: yup.number().default(0).required('This field is required'),
-  skillWarantyYear: yup.number().default(0).required('This field is required'),
-
-
+  services: yup.array().of(servicesValidationSchema)
+  .required('เพิ่มบริการอย่างน้อย 1 รายการ')
+  .min(1, 'ต้องเลือกบริการอย่างน้อย 1 รายการ'),
 });
 

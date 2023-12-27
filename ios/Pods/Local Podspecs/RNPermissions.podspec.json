@@ -14,7 +14,12 @@
     "git": "https://github.com/zoontek/react-native-permissions.git",
     "tag": "4.0.1"
   },
-  "source_files": "ios/*.{h,m,mm}",
+  "source_files": [
+    "ios/*.{h,m,mm}",
+    "ios/PhotoLibrary/*.{h,m,mm}",
+    "ios/Camera/*.{h,m,mm}",
+    "ios/Notifications/*.{h,m,mm}"
+  ],
   "dependencies": {
     "React-Core": [
 

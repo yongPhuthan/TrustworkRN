@@ -37,13 +37,12 @@ export type ServiceList = {
 
 export type Quotation = {
   id: string;
-  quotationId:string;
   services: Service[];
-  vat7: number;
+  customer: Customer;
+  vat7: number | undefined;
   taxName: string;
-  taxValue: number;
+  taxValue: number | undefined;
   summary: number;
-  projectName: string;
   summaryAfterDiscount: number;
   discountName: string;
   discountValue: number;
@@ -53,33 +52,13 @@ export type Quotation = {
   docNumber: string;
   FCMToken: string;
   sellerSignature: string;
-  customerSignature: string;
-  customerDateSign: string;
-  status: string;
-  emailCustomerApproved: string;
-  customerPosition: string;
-  customerNameSign: string;
-  dateApproved: string;
-  skillWarantyYear: number;
-  productWarantyYear: number;
-  companyUser: CompanyUser | null;
-  sellerId: string;
-  customer: Customer | null;
-  customerId: string | null;
-  contract: Contract | null;
-  contractId: string | null;
-  walletTransaction: WalletTransaction | null;
-  walletTransactionId: string | null;
-  periodPercent: any[]; 
-  periodTHB: any[]; 
-  created: Date;
-  updated: Date;
+  // ...other fields as per your schema
 };
+
 
 export type CustomerForm = {
   name: string;
   address: string;
-  mobilePhone: string;
   companyId: string;
   phone: string,
   taxId:string
@@ -106,9 +85,7 @@ export type Service = {
   serviceImage: string;
   serviceImages: string[];
   quotations: Quotation | null;
-  quotationId: string | null;
-  company: CompanyUser | null;
-  companyId: string | null;
+  quotationId: string | undefined;
   audits: SelectedAuditData[]; 
   materials: SelectedMaterialData[]; 
 };
@@ -189,14 +166,12 @@ export type CompanyUser = {
 };
 
 export type Customer = {
-  id: string;
+  id: string | undefined;
   name: string;
   address: string;
-  mobilePhone: string;
-  officePhone: string;
-  companyId: String;
+  phone: string;
   quotation: Quotation[];
-  customerType: string;
+
 };
 
 export type WalletTransaction = {

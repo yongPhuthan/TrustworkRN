@@ -44,5 +44,4 @@ console.log('Firebase App name: ', firebase.app().name);
 // Testing Firestore Functions
 
 
-
 export default firebase;

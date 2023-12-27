@@ -54,9 +54,14 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     dispatch,
   }: any = useContext(Store);
   const requestNotificationPermission = async () => {
-    const { status } = await requestNotifications(['alert', 'badge', 'sound']);
-    console.log('Notification permission request status:', status);
+    try {
+      const { status } = await requestNotifications(['alert', 'badge', 'sound']);
+      console.log('Notification permission request status:', status);
+    } catch (error) {
+      console.error('Error requesting notifications permission:', error);
+    }
   };
+  
   const checkNotificationPermission = async () => {
     const { status, settings } = await checkNotifications();
     console.log('Notification permission status:', status);
@@ -128,7 +133,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       console.error('User or user email is not available');
       return;
     }
-    console.log('BACK_END_SERVER_URL', BACK_END_SERVER_URL);
+    console.log('BACK_END_SERVER_URL3', BACK_END_SERVER_URL);
 
     try {
       const token = await user.getIdToken(true);
