@@ -29,7 +29,13 @@ import CustomCheckbox from '../../components/CustomCheckbox';
 import {useSlugify} from '../../hooks/utils/useSlugify';
 import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
 import Modal from 'react-native-modal';
-
+import {
+  useForm,
+  FormProvider,
+  useFormContext,
+  Controller,
+  set,
+} from 'react-hook-form';
 type ImageData = {
   id: number;
   url: string;
@@ -75,7 +81,15 @@ const GalleryScreen = ({
   }));
   const [galleryImages, setGalleryImages] =
     useState<ImageData[]>(initialGalleryImages);
-
+    const context = useFormContext();
+    const {
+      register,
+      control,
+      getValues,
+      setValue,
+      watch,
+      formState: {errors},
+    } = context as any;
   const {
     state: {serviceList, code},
     dispatch,
@@ -96,7 +110,8 @@ const GalleryScreen = ({
     const urls = updatedData
       .filter(img => img.defaultChecked)
       .map(img => img.url);
-    setServiceImages(urls);
+    // setServiceImages(urls);
+    setValue('serviceImages', urls);
   };
   const getGallery = async () => {
     if (!user) {
@@ -120,6 +135,7 @@ const GalleryScreen = ({
         if (!response.ok) {
           throw new Error('Server responded with status: ' + response.status);
         }
+        console.log('ok go')
 
         const imageUrls = await response.json();
         return imageUrls;
@@ -132,21 +148,15 @@ const GalleryScreen = ({
 
   const {data, isLoading, error} = useQuery({
     queryKey: ['gallery'],
-    queryFn: () => {
-      if (code && code !== 'undefined') {
-        return getGallery();
-      } else {
-        console.error('The id is undefined. Skipping the API call.');
-        return Promise.resolve({});
-      }
-    },
+    enabled: !!code,
+    queryFn: () => getGallery(),
     onSuccess: data => {
       if (data && Array.isArray(data) ) {
-        if(serviceImages.length > 0){
+        if(watch('serviceImages').length > 0){
           const imageData = data.map((url, index) => ({
             id: index + 1, // Assigning an ID
             url: url,
-            defaultChecked: serviceImages.includes(url), // Check if the URL is in serviceImages
+            defaultChecked: watch('serviceImages').includes(url), // Check if the URL is in serviceImages
           }));
           setGalleryImages(imageData);
         }else {
@@ -307,7 +317,6 @@ const GalleryScreen = ({
       </View>
     );
   }
-console.log('gallery', galleryImages)
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       {isImageUpload ? (
@@ -381,14 +390,14 @@ console.log('gallery', galleryImages)
                 style={[
                   styles.uploadButton,
                   styles.saveButton,
-                  !serviceImages || serviceImages.length === 0
+                  !watch('serviceImages') || watch('serviceImages').length === 0
                     ? styles.disabledButton
                     : null,
                 ]}
                 onPress={() => {
                   if (serviceImages) onClose();
                 }}
-                disabled={!serviceImages || serviceImages.length === 0}>
+                disabled={!watch('serviceImages') || watch('serviceImages').length === 0}>
                 <Text style={styles.uploadButtonText}>บันทึก</Text>
               </TouchableOpacity>
             </View>

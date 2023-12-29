@@ -20,13 +20,18 @@ export type ProductItem = {
   discountPercent: number;
   audits: Audit[];
 };
+type OnAddService = (service: Service) => void;
+
 
 export type ParamListBase = {
   Quotation: undefined;
   RegisterScreen: undefined;
   AddCustomer: undefined;
   AuditCategory: Audit;
-  AddProduct: undefined;
+  AddProduct: {
+    onAddService: OnAddService;
+    quotationId: string;
+  };
   TopUpScreen: undefined;
   LayoutScreen: undefined;
   CreateContractScreen: {id: string};
@@ -39,7 +44,11 @@ export type ParamListBase = {
   EditDefaultContract: any;
   DashboardQuotation: undefined;
   SelectContract: {id: string};
-  EditProductForm: {item: Service};
+  EditProductForm: {
+    index: number;
+    currentValue: Service;
+    update: any;
+  };
   AddExistProduct: {item: Service};
   EditClientForm: undefined;
   EditCustomerForm: undefined;

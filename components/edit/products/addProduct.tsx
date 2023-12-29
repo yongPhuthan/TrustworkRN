@@ -272,6 +272,7 @@ const AddProductForm = ({
                 }
               />
             )}
+            
           </View>
           <Text style={styles.priceTitle}>ชื่อรายการ</Text>
           <Controller
@@ -811,7 +812,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: 'white',
     justifyContent: 'flex-start',
-    marginTop: 10,
+    marginTop: 0,
     paddingHorizontal: 20,
     paddingVertical: 5,
   },

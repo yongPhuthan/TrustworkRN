@@ -27,6 +27,14 @@ import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import {useQuery} from '@tanstack/react-query';
 import Lottie from 'lottie-react-native';
 import {Audit, ServiceList, EditProductList} from '../../types/docType';
+import {
+  useForm,
+  FormProvider,
+  useFormContext,
+  Controller,
+  set,
+} from 'react-hook-form';
+
 import {ParamListBase} from '../../types/navigationType';
 import Modal from 'react-native-modal';
 import {useUser} from '../../providers/UserContext';
@@ -50,7 +58,15 @@ const SelectAudit = ({
   const [headerText, setHeaderText] = useState('');
   const user = useUser();
   const [audits, setAudits] = useState<Audit[] | null>(null);
-
+const context = useFormContext();
+  const {
+    register,
+    control,
+    getValues,
+    setValue,
+    watch,
+    formState: {errors},
+  } = context as any;
   const {
     state: {selectedAudit, companyID, serviceList},
     dispatch,
@@ -92,22 +108,22 @@ const SelectAudit = ({
   );
 
   const handleSelectAudit = (audit: Audit) => {
-    const service = serviceList.find(s => s.id === serviceId);
-  
-    const existingAuditInAuditsList = 
-      service?.audits?.some(auditData => auditData.AuditData.id === audit.id) ?? false;
-  
-    if (existingAuditInAuditsList) {
-      dispatch(stateAction.remove_selected_audit(serviceId, audit.id));
+    const currentAudits = getValues('audits') || [];
+    const auditIndex = currentAudits.findIndex(auditData => auditData.AuditData.id === audit.id);
+    if (auditIndex !== -1) {
+      const updatedAudits = [...currentAudits];
+      updatedAudits.splice(auditIndex, 1);
+      setValue('audits', updatedAudits);
     } else {
-      dispatch(stateAction.selected_audit(serviceId, audit));
+      const updatedAudits = [...currentAudits, { AuditData: audit }];
+      setValue('audits', updatedAudits);
     }
   };
   
+  
 
   const handleDonePress = () => {
-    if (serviceList[servicListIndex]?.audits?.length > 0) {
-      // dispatch here
+    if (watch('audits')?.length > 0) {
       onClose();
     }
   };
@@ -183,7 +199,7 @@ const SelectAudit = ({
                     description={audit.description}
                     number={audit.number}
                     defaultChecked={
-                      (serviceList[servicListIndex]?.audits || []).some(
+                      (getValues('audits') || []).some(
                         auditData => auditData.AuditData.id === audit.id,
                       ) 
                     }
@@ -196,13 +212,13 @@ const SelectAudit = ({
           </View>
         </ScrollView>
 
-        {serviceList[servicListIndex]?.audits?.length > 0 && (
+        {watch('audits').length > 0 && (
           <View style={styles.containerBtn}>
             <TouchableOpacity onPress={handleDonePress} style={styles.button}>
               <Text
                 style={
                   styles.buttonText
-                }>{`บันทึก ${serviceList[servicListIndex]?.audits?.length} มาตรฐาน`}</Text>
+                }>{`บันทึก ${watch('audits').length } มาตรฐาน`}</Text>
             </TouchableOpacity>
           </View>
         )}

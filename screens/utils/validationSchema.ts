@@ -39,12 +39,12 @@ export const servicesValidationSchema = yup.object().shape({
   description: yup.string().required(),
   unitPrice: yup.number().required(),
   qty: yup.number().positive().integer().required(),
-  discountPercent: yup.number().required(),
+  discountPercent: yup.number(),
   total: yup.number().required(),
   unit: yup.string().required(),
   serviceImage: yup.string().required(),
-  serviceImages: yup.array().of(yup.string()).required(),
-  quotations: yup.mixed(), // Adjust based on Quotation type
+  serviceImages: yup.array().of(yup.string()).required('เลือกภาพตัวอย่างผลงาน'),
+  quotations: yup.mixed(),
   quotationId: yup.string(),
   audits: yup.array().of(selectedAuditDataSchema).required('ต้องเลือกมาตรฐานอย่างน้อย 1 รายการ'),
   materials: yup.array().of(selectedMaterialDataSchema).required('ต้องเลือกวัสดุอุปกรณ์อย่างน้อย 1 รายการ'),
@@ -69,4 +69,17 @@ export const quotationsValidationSchema = yup.object().shape({
   .required('เพิ่มบริการอย่างน้อย 1 รายการ')
   .min(1, 'ต้องเลือกบริการอย่างน้อย 1 รายการ'),
 });
-
+export const serviceValidationSchema = yup.object().shape({
+  id: yup.string(),
+  title: yup.string().required('ระบุชื่อบริการ'),
+  description: yup.string(),
+  unitPrice: yup.number().required('ระบุราคาต่อหน่วย'),
+  qty: yup.number().positive().integer().required(),
+  discountPercent: yup.number(),
+  total: yup.number().required(),
+  unit: yup.string().required(),
+  serviceImage: yup.string().required(),
+  serviceImages: yup.array().of(yup.string()),
+  audits: yup.array().of(selectedAuditDataSchema),
+  materials: yup.array().of(selectedMaterialDataSchema),
+});

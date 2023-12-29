@@ -34,6 +34,13 @@ import CustomCheckbox from '../../components/CustomCheckbox';
 import {useUser} from '../../providers/UserContext';
 import {Store} from '../../redux/store';
 import AddNewMaterial from './addNew';
+import {
+  useForm,
+  FormProvider,
+  useFormContext,
+  Controller,
+  set,
+} from 'react-hook-form';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ExistingMaterials'>;
@@ -57,7 +64,15 @@ const ExistingMaterials = ({
 }: ExistingModalProps) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [isOpenModal, setIsOpenModal] = useState(false);
-
+  const context = useFormContext();
+  const {
+    register,
+    control,
+    getValues,
+    setValue,
+    watch,
+    formState: {errors},
+  } = context as any;
   const route = useRoute();
   const user = useUser();
 
@@ -100,17 +115,16 @@ const ExistingMaterials = ({
       },
     },
   );
-  const handleSelectMaterial = (material:any) => {
-    const service = serviceList.find(s => s.id === serviceId);
-  
-    const existingMaterialInSelectedMaterialsList = 
-    service?.materials?.some(item => item.materialData.id === material.id) ?? false;
-  
-    if (existingMaterialInSelectedMaterialsList) {   
-      dispatch(stateAction.remove_selected_materials(serviceId, material.id));
-      
+  const handleSelectMaterial = (material: Material) => {
+    const currentMaterials = getValues('materials') || [];
+    const materialIndex = currentMaterials.findIndex(materialData => materialData.materialData.id === material.id);
+    if (materialIndex !== -1) {
+      const updatedMaterials = [...currentMaterials];
+      updatedMaterials.splice(materialIndex, 1);
+      setValue('materials', updatedMaterials);
     } else {
-  dispatch(stateAction.selected_materials(serviceId, material));
+      const updatedMaterials = [...currentMaterials, { materialData: material }];
+      setValue('materials', updatedMaterials);
     }
   };
 
@@ -129,8 +143,7 @@ const ExistingMaterials = ({
     );
   }
   const handleDonePress = () => {
-    if (serviceList[servicListIndex]?.materials?.length > 0) {
-      // dispatch here
+    if (watch('materials')?.length > 0) {
       onClose();
     }
   };
@@ -153,14 +166,14 @@ const ExistingMaterials = ({
               <TouchableOpacity
                 style={[
                   styles.card,
-                  (serviceList[servicListIndex]?.selectedMaterials || []).some(m => m.id === item.id)
+                  (watch('materials') || []).some(m => m.id === item.id)
                     ? styles.cardChecked
                     : null,
                 ]}
                 onPress={() => handleSelectMaterial(item)}>
                 <CheckBox
                   center
-                  checked={(serviceList[servicListIndex]?.materials || []).some( material => material.materialData.id === item.id)}
+                  checked={(watch('materials')|| []).some( material => material.materialData.id === item.id)}
                   onPress={() => handleSelectMaterial(item)}
                   containerStyle={styles.checkboxContainer}
                   checkedColor="#012b20"
@@ -192,10 +205,10 @@ const ExistingMaterials = ({
           keyExtractor={item => item.id}
         />
 
-        {serviceList[servicListIndex]?.materials?.length > 0 && (
+        {watch('materials')?.length > 0 && (
           <TouchableOpacity onPress={handleDonePress} style={styles.saveButton}>
             <Text style={styles.saveText}>
-              {`บันทึก ${serviceList[servicListIndex]?.materials?.length} รายการ`}{' '}
+              {`บันทึก ${watch('materials')?.length} รายการ`}{' '}
             </Text>
           </TouchableOpacity>
         )}

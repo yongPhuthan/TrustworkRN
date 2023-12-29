@@ -33,6 +33,15 @@ const Summary = (props: Props) => {
   const [discount, setDiscount] = useState('0');
   const [vat7, setVat7] = useState(false);
   const [vat7Value, setVat7Value] = useState(0);
+  const context = useFormContext();
+  const {
+    register,
+    control,
+    getValues,
+    setValue,
+    watch,
+    formState: {errors},
+  } = context as any;
 
   const onDiscountInputChange = (value: string) => {
     if (value === '') {
@@ -56,24 +65,29 @@ const Summary = (props: Props) => {
     : 0;
   const total = Number(sumAfterDiscount + vat7Amount - vat3Amount);
 
-  useEffect(() => {
-    props.onValuesChange(
-      total,
-      discountValue,
-      sumAfterDiscount,
-      vat7Amount,
-      vat3Amount,
-    );
-  }, [total, discountValue, sumAfterDiscount, vat7Amount, vat3Amount]);
+useEffect(() => {
+  // Watch the services array for changes
+  const subscription = watch((value, { name, type }) => {
+    if (name === 'services') {
+      // Calculate the summary
+      const sum = value.services.reduce((acc, curr) => acc + (curr.total || 0), 0);
+
+      // Update the summary field
+      setValue('summary', sum);
+    }
+  });
+
+  return () => subscription.unsubscribe();
+}, [watch('services')]);
+console.log('summary', watch('summary'));
 
   return (
     <View style={styles.container}>
       <View style={styles.summary}>
-        <Text style={styles.summaryText}>{props.title}</Text>
+        <Text style={styles.summaryText}>ยอดรวม</Text>
         <Text style={styles.summaryPrice}>
-          {Number(props.price)
-            .toFixed(2)
-            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+        {watch('summary') ? new Intl.NumberFormat().format(watch('summary')) : 0}
+
         </Text>
       </View>
       <View style={styles.summary}>

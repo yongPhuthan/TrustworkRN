@@ -115,7 +115,7 @@ const EditCustomer = ({onClose}: Props) => {
         <Text style={styles.label}>เบอร์โทรศัพท์</Text>
         <Controller
           control={control}
-          name="customer.mobilePhone"
+          name="customer.phone"
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
               // placeholder="เบอร์โทรศัพท์"

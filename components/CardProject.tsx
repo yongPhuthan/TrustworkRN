@@ -49,6 +49,7 @@ const CardProject = (props: Props) => {
     handleModalClose,
   } = props;  
   
+  console.log('serviceList FORM', serviceList)
 
   return (
     <View>
@@ -67,17 +68,16 @@ const CardProject = (props: Props) => {
         <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
           <View style={styles.unitPrice}>
             <Text>
-              {Number(serviceList.unitPrice)
-                .toFixed(2)
-                .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+              {serviceList.unitPrice ? new Intl.NumberFormat().format(serviceList.unitPrice) : '0'}
+             
             </Text>
             <Text> x</Text>
             <Text> {serviceList.qty}</Text>
           </View>
           <Text style={styles.summaryPrice}>
-            {Number(serviceList.total)
-              .toFixed(2)
-              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+          {serviceList.total ? new Intl.NumberFormat().format(serviceList.total) : '0'}
+
+          
           </Text>
         </View>
         {/* {serviceList?.discountPercent   ? (

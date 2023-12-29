@@ -9,8 +9,8 @@ import {
   import React, {useState, useContext, useEffect, useRef} from 'react';
   import {Store} from '../redux/store';
   import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-  import {useForm, Controller,useFormContext} from 'react-hook-form';
-  
+  import {useForm, Controller, useFormContext, set} from 'react-hook-form';
+
   import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
   import {
     faPeopleCarry,
@@ -21,10 +21,22 @@ import {
   const windowWidth = Dimensions.get('window').width;
   
   const CardClient = (props: Props) => {
+    const context = useFormContext();
+
+    const {
+      register,
+      control,
+      getValues,
+      setValue,
+      watch,
+      formState: {errors},
+    } = context
     const {
       state: {client_name, client_address, client_tel, client_tax},
       dispatch,
     }: any = useContext(Store);
+
+
     return (
       <View >
         <View style={styles.header}>
@@ -41,15 +53,15 @@ import {
         </View>
         <TouchableOpacity style={styles.subContainer}>
           <View style={styles.summary}>
-            <Text style={styles.summaryText}>{client_name}</Text>
+            <Text style={styles.summaryText}>{watch('customer.name')}</Text>
             <Text style={styles.summaryPrice}></Text>
           </View>
           <View style={styles.description}>
-            <Text>{client_address}</Text>
+            <Text>{watch('customer.address')}</Text>
           </View>
           <View style={styles.telAndTax}>
-            <Text>โทร.{client_tel}</Text>
-            <Text>{client_tax}</Text>
+            <Text>โทร.{watch('customer.phone')}</Text>
+            <Text>{watch('customer.companyId')}</Text>
           </View>
         </TouchableOpacity>
       </View>

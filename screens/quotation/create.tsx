@@ -13,7 +13,13 @@ import {
   Switch,
 } from 'react-native';
 import {v4 as uuidv4} from 'uuid';
-import React, {useState, useContext, useEffect, useMemo} from 'react';
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react';
 import DocNumber from '../../components/DocNumber';
 import AddClient from '../../components/AddClient';
 import AddServices from '../../components/AddServices';
@@ -21,7 +27,13 @@ import Summary from '../../components/Summary';
 import Divider from '../../components/styles/Divider';
 import {NavigationContainer} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {useForm, Controller, FormProvider} from 'react-hook-form';
+import EditCustomer from '../../components/edit/customer/EditCustomer';
+import {
+  useForm,
+  Controller,
+  FormProvider,
+  useFieldArray,
+} from 'react-hook-form';
 import {
   HOST_URL,
   PROJECT_FIREBASE,
@@ -42,16 +54,21 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import Signature from 'react-native-signature-canvas';
 import {yupResolver} from '@hookform/resolvers/yup';
 import AddCustomer from '../../components/add/AddCustomer';
-
+import AddProductForm from '../../components/edit/products/addProduct';
 import axios, {AxiosResponse, AxiosError} from 'axios';
 import {useUser} from '../../providers/UserContext';
 import messaging from '../../firebase';
-import {Audit, CompanyUser} from '../../types/docType';
+import {Audit, CompanyUser, Service} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
 import SignatureComponent from '../../components/utils/signature';
+import EditProductForm from '../../components/edit/products/EditProduct';
 import SmallDivider from '../../components/styles/SmallDivider';
-import {quotationsValidationSchema} from '../utils/validationSchema';
+import {
+  quotationsValidationSchema,
+  customersValidationSchema,
+} from '../utils/validationSchema';
+import Addservices from '../../components/add/AddServices';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
 }
@@ -80,15 +97,18 @@ const Quotation = ({navigation}: Props) => {
   const [summaryAfterDiscount, setSumAfterDiscount] = useState(0);
   const [vat7Amount, setVat7Amount] = useState(0);
   const [addCustomerModal, setAddCustomerModal] = useState(false);
-
+  const [editCustomerModal, setEditCustomerModal] = useState(false);
   const [vat5Amount, setVat5Amount] = useState(0);
   const thaiDateFormatter = useThaiDateFormatter();
+  const [addServicesModal, setAddServicesModal] = useState(false);
   const user = useUser();
   const [vat3Amount, setVat3Amount] = useState(0);
   // const {fetchCompanyUser} = useFetchCompanyUser();
   const [productWarantyYear, setProductWarantyYear] = useState(0);
   const [skillWarantyYear, setSkillWarantyYear] = useState(0);
-  const [customerName, setCustomerName] = useState('');
+  const [editServicesModal, setEditServicesModal] = useState(false);
+
+  // const [customerName, setCustomerName] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [docNumber, setDocnumber] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
@@ -96,10 +116,12 @@ const Quotation = ({navigation}: Props) => {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [singatureModal, setSignatureModal] = useState(false);
   const [signature, setSignature] = useState('');
+  const [serviceIndex, setServiceIndex] = useState(0);
   const quotationId = uuidv4();
   const [fcmToken, setFtmToken] = useState('');
   const id = uuidv4();
   const [discount, setDiscount] = useState('0');
+
   const [showEditServiceModal, setShowEditServiceModal] = useState(false);
   const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(
     null,
@@ -110,12 +132,14 @@ const Quotation = ({navigation}: Props) => {
       throw new Error('User not authenticated');
     } else {
       const idToken = await user.getIdToken(true);
-      const { email } = user;
+      const {email} = user;
       if (!email) {
         throw new Error('Email not found');
       }
-  
-      let url = `${BACK_END_SERVER_URL}/api/company/getCompanySeller?email=${encodeURIComponent(email)}`;
+
+      let url = `${BACK_END_SERVER_URL}/api/company/getCompanySeller?email=${encodeURIComponent(
+        email,
+      )}`;
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -123,28 +147,44 @@ const Quotation = ({navigation}: Props) => {
           Authorization: `Bearer ${idToken}`,
         },
       });
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       const data = await response.json();
-  
+
       // Register the device for remote messages
       await firebase.messaging().requestPermission();
-  
+
       // Now, get the FCM token
       const fcmToken = await firebase.messaging().getToken();
       if (fcmToken) {
         console.log('fcmToken', fcmToken);
         setFtmToken(fcmToken);
       }
-  
+
       return data;
     }
   };
-  
+  const {docnumber: initialDocnumber, initialDateOffer, initialDateEnd} = useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const randomNum = Math.floor(Math.random() * 900) + 100;
+    const docnumber = `${year}${month}${day}${randomNum}`;
 
+    const dateOffer = `${day}-${month}-${year}`;
+
+    const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const endYear = endDate.getFullYear();
+    const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+    const endDay = String(endDate.getDate()).padStart(2, '0');
+    const dateEnd = `${endDay}-${endMonth}-${endYear}`;
+
+    return {initialDateOffer: dateOffer, initialDateEnd: dateEnd, docnumber};
+  }, []) as any;
   const defaultAudit = {
     AuditData: {
       id: 0,
@@ -205,9 +245,9 @@ const Quotation = ({navigation}: Props) => {
     discountName: 'thb',
     discountValue: 0,
     allTotal: 0,
-    dateOffer: '',
-    dateEnd: '',
-    docNumber: '',
+    dateOffer: initialDateOffer,
+    dateEnd: initialDateEnd,
+    docNumber: initialDocnumber,
     FCMToken: fcmToken,
     sellerSignature: '',
   };
@@ -217,14 +257,27 @@ const Quotation = ({navigation}: Props) => {
     defaultValues: quotationDefaultValues,
     resolver: yupResolver(quotationsValidationSchema),
   });
+  const {fields, append, remove, update} = useFieldArray({
+    control: methods.control,
+    name: 'services',
+  });
+
+  const customer = methods.getValues('customer');
+  const services = methods.getValues('services');
+  const isCustomerDisabled = useMemo(() => {
+    return customer.name === '' && customer.address === '';
+  }, [customer.name, customer.address]);
+  const isServicesDisbled = useMemo(() => {
+    return services[0]?.title === '' || services[0]?.unitPrice === '';
+  }, [services]);
 
   const totalPrice = useMemo(() => {
     let total = 0;
-    for (let i = 0; i < serviceList.length; i++) {
-      total += Number(serviceList[i].total);
+    for (let i = 0; i < methods.watch('services').length; i++) {
+      total += Number(methods.watch(`services[${i}].total`));
     }
-    return total;
-  }, [serviceList]);
+    return methods.setValue
+  }, [ methods.watch('services')]);
 
   const isDisabled = !client_name || serviceList.length === 0;
 
@@ -253,9 +306,9 @@ const Quotation = ({navigation}: Props) => {
     setVat3Amount(vat3Amount);
   };
 
-  const handleCustomerNameChange = (value: string) => {
-    setCustomerName(value);
-  };
+  // const handleCustomerNameChange = (value: string) => {
+  //   setCustomerName(value);
+  // };
 
   const useSignature = () => {
     if (companyUser?.signature) {
@@ -283,16 +336,29 @@ const Quotation = ({navigation}: Props) => {
 
   const handleAddProductForm = async () => {
     if (companyUser?.user) {
+      // setAddServicesModal(!addServicesModal);
       dispatch(stateAction.reset_audit());
-      navigation.navigate('ExistingProduct', {id: companyUser.user?.id});
+      navigation.navigate('AddProduct', {
+        onAddService: newProduct => append(newProduct),
+        quotationId: quotationId,
+      });
+      // navigation.navigate('ExistingProduct', {id: companyUser.user?.id});
     } else {
       await firebase.auth().signOut();
     }
   };
-  const handleEditService = (index: number) => {
+  const handleEditServiceCallback = useCallback(
+    index => {
+      setServiceIndex(index);
+      handleModalClose();
+      setEditServicesModal(true);
+    },
+    [setServiceIndex, handleModalClose, setEditServicesModal],
+  );
+  const handleEditService = (index: number, currentValue) => {
     setShowEditServiceModal(!showEditServiceModal);
     handleModalClose();
-    navigation.navigate('EditProductForm', {item: serviceList[index]});
+    navigation.navigate('EditProductForm', {index, currentValue, update});
   };
 
   const handleEditClient = () => {
@@ -355,45 +421,23 @@ const Quotation = ({navigation}: Props) => {
   };
 
   const handleInvoiceNumberChange = (text: string) => {
-    setDocnumber(text);
+    methods.setValue('docNumber', text);
   };
 
   const handleStartDateSelected = (date: Date) => {
     const formattedDate = thaiDateFormatter(date);
-    setDateOffer(formattedDate);
-    console.log(dateOffer);
+    methods.setValue('dateOffer', formattedDate);
   };
   const handleEndDateSelected = (date: Date) => {
     const formattedEndDate = thaiDateFormatter(date);
-    setDateEnd(formattedEndDate);
+    methods.setValue('dateEnd', formattedEndDate);
   };
-  const {docnumber, initialDateOffer, initialDateEnd} = useMemo(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const randomNum = Math.floor(Math.random() * 900) + 100;
-    const docnumber = `${year}${month}${day}${randomNum}`;
 
-    const dateOffer = `${day}-${month}-${year}`;
-
-    const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const endYear = endDate.getFullYear();
-    const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
-    const endDay = String(endDate.getDate()).padStart(2, '0');
-    const dateEnd = `${endDay}-${endMonth}-${endYear}`;
-
-    return {initialDateOffer: dateOffer, initialDateEnd: dateEnd, docnumber};
-  }, []) as any;
 
   const [dateOffer, setDateOffer] = useState<String>(initialDateOffer);
   const [dateEnd, setDateEnd] = useState<String>(initialDateEnd);
 
-  useEffect(() => {
-    setDocnumber(docnumber);
-    setDateOffer(dateOffer);
-    setDateEnd(dateEnd);
-  }, [serviceList, navigation, docnumber, dateOffer, dateEnd]);
+
 
   if (isLoading) {
     return (
@@ -406,9 +450,10 @@ const Quotation = ({navigation}: Props) => {
 
   const handleRemoveService = (index: number) => {
     setVisibleModalIndex(null);
-    dispatch(stateAction.remove_serviceList(index));
+
+    // Remove the field at the specified index using the remove method
+    remove(index);
   };
-  console.log('fcmToken', fcmToken);
   return (
     <FormProvider {...methods}>
       <View style={{flex: 1}}>
@@ -422,7 +467,7 @@ const Quotation = ({navigation}: Props) => {
             <DocNumber
               label="เลขที่เอกสาร"
               onChange={handleInvoiceNumberChange}
-              value={docNumber}
+              value={methods.watch('docNumber')}
             />
             <DatePickerButton
               label="ยืนราคาถึงวันที่ี"
@@ -431,8 +476,8 @@ const Quotation = ({navigation}: Props) => {
             />
           </View>
           <View style={styles.subContainer}>
-            {client_name ? (
-              <CardClient handleEditClient={handleEditClient} />
+            {!isCustomerDisabled ? (
+              <CardClient handleEditClient={() => setEditCustomerModal(true)} />
             ) : (
               <AddClient handleAddClient={() => setAddCustomerModal(true)} />
             )}
@@ -446,18 +491,19 @@ const Quotation = ({navigation}: Props) => {
               />
               <Text style={styles.label}>บริการ-สินค้า</Text>
             </View>
-            {serviceList.map((item: any, index: number) => (
-              <CardProject
-                handleModalClose={handleModalClose}
-                visibleModalIndex={visibleModalIndex === index}
-                setVisibleModalIndex={() => setVisibleModalIndex(index)}
-                index={index}
-                handleRemoveService={() => handleRemoveService(index)}
-                handleEditService={() => handleEditService(index)}
-                serviceList={item}
-                key={index}
-              />
-            ))}
+            {fields.length > 0 &&
+              fields.map((field: any, index: number) => (
+                <CardProject
+                  handleModalClose={handleModalClose}
+                  visibleModalIndex={visibleModalIndex === index}
+                  setVisibleModalIndex={() => setVisibleModalIndex(index)}
+                  index={index}
+                  handleRemoveService={() => handleRemoveService(index)}
+                  handleEditService={() => handleEditService(index, field)}
+                  serviceList={field}
+                  key={field.id}
+                />
+              ))}
 
             <AddServices handleAddProductFrom={handleAddProductForm} />
             <Divider />
@@ -471,7 +517,7 @@ const Quotation = ({navigation}: Props) => {
             {/* <Divider /> */}
             <Summary
               title={'ยอดรวม'}
-              price={totalPrice}
+              price={200}
               onValuesChange={handleValuesChange}
             />
             <SmallDivider />
@@ -513,6 +559,23 @@ const Quotation = ({navigation}: Props) => {
           onBackdropPress={() => setAddCustomerModal(false)}>
           <AddCustomer onClose={() => setAddCustomerModal(false)} />
         </Modal>
+        <Modal
+          isVisible={editCustomerModal}
+          style={styles.modalFull}
+          onBackdropPress={() => setEditCustomerModal(false)}>
+          <EditCustomer onClose={() => setEditCustomerModal(false)} />
+        </Modal>
+
+        <Modal
+          isVisible={editServicesModal}
+          style={styles.modalServiceFull}
+          onBackdropPress={() => setEditServicesModal(false)}>
+          <EditProductForm
+            quotationId={quotationId}
+            onClose={() => setEditServicesModal(false)}
+            serviceIndex={serviceIndex}
+          />
+        </Modal>
         <View>
           <FooterBtn
             btnText="ดำเนินการต่อ"
@@ -540,7 +603,7 @@ const styles = StyleSheet.create({
   },
   modalFull: {
     margin: 0,
-    marginTop: 100,
+    marginTop: 50,
     justifyContent: 'flex-start',
     alignItems: 'center',
     width: windowWidth,
@@ -772,6 +835,13 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
     width: windowWidth,
+  },
+  modalServiceFull: {
+    margin: 0,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    width: windowWidth,
+    height: windowHeight,
   },
   modalTitle: {
     fontSize: 18,

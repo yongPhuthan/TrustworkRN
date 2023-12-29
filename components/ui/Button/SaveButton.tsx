@@ -11,7 +11,7 @@ const SaveButton = (props: Props) => {
   if (disabled) {
     return (
       <View style={styles.containerBtn}>
-        <TouchableOpacity style={styles.disabledButton} disabled>
+        <TouchableOpacity  style={styles.disabledButton} disabled>
           <View style={styles.header}>
             <Text style={styles.buttonText}>บันทึก</Text>
           </View>
@@ -21,7 +21,7 @@ const SaveButton = (props: Props) => {
   }
   return (
     <View style={styles.containerBtn}>
-      <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
+      <TouchableOpacity  style={styles.button} onPress={() => props.onPress()}>
         <View style={styles.header}>
           <Text style={styles.buttonText}>บันทึก</Text>
         </View>

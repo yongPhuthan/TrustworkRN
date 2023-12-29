@@ -8,8 +8,9 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import {useForm, Controller, useFormContext} from 'react-hook-form';
+import {useForm, Controller, useFormContext, set} from 'react-hook-form';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {v4 as uuidv4} from 'uuid';
 
 import {
   faCloudUpload,
@@ -37,11 +38,13 @@ const AddCustomer = ({onClose}: Props) => {
     register,
     control,
     getValues,
+    setValue,
+    watch,
     formState: {errors},
-    
   } = context as any;
 
   const onSubmit = data => {
+   setValue('customer.id', uuidv4())
     onClose();
   };
 
@@ -71,7 +74,7 @@ const AddCustomer = ({onClose}: Props) => {
           name="customer.name"
           rules={{required: true}}
           render={({field: {onChange, onBlur, value}}) => (
-            <TextInput  
+            <TextInput
               style={styles.inputName}
               onBlur={onBlur}
               onChangeText={onChange}
@@ -79,12 +82,12 @@ const AddCustomer = ({onClose}: Props) => {
             />
           )}
         />
-{errors.customer && 'name' in errors.customer && (
-  <Text style={styles.errorText}>
-    {errors?.customer?.name.message}
-  </Text>
-)}
-
+        {errors && (
+          <Text style={styles.errorText}>
+            {' '}
+            {errors?.customer?.name?.message}
+          </Text>
+        )}
 
         <Text style={styles.label}>ที่อยู่</Text>
         <Controller
@@ -104,12 +107,17 @@ const AddCustomer = ({onClose}: Props) => {
             />
           )}
         />
-        {errors && <Text style={styles.errorText}> {errors?.customer?.address?.message}</Text>}
+        {errors && (
+          <Text style={styles.errorText}>
+            {' '}
+            {errors?.customer?.address?.message}
+          </Text>
+        )}
 
         <Text style={styles.label}>เบอร์โทรศัพท์</Text>
         <Controller
           control={control}
-          name="customer.mobilePhone"
+          name="customer.phone"
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
               // placeholder="เบอร์โทรศัพท์"
@@ -139,12 +147,12 @@ const AddCustomer = ({onClose}: Props) => {
         />
         <TouchableOpacity
           disabled={
-            !getValues('customer.name') || !getValues('customer.address')
+            !watch('customer.name') || !watch('customer.address')
           }
-          onPress={(onSubmit)}
+          onPress={onSubmit}
           style={[
             styles.button,
-            (!getValues('customer.name') || !getValues('customer.address')) &&
+            (!watch('customer.name') || !watch('customer.address')) &&
               styles.buttonDisabled,
           ]}>
           <Text style={styles.buttonText}>{`บันทึก`}</Text>
