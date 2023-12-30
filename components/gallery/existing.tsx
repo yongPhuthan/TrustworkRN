@@ -2,6 +2,7 @@ import React, {useState, useCallback, useContext, useEffect} from 'react';
 import {
   View,
   Image,
+  SafeAreaView,
   ActivityIndicator,
   FlatList,
   TouchableOpacity,
@@ -14,7 +15,7 @@ import {useQuery, useQueryClient, useMutation} from '@tanstack/react-query';
 import ImageResizer from '@bam.tech/react-native-image-resizer';
 
 import {Store} from '../../redux/store';
-import {faPlus, faCamera, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
+import {faPlus, faCamera, faArrowLeft, faClose} from '@fortawesome/free-solid-svg-icons';
 import {CheckBox} from '@rneui/themed';
 import {
   launchImageLibrary,
@@ -324,15 +325,15 @@ const GalleryScreen = ({
           <ActivityIndicator />
         </View>
       ) : (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
           <View style={styles.header}>
             <TouchableOpacity style={styles.onCloseButton} onPress={onClose}>
-              <FontAwesomeIcon icon={faArrowLeft} size={24} color="gray" />
+              <FontAwesomeIcon icon={faClose} size={24} color="gray" />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.onPlusButton}
               onPress={handleUploadMoreImages}>
-              <FontAwesomeIcon icon={faPlus} size={24} color="gray" />
+              <FontAwesomeIcon icon={faCamera} size={24} color="gray" />
             </TouchableOpacity>
           </View>
           <FlatList
@@ -414,7 +415,7 @@ const GalleryScreen = ({
               </TouchableOpacity>
             </View>
           </Modal>
-        </View>
+        </SafeAreaView>
       )}
     </Modal>
   );
@@ -426,6 +427,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     backgroundColor: '#fff',
     width,
   },
@@ -585,6 +588,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 10,
+    paddingHorizontal: 20,
     backgroundColor: 'white',
     // backgroundColor: '#f5f5f5',
   },

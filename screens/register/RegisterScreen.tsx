@@ -21,7 +21,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import firebase from '../../firebase';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {ParamListBase} from '../../types/navigationType';
-
+import {useUser} from '../../providers/UserContext';
+import {
+  BACK_END_SERVER_URL,
+} from '@env';
 const screenWidth = Dimensions.get('window').width;
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'RegisterScreen'>;
@@ -32,7 +35,14 @@ const RegisterScreen = ({navigation}: Props) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [registrationCode, setRegistrationCode] = useState('');
   const [userLoading, setUserLoading] = useState(false);
-  const isButtonDisabled = !email || !password || !confirmPassword || !registrationCode || password !== confirmPassword;
+  const user = useUser();
+
+  const isButtonDisabled =
+    !email ||
+    !password ||
+    !confirmPassword ||
+    !registrationCode ||
+    password !== confirmPassword;
 
   const [error, setError] =
     useState<FirebaseAuthTypes.NativeFirebaseAuthError | null>(null);
@@ -55,6 +65,7 @@ const RegisterScreen = ({navigation}: Props) => {
         nativeErrorCode: '',
         nativeErrorMessage: '',
       });
+      setUserLoading(false);
       return;
     }
 
@@ -63,7 +74,6 @@ const RegisterScreen = ({navigation}: Props) => {
       .collection('registrationCodes')
       .doc(registrationCode);
     const doc = await docRef.get();
-
     if (!doc.exists) {
       setError({
         code: 'auth/invalid-registration-code',
@@ -99,48 +109,61 @@ const RegisterScreen = ({navigation}: Props) => {
 
       return;
     }
+    try {
+      await docRef.update({used: true});
+      const userCredential = await firebase
+        .auth()
+        .createUserWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+      if (!user) {
+        throw new Error(
+          'User creation was successful, but no user data was returned.',
+        );
+      }
+      if (!user || !user.email) {
+        console.error('User or user email is not available');
+        return;
+      }
+      try {
+        const token = await user.getIdToken(true);
 
-    await docRef.update({used: true});
-
-    firebase
-      .auth()
-      .createUserWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        const user = userCredential.user;
-        if (!user && !userCredential) {
-          setUserLoading(false);
-
-          throw new Error(
-            'User creation was successful, but no user data was returned.',
-          );
-        } else {
-          const flagRef = firebase
-            .firestore()
-            .collection('completionFlags')
-            .doc(user.uid);
-          flagRef.onSnapshot(snapshot => {
-            if (snapshot.exists && snapshot.data()?.completed) {
-              navigation.navigate('CreateCompanyScreen');
-
-              setUserLoading(false);
-              flagRef.onSnapshot(() => {});
-            }
-          });
+        const response = await fetch(
+          `${BACK_END_SERVER_URL}/api/company/createUser`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({email: user.email, uid: user.uid}),
+          },
+        );
+        console.log('response', response);
+        if (!response.ok) {
+          throw new Error('Failed to create user on the server');
         }
-      })
-      .catch(error => {
-        let errorMessage = '';
-        if (error.code === 'auth/email-already-in-use') {
-          errorMessage = 'อีเมลล์นี้ถูกสมัครสมาชิกไปแล้ว';
-        }
+        console.log('responseOK');
 
-        if (error.code === 'auth/invalid-email') {
-          errorMessage = 'กรอกอีเมลล์ไม่ถูกต้อง';
-        }
+        const responseData = await response.json();
+        console.log('Server response:', responseData);
+        navigation.navigate('CreateCompanyScreen');
 
-        setError({...error, message: errorMessage});
-      });
-    setUserLoading(false);
+        setUserLoading(false);
+        // Proceed with additional client-side logic if needed
+      } catch (serverError) {
+        console.error('Server-side user creation failed:', serverError);
+        // Handle server-side error
+      }
+    } catch (error) {
+      let errorMessage = '';
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'อีเมลล์นี้ถูกสมัครสมาชิกไปแล้ว';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'กรอกอีเมลล์ไม่ถูกต้อง';
+      }
+      setError({...error, message: errorMessage});
+      setUserLoading(false);
+    }
   };
 
   return (
@@ -175,7 +198,7 @@ const RegisterScreen = ({navigation}: Props) => {
         />
 
         <Text>code ลงทะเบียน</Text>
-        
+
         <TextInput
           placeholder="Code ลงทะเบียน"
           style={styles.input}
@@ -185,16 +208,19 @@ const RegisterScreen = ({navigation}: Props) => {
         {error && <Text style={styles.errorText}>{error.message}</Text>}
 
         <Pressable
-        style={[styles.pressable, styles.getStartedButton, isButtonDisabled && styles.disabledButton]}
-        onPress={signUpEmail}
-        disabled={isButtonDisabled}>
-             { userLoading ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                    <Text style={styles.pressableText}>ลงทะเบียน</Text>
-                )}
-       
-      </Pressable>
+          style={[
+            styles.pressable,
+            styles.getStartedButton,
+            isButtonDisabled && styles.disabledButton,
+          ]}
+          onPress={signUpEmail}
+          disabled={isButtonDisabled}>
+          {userLoading ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Text style={styles.pressableText}>ลงทะเบียน</Text>
+          )}
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -245,27 +271,27 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   pressable: {
-    width: '100%', 
+    width: '100%',
     paddingVertical: 12,
     borderRadius: 4,
     marginVertical: 20,
   },
   getStartedButton: {
-    backgroundColor: '#012b20', 
+    backgroundColor: '#012b20',
   },
 
   pressableText: {
     color: 'white',
     fontSize: 16,
-    textAlign: 'center', 
+    textAlign: 'center',
   },
   pressableTextLogin: {
     color: '#5C5F62',
     fontSize: 16,
-    textAlign: 'center', 
+    textAlign: 'center',
   },
   disabledButton: {
-    opacity: 0.5, 
-  }
+    opacity: 0.5,
+  },
 });
 export default RegisterScreen;

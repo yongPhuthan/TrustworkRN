@@ -30,11 +30,8 @@ if (__DEV__) {
   // firebase.functions().useEmulator(emulatorHost, 5001);
   firebase.auth().useEmulator(`${emulatorHost}:9099`);
   // firebase.firestore().useEmulator(emulatorHost, 8080)
-  // firebase.storage().useEmulator(emulatorHost,9199)
-  // firebase.firestore().settings({
-  //   host: `${emulatorHost}:8080`,
-  //   ssl: false
-  // });
+  firebase.storage().useEmulator(emulatorHost,9199)
+
   
   console.log('Using emulator at ' + emulatorHost);
 }
@@ -42,6 +39,20 @@ if (__DEV__) {
 console.log('Firebase App name: ', firebase.app().name);
 
 // Testing Firestore Functions
+async function testFirestoreConnection() {
+  try {
+    const doc = await firestore().collection('testCollection').doc('testDoc').get();
+    if (doc.exists) {
+      console.log('Firestore connection successful. Document data:', doc.data());
+    } else {
+      console.log('Firestore connection successful. No such document!');
+    }
+  } catch (error) {
+    console.error('Firestore connection failed:', error);
+  }
+}
 
+// Test Firestore connection
+testFirestoreConnection();
 
 export default firebase;

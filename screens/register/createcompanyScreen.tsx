@@ -58,33 +58,7 @@ interface ImageResponse extends ImagePickerResponse {
   assets?: Asset[];
 }
 const screenWidth = Dimensions.get('window').width;
-const createCompanySeller2 = async ({data, uid}) => {
-  if (!uid) {
-    throw new Error('User UID is not provided.');
-  }
-  try {
-    const response = await fetch(
-      `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/createCompanySeller`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${uid}`,
-        },
-        body: JSON.stringify({data}),
-      },
-    );
-    console.log('Response:', response.status);
 
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return;
-  } catch (error) {
-    console.error(error);
-    throw new Error('There was an error processing the request');
-  }
-};
 const createCompanySeller = async ({data, token}) => {
   if (!token) {
     throw new Error('Auth token is not provided.');
@@ -108,8 +82,9 @@ const createCompanySeller = async ({data, token}) => {
       const errorText = await response.text();
       throw new Error(`Network response was not ok: ${errorText}`);
     }
+    
 
-    return await response.json(); // Assuming the response is JSON
+    // return await response.json(); // Assuming the response is JSON
   } catch (error) {
     console.error('Error:', error);
     throw new Error('There was an error processing the request');
@@ -154,10 +129,8 @@ const CreateCompanyScreen = ({navigation}: Props) => {
     : CLOUDFLARE_WORKER;
 
   const categories: object[] = [
-    {key: '1', value: 'Mobiles', disabled: true},
     {key: '2', value: 'อลูมิเนียม'},
     {key: '3', value: 'ฝ้าซีลาย'},
-    {key: '4', value: 'Computers', disabled: true},
     {key: '5', value: 'งานเหล็กลังคา'},
     {key: '6', value: 'งานกระเบื้อง'},
     {key: '7', value: 'งานปูน'},
@@ -338,7 +311,6 @@ const CreateCompanyScreen = ({navigation}: Props) => {
 
   const handleFunction = async () => {
     const data = {
-      id: uuidv4(),
       bizName,
       userName,
       userLastName,
@@ -350,7 +322,7 @@ const CreateCompanyScreen = ({navigation}: Props) => {
       mobileTel,
       email:user?.email,
       bizType,
-      logo: logo || 'logo',
+      logo: logo ? logo : 'NONE',
       companyNumber: taxID,
     };
     console.log(data);
@@ -397,7 +369,7 @@ const CreateCompanyScreen = ({navigation}: Props) => {
       console.error('Error fetching images:', error);
     }
   };
-
+console.log('userPosition',userPosition)
   const renderPage = () => {
     switch (page) {
       case 1:

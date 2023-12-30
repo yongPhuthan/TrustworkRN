@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Dimensions,
+  SafeAreaView,
 } from 'react-native';
 import {
   faCloudUpload,
@@ -58,7 +59,7 @@ const SelectAudit = ({
   const [headerText, setHeaderText] = useState('');
   const user = useUser();
   const [audits, setAudits] = useState<Audit[] | null>(null);
-const context = useFormContext();
+  const context = useFormContext();
   const {
     register,
     control,
@@ -109,18 +110,18 @@ const context = useFormContext();
 
   const handleSelectAudit = (audit: Audit) => {
     const currentAudits = getValues('audits') || [];
-    const auditIndex = currentAudits.findIndex(auditData => auditData.AuditData.id === audit.id);
+    const auditIndex = currentAudits.findIndex(
+      auditData => auditData.AuditData.id === audit.id,
+    );
     if (auditIndex !== -1) {
       const updatedAudits = [...currentAudits];
       updatedAudits.splice(auditIndex, 1);
       setValue('audits', updatedAudits);
     } else {
-      const updatedAudits = [...currentAudits, { AuditData: audit }];
+      const updatedAudits = [...currentAudits, {AuditData: audit}];
       setValue('audits', updatedAudits);
     }
   };
-  
-  
 
   const handleDonePress = () => {
     if (watch('audits')?.length > 0) {
@@ -156,7 +157,7 @@ const context = useFormContext();
   }
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <FontAwesomeIcon icon={faClose} size={24} color="gray" />
@@ -198,11 +199,9 @@ const context = useFormContext();
                     content={audit.content}
                     description={audit.description}
                     number={audit.number}
-                    defaultChecked={
-                      (getValues('audits') || []).some(
-                        auditData => auditData.AuditData.id === audit.id,
-                      ) 
-                    }
+                    defaultChecked={(getValues('audits') || []).some(
+                      auditData => auditData.AuditData.id === audit.id,
+                    )}
                     imageUri={audit.auditEffectImage}
                     onPress={() => handleSelectAudit(audit)}
                   />
@@ -215,14 +214,13 @@ const context = useFormContext();
         {watch('audits').length > 0 && (
           <View style={styles.containerBtn}>
             <TouchableOpacity onPress={handleDonePress} style={styles.button}>
-              <Text
-                style={
-                  styles.buttonText
-                }>{`บันทึก ${watch('audits').length } มาตรฐาน`}</Text>
+              <Text style={styles.buttonText}>{`บันทึก ${
+                watch('audits').length
+              } มาตรฐาน`}</Text>
             </TouchableOpacity>
           </View>
         )}
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };

@@ -7,10 +7,12 @@ import {
   Dimensions,
   TouchableOpacity,
   ActivityIndicator,
+  SafeAreaView,
   FlatList,
 } from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
+import Modal from 'react-native-modal';
 import {useRoute} from '@react-navigation/native';
 import {HOST_URL, PROJECT_FIREBASE, PROD_API_URL} from '@env';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
@@ -87,6 +89,8 @@ const ExistingWorkers = ({navigation}: Props) => {
   };
 
   return (
+    <>
+    //old worker
     <View style={styles.container}>
       {workers.length > 0 && (
         <Text style={styles.titleText}>เลือกจากรายการเดิม</Text>
@@ -136,6 +140,10 @@ const ExistingWorkers = ({navigation}: Props) => {
         </TouchableOpacity>
       )}
     </View>
+
+
+
+    </>
   );
 };
 

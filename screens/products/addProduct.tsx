@@ -27,6 +27,7 @@ import {
   FormProvider,
   useFormContext,
   Controller,
+  useWatch,
   set,
 } from 'react-hook-form';
 
@@ -68,7 +69,6 @@ const AddProductForm = ({navigation, route}: Props) => {
   const {quotationId, onAddService} = route.params;
   const [discountPercent, setDiscountPercent] = useState(0);
   const [qty, setQuantity] = useState(1);
-  const [unitPrice, setPrice] = useState(0);
   const [isModalVisible, setModalVisible] = useState(false);
   const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
   const [serviceImages, setServiceImages] = useState<string[]>([]);
@@ -85,49 +85,6 @@ const AddProductForm = ({navigation, route}: Props) => {
     console.log('or wathc', methods.watch());
     onAddService(methods.watch());
     navigation.goBack();
-  };
-
-  const handleFormSubmit = useCallback(
-    (data: FormData) => {
-      const newData = {
-        title: data.title,
-        description: data.description,
-        unitPrice: data.unitPrice,
-        serviceImages,
-        qty: qty,
-        discountPercent,
-        total: (qty * unitPrice).toString(),
-      };
-      dispatch(stateAction.put_serviceList(serviceID, newData));
-      dispatch(stateAction.reset_audit());
-      dispatch(stateAction.reset_service_images());
-      dispatch(stateAction.reset_materials());
-      navigation.pop(2);
-    },
-    [serviceList, qty, unitPrice, serviceID],
-  );
-  const defaultAudit = {
-    AuditData: {
-      id: 0,
-      number: 0,
-      image: '',
-      title: '',
-      content: '',
-      auditEffectDescription: '',
-      auditEffectImage: '',
-      auditShowTitle: '',
-      category: '',
-      subCategory: '',
-      defaultChecked: false,
-    },
-  };
-  const defaultMaterial = {
-    materialData: {
-      id: 0,
-      name: '',
-      description: '',
-      image: '',
-    },
   };
   const defaultService = {
     id: uuidv4(),
@@ -149,34 +106,43 @@ const AddProductForm = ({navigation, route}: Props) => {
     defaultValues: defaultService,
     resolver: yupResolver(serviceValidationSchema),
   });
+  const audits = useWatch({
+    control: methods.control,
+    name: 'audits',
+    defaultValue: [],
+  });
+  const title = useWatch({
+    control: methods.control,
+    name: 'title',
+    defaultValue: '',
+  });
 
-  const serviceIndex = useMemo(
-    () => serviceList.findIndex(service => service.id === serviceID),
-    [serviceList, serviceID],
-  );
-  const totalCost = useMemo(
-    () => (qty > 0 ? qty * unitPrice : 0),
-    [qty, unitPrice],
-  );
+  const materials = useWatch({
+    control: methods.control,
+    name: 'materials',
+    defaultValue: [],
+  });
+  const [unitPrice, quantity] = useWatch({
+    control:methods.control,
+    name: ['unitPrice', 'qty'], // Watching multiple fields
+  });
 
   useEffect(() => {
-    const unitPrice = Number(methods.watch('unitPrice'));
-    const quantity = Number(methods.watch('qty'));
+    const unitPriceNum = Number(unitPrice);
+    const quantityNum = Number(quantity);
   
-    if (isFinite(unitPrice) && isFinite(quantity)) {
-      const total = unitPrice * quantity;
+    if (isFinite(unitPriceNum) && isFinite(quantityNum)) {
+      const total = unitPriceNum * quantityNum;
       methods.setValue('total', total);
     }
-  }, [methods.watch('unitPrice'), methods.watch('qty'), methods.setValue]);
+  }, [unitPrice, quantity, methods.setValue]);
 
-  const isAuditsDisabled = useMemo(() => {
-    return serviceList[serviceIndex]?.audits?.length > 0;
-  }, [serviceList, serviceIndex]);
+
 
   const isButtonDisbled = useMemo(() => {
-    return methods.watch('materials')?.length > 0 && methods.watch('audits')?.length > 0 && methods.watch('title') !== null || '' && methods.watch('unitPrice') !== null || '';
-  }, [methods.watch()]);
-  console.log('methods.watch', methods.getValues('audits')?.length);
+    return materials.length > 0 && audits?.length > 0 && title !== null || '' && unitPrice !== null || '';
+  }, [audits, materials, title, unitPrice]);
+
   return (
     <>
       <FormProvider {...methods}>
@@ -433,7 +399,7 @@ const AddProductForm = ({navigation, route}: Props) => {
               <SmallDivider />
 
               <View>
-                {methods.getValues('audits')?.length > 0 ? (
+                {audits.length > 0 ? (
                   <View style={styles.cardContainer}>
                     <Text
                       style={{
@@ -447,7 +413,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                       }}>
                       มาตรฐานของบริการนี้:
                     </Text>
-                    {methods.watch('audits')?.map((item: any) => (
+                    {audits?.map((item: any) => (
                       <TouchableOpacity
                         key={item.AuditData.id}
                         style={styles.card}
@@ -489,7 +455,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                 }}></View>
               <SmallDivider />
               <View>
-                {methods.getValues('materials')?.length > 0 ? (
+                {materials?.length > 0 ? (
                   <View style={styles.cardContainer}>
                     <Text
                       style={{
@@ -502,7 +468,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                       }}>
                       วัสดุอุปกรณ์ที่ใช้
                     </Text>
-                    {methods.getValues('materials')?.map((item: any, index) => (
+                    {materials?.map((item: any, index) => (
                       <TouchableOpacity
                         key={index}
                         style={styles.card}
@@ -553,7 +519,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                <SaveButton disabled={!isButtonDisbled} onPress={handleDone} />
+                <SaveButton disabled={false} onPress={handleDone} />
               </View>
             </View>
             <SelectAudit

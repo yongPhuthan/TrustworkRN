@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
 import CardDashBoard from '../../components/CardDashBoard';
-import {HOST_URL, BACK_END_SERVER_URL , PROJECT_FIREBASE} from '@env';
+import {HOST_URL, BACK_END_SERVER_URL, PROJECT_FIREBASE} from '@env';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -34,7 +34,13 @@ import * as stateAction from '../../redux/actions';
 import {DashboardScreenProps} from '../../types/navigationType';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useUser} from '../../providers/UserContext';
-import { check, PERMISSIONS, RESULTS,checkNotifications,requestNotifications } from 'react-native-permissions';
+import {
+  check,
+  PERMISSIONS,
+  RESULTS,
+  checkNotifications,
+  requestNotifications,
+} from 'react-native-permissions';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(true);
@@ -55,15 +61,15 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   }: any = useContext(Store);
   const requestNotificationPermission = async () => {
     try {
-      const { status } = await requestNotifications(['alert', 'badge', 'sound']);
+      const {status} = await requestNotifications(['alert', 'badge', 'sound']);
       console.log('Notification permission request status:', status);
     } catch (error) {
       console.error('Error requesting notifications permission:', error);
     }
   };
-  
+
   const checkNotificationPermission = async () => {
-    const { status, settings } = await checkNotifications();
+    const {status, settings} = await checkNotifications();
     console.log('Notification permission status:', status);
     console.log('Notification settings:', settings);
   };
@@ -96,7 +102,9 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
     if (activeFilter === 'ALL') return originalQuotationData;
 
-    return originalQuotationData.filter(q => q.status === activeFilter);
+    return originalQuotationData.filter(
+      (q: Quotation) => q.status === activeFilter,
+    );
   }, [originalQuotationData, activeFilter]);
 
   const updateContractData = (filter: string) => {
@@ -179,6 +187,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     } catch (err) {
       // Handle or throw the error depending on your error handling strategy
       console.error('Error fetching dashboard data:', err);
+      await auth().signOut();
       throw err;
     }
   }
@@ -258,16 +267,17 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     requestNotificationPermission();
   }, []);
   useEffect(() => {
-    
     if (user) {
-      const unsubscribe = messaging().setBackgroundMessageHandler(async remoteMessage => {
-        console.log('Message handled in the background!', remoteMessage);
-      });
+      const unsubscribe = messaging().setBackgroundMessageHandler(
+        async remoteMessage => {
+          console.log('Message handled in the background!', remoteMessage);
+        },
+      );
 
       return unsubscribe;
     }
   }, [user]);
-  
+
   if (isQuery || !data) {
     return (
       <View style={styles.loadingContainer}>
@@ -276,7 +286,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     );
   }
 
-  if (error) {
+  if (error || !companyData) {
     if (user) {
       if (!companyData) {
         navigation.navigate('CreateCompanyScreen');
@@ -319,7 +329,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     await dispatch(stateAction.client_tax(''));
     await dispatch(stateAction.client_name(customer.name));
     await dispatch(stateAction.client_address(customer.address));
-    await dispatch(stateAction.client_tel(customer.mobilePhone));
+    await dispatch(stateAction.client_tel(customer.phone));
     await dispatch(stateAction.client_tax(customer.companyId));
     await dispatch(stateAction.service_list(services));
     dispatch(stateAction.get_companyID(data[0].id));
@@ -329,7 +339,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
   const FilterButton = ({filter, isActive, onPress}) => {
     const displayText = filterLabels[filter] || filter;
-
+    console.log('companyUser', companyData);
     return (
       <TouchableOpacity
         style={[styles.filterButton, isActive ? styles.activeFilter : null]}

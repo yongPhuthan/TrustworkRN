@@ -11,7 +11,7 @@ import React, {useState, useContext, useEffect} from 'react';
 import RNPickerSelect from 'react-native-picker-select';
 import Divider from './styles/Divider';
 import SmallDivider from './styles/SmallDivider';
-import {useForm, Controller, useFormContext, set} from 'react-hook-form';
+import {useForm, Controller, useFormContext, useWatch, set} from 'react-hook-form';
 
 type Props = {
   title: string;
@@ -31,7 +31,7 @@ const Summary = (props: Props) => {
   const [selectedValue, setSelectedValue] = useState(0);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [discount, setDiscount] = useState('0');
-  const [vat7, setVat7] = useState(false);
+  const [vat7Picker, setVat7Picker] = useState(false);
   const [vat7Value, setVat7Value] = useState(0);
   const context = useFormContext();
   const {
@@ -52,52 +52,109 @@ const Summary = (props: Props) => {
   };
 
   const data = [
-    {label: '0%', value: 0},
     {label: '3%', value: 3},
-    // {label: '5%', value: 5},
+    {label: '5%', value: 5},
   ];
-
-  const discountValue = (props.price * parseFloat(discount)) / 100;
-  const sumAfterDiscount = props.price - discountValue;
-  const vat7Amount = vat7 ? sumAfterDiscount * 0.07 : 0;
-  const vat3Amount = pickerVisible
-    ? (sumAfterDiscount * Number(selectedValue)) / 100
-    : 0;
-  const total = Number(sumAfterDiscount + vat7Amount - vat3Amount);
-
-useEffect(() => {
-  // Watch the services array for changes
-  const subscription = watch((value, { name, type }) => {
-    if (name === 'services') {
-      // Calculate the summary
-      const sum = value.services.reduce((acc, curr) => acc + (curr.total || 0), 0);
-
-      // Update the summary field
-      setValue('summary', sum);
-    }
+  const discountPercentage = useWatch({
+    control,
+    name: 'discountPercentage',
+  });
+  const summary = useWatch({
+    control,
+    name: 'summary',
   });
 
-  return () => subscription.unsubscribe();
-}, [watch('services')]);
-console.log('summary', watch('summary'));
+  const services = useWatch({
+    control,
+    name: 'services',
+  });
+  const discountValue = useWatch({
+    control,
+    name: 'discountValue',
+  });
+
+  const summaryAfterDiscount = useWatch({
+    control,
+    name: 'summaryAfterDiscount',
+  });
+
+  const taxValue = useWatch({
+    control,
+    name: 'taxValue',
+  });
+  const vat7 = useWatch({
+    control,
+    name: 'vat7',
+  });
+  const total = useWatch({
+    control,
+    name: 'total',
+  });
+  useEffect(() => {
+    const sum = services.reduce((acc, curr) => acc + (curr.total || 0), 0);
+  
+    // Parse discountPercentage, treat empty string as 0
+    const parsedDiscountPercentage = discountPercentage === '' ? 0 : parseFloat(discountPercentage);
+    const calculatedDiscountValue = (sum * parsedDiscountPercentage) / 100;
+    const calculatedSummaryAfterDiscount = sum - calculatedDiscountValue;
+  
+    let taxType = 'NOTAX';
+    let taxValue = 0;
+  
+    const vat7Amount = vat7Picker ? calculatedSummaryAfterDiscount * 0.07 : 0;
+  
+    if (pickerVisible && selectedValue) {
+      switch (selectedValue) {
+        case 3:
+          taxType = 'TAX3';
+          taxValue = calculatedSummaryAfterDiscount * 0.03;
+          break;
+        case 5:
+          taxType = 'TAX5';
+          taxValue = calculatedSummaryAfterDiscount * 0.05;
+          break;
+        // Add more cases here if needed
+      }
+    }
+  
+    setValue('vat7', vat7Amount);
+    setValue('taxType', taxType);
+    setValue('taxValue', taxValue);
+    setValue('discountValue', calculatedDiscountValue);
+    setValue('summary', sum);
+    setValue('summaryAfterDiscount', calculatedSummaryAfterDiscount);
+    setValue('total', calculatedSummaryAfterDiscount + vat7Amount - taxValue);
+  }, [services, discountPercentage, vat7Picker, pickerVisible, selectedValue]);
+  
+
 
   return (
     <View style={styles.container}>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>ยอดรวม</Text>
         <Text style={styles.summaryPrice}>
-        {watch('summary') ? new Intl.NumberFormat().format(watch('summary')) : 0}
-
+         {new Intl.NumberFormat().format(summary)}
         </Text>
       </View>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>ส่วนลดรวม</Text>
         <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            placeholder="0"
-            onChangeText={onDiscountInputChange}
-            keyboardType="numeric"
+          <Controller
+            control={control}
+            name="discountPercentage"
+            defaultValue={0}
+            render={({field: {onChange, onBlur, value}}) => (
+              <TextInput
+                style={styles.input}
+                placeholder="0"
+                onBlur={onBlur}
+                keyboardType="number-pad"
+                onChangeText={value => {
+                  onChange(value);
+                }}
+                value={value}
+              />
+            )}
           />
           <Text style={styles.summaryText}>%</Text>
         </View>
@@ -105,17 +162,13 @@ console.log('summary', watch('summary'));
       <View style={styles.summary}>
         <Text style={styles.summaryText}>ส่วนลดเป็นเงิน</Text>
         <Text style={styles.summaryPrice}>
-          {Number(discountValue)
-            .toFixed(2)
-            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+          {new Intl.NumberFormat().format(discountValue)}
         </Text>
       </View>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>ยอดรวมหลังหักส่วนลด</Text>
         <Text style={styles.summaryPrice}>
-          {Number(sumAfterDiscount)
-            .toFixed(2)
-            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+          {new Intl.NumberFormat().format(summaryAfterDiscount)}
         </Text>
       </View>
       <SmallDivider />
@@ -147,9 +200,7 @@ console.log('summary', watch('summary'));
             />
           </View>
           <Text style={styles.summaryText}>
-            {Number(vat3Amount.toFixed(2))
-              .toFixed(2)
-              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+          {new Intl.NumberFormat().format(taxValue)}
           </Text>
         </View>
       )}
@@ -162,8 +213,8 @@ console.log('summary', watch('summary'));
           trackColor={{false: '#767577', true: '#81b0ff'}}
           thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
           ios_backgroundColor="#3e3e3e"
-          onValueChange={() => setVat7(!vat7)}
-          value={vat7}
+          onValueChange={() => setVat7Picker(!vat7Picker)}
+          value={vat7Picker}
           style={[
             {},
             Platform.select({
@@ -177,7 +228,7 @@ console.log('summary', watch('summary'));
           ]}
         />
       </View>
-      {vat7 && (
+      {vat7Picker && (
         <View style={styles.pickerWrapper}>
           <Text style={styles.summaryText}> 7 % </Text>
 
@@ -191,18 +242,14 @@ console.log('summary', watch('summary'));
                 marginVertical: 10,
               },
             })}>
-            {Number(vat7Amount.toFixed(2))
-              .toFixed(2)
-              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+           {new Intl.NumberFormat().format(vat7)}
           </Text>
         </View>
       )}
       <View style={styles.summaryTotal}>
         <Text style={styles.totalSummary}>รวมทั้งสิ้น</Text>
         <Text style={styles.totalSummary}>
-          {Number(total)
-            .toFixed(2)
-            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+        {new Intl.NumberFormat().format(total)}
         </Text>
       </View>
     </View>

@@ -26,17 +26,18 @@ import {useRoute} from '@react-navigation/native';
 import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {CompanyUser, Service, Material} from '../../types/docType';
+import {CompanyUser, Service, Material, Workers} from '../../types/docType';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
 import * as stateAction from '../../redux/actions';
 import Modal from 'react-native-modal';
 import CustomCheckbox from '../../components/CustomCheckbox';
 import {useUser} from '../../providers/UserContext';
 import {Store} from '../../redux/store';
-import AddNewMaterial from './addNew';
+import AddNewMaterial from '../materials/addNew';
 import {
   useForm,
   FormProvider,
+  useWatch,
   useFormContext,
   Controller,
   set,
@@ -51,12 +52,12 @@ interface ExistingModalProps {
 const numColumns = 2;
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
-const ExistingMaterials = ({
+const ExistingWorkers = ({
   isVisible,
   onClose,
   serviceId,
 }: ExistingModalProps) => {
-  const [materials, setMaterials] = useState<Material[]>([]);
+  const [workers, setWorkers] = useState<Workers[]>([]);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const context = useFormContext();
   const {
@@ -101,24 +102,30 @@ const ExistingMaterials = ({
   };
 
   const {data, isLoading, isError} = useQuery(
-    ['existingMaterials'],
+    ['workers'],
     () => fetchExistingMaterials().then(res => res),
     {
       onSuccess: data => {
-        setMaterials(data);
+        setWorkers(data);
       },
     },
   );
-  const handleSelectMaterial = (material: Material) => {
-    const currentMaterials = getValues('materials') || [];
-    const materialIndex = currentMaterials.findIndex(materialData => materialData.materialData.id === material.id);
-    if (materialIndex !== -1) {
-      const updatedMaterials = [...currentMaterials];
-      updatedMaterials.splice(materialIndex, 1);
-      setValue('materials', updatedMaterials);
+  
+
+  const currentWorkers = useWatch({
+    control,
+    name: 'workers',
+  });
+
+  const handleSelectWorker = (workers: Workers) => {
+    const workerIndex = currentWorkers.findIndex(worker => worker.id === workers.id);
+    if (workerIndex !== -1) {
+      const updatedWorkers = [...currentWorkers];
+      updatedWorkers.splice(workerIndex, 1);
+      setValue('workers', updatedWorkers);
     } else {
-      const updatedMaterials = [...currentMaterials, { materialData: material }];
-      setValue('materials', updatedMaterials);
+      const updatedWorkers = [...currentWorkers, workers];
+      setValue('workers', updatedWorkers);
     }
   };
 
@@ -132,12 +139,12 @@ const ExistingMaterials = ({
   if(isError) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>เกิดข้อผิดพลาด Material</Text>
+        <Text>เกิดข้อผิดพลาด Worker</Text>
       </View>
     );
   }
   const handleDonePress = () => {
-    if (watch('materials')?.length > 0) {
+    if (currentWorkers.length > 0) {
       onClose();
     }
   };
@@ -154,27 +161,27 @@ const ExistingMaterials = ({
         </View>
 
         <FlatList
-          data={materials}
+          data={workers}
           renderItem={({item, index}) => (
             <>
               <TouchableOpacity
                 style={[
                   styles.card,
-                  (watch('materials') || []).some(m => m.id === item.id)
+                  currentWorkers.some(m => m.id === item.id)
                     ? styles.cardChecked
                     : null,
                 ]}
-                onPress={() => handleSelectMaterial(item)}>
+                onPress={() => handleSelectWorker(item)}>
                 <CheckBox
                   center
-                  checked={(watch('materials')|| []).some( material => material.materialData.id === item.id)}
-                  onPress={() => handleSelectMaterial(item)}
+                  checked={currentWorkers.some( worker => worker.id === item.id)}
+                  onPress={() => handleSelectWorker(item)}
                   containerStyle={styles.checkboxContainer}
                   checkedColor="#012b20"
                 />
                 <View style={styles.textContainer}>
                   <Text style={styles.productTitle}>{item.name}</Text>
-                  <Text style={styles.description}>{item.description}</Text>
+                  <Text style={styles.description}>{item.mainSkill}</Text>
                 </View>
                 <Image source={{uri: item.image}} style={styles.productImage} />
               </TouchableOpacity>
@@ -199,10 +206,10 @@ const ExistingMaterials = ({
           keyExtractor={item => item.id}
         />
 
-        {watch('materials')?.length > 0 && (
+        {currentWorkers?.length > 0 && (
           <TouchableOpacity onPress={handleDonePress} style={styles.saveButton}>
             <Text style={styles.saveText}>
-              {`บันทึก ${watch('materials')?.length} รายการ`}{' '}
+              {`บันทึก ${currentWorkers.length} รายการ`}{' '}
             </Text>
           </TouchableOpacity>
         )}
@@ -397,4 +404,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ExistingMaterials;
+export default ExistingWorkers;

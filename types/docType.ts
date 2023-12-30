@@ -40,6 +40,7 @@ export type Quotation = {
   services: Service[];
   customer: Customer;
   vat7: number | undefined;
+  status: string;
   taxName: string;
   taxValue: number | undefined;
   summary: number;
@@ -298,4 +299,5 @@ export type FormData = {
   materials?: MaterialData[];
   unit: string;
 };
+
 

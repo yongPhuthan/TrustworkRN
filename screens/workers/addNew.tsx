@@ -4,9 +4,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  ActivityIndicator,
   Image,
   StyleSheet,
 } from 'react-native';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faCamera} from '@fortawesome/free-solid-svg-icons';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
@@ -14,7 +16,8 @@ import {RouteProp} from '@react-navigation/native';
 import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
 import {Store} from '../../redux/store';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-
+import {BACK_END_SERVER_URL} from '@env';
+import {useUser} from '../../providers/UserContext';
 import {useSlugify} from '../../hooks/utils/useSlugify';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {
@@ -36,47 +39,64 @@ type Props = {
   navigation: StackNavigationProp<ParamListBase, 'AddNewWorker'>;
   route: RouteProp<ParamListBase, 'AddNewWorker'>;
 };
-const createWorker = async (data: any) => {
-  const user = auth().currentUser;
-  if(!user) return; // return if user is null
-  
-  let url;
-  
-  if (__DEV__) {
-    url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appAddNewWorker`;
-  } else {
-    url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appAddNewWorker`;
-  }
-  
-  try {
-    const idToken = await user.getIdToken(); 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${idToken}`, 
-      },
-      body: JSON.stringify({data}),
-    });
-
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-
-  } catch(err) {
-    console.error(err);
-  }
-};
-
-
-
 
 const AddNewWorker = ({navigation}: Props) => {
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const queryClient = useQueryClient();
   const [image, setImage] = useState<string | null>(null);
   const uriToBlobFunction = useUriToBlob();
   const [isImageUpload, setIsImageUpload] = useState(false);
+  const user = useUser();
+  const createWorker = async () => {
+    if (!user || !user.email || !image || !title || !description) {
+      console.error('User or user email or Image is not available');
+      return;
+    }
+    const imageUrl = await uploadImageToFbStorage(image);
+    const data = {
+      title,
+      description,
+      image: imageUrl,
+    };
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/company/createWorker`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({data}),
+        },
+      );
+      if (!response.ok) {
+        if (response.status === 401) {
+          const errorData = await response.json();
+          if (
+            errorData.message ===
+            'Token has been revoked. Please reauthenticate.'
+          ) {
+          }
+          throw new Error(errorData.message);
+        }
+        throw new Error('Network response was not ok.');
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const {mutate, isLoading} = useMutation(createWorker, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['workers', code]);
+      navigation.goBack();
+    },
+    onError: () => {
+      console.log('onError');
+    },
+  });
 
   const {
     state: {code},
@@ -110,19 +130,18 @@ const AddNewWorker = ({navigation}: Props) => {
       }
     });
   };
-  const uploadImageToCloudflare = async (imagePath: string) => {
+  const uploadImageToFbStorage = async (imagePath: string) => {
     if (!imagePath) {
       console.log('No image path provided');
       return;
     }
+    if (!user || !user.email) {
+      throw new Error('User or user email is not available');
+    }
+
     const name = imagePath.substring(imagePath.lastIndexOf('/') + 1);
     const fileType = imagePath.substring(imagePath.lastIndexOf('.') + 1);
     const filename = slugify(name);
-
-    const blob = (await uriToBlobFunction(imagePath)) as Blob;
-    const CLOUDFLARE_ENDPOINT = __DEV__
-      ? CLOUDFLARE_WORKER_DEV
-      : CLOUDFLARE_WORKER;
 
     let contentType = '';
     switch (fileType.toLowerCase()) {
@@ -138,18 +157,27 @@ const AddNewWorker = ({navigation}: Props) => {
         return;
     }
 
+    const blob = (await uriToBlobFunction(imagePath)) as Blob;
+    const filePath = __DEV__
+      ? `Test/${code}/workers/${filename}`
+      : `${code}/workers/${filename}`;
     try {
-      const response = await fetch(`${CLOUDFLARE_ENDPOINT}${filename}`, {
-        method: 'POST',
-        headers: {
-          workers: 'true',
+      const token = await user.getIdToken(true);
+
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/upload/postImageApprove`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            filePath,
+            contentType: contentType,
+          }),
         },
-        body: JSON.stringify({
-          fileName: name,
-          fileType: contentType,
-          code,
-        }),
-      });
+      );
 
       if (!response.ok) {
         const text = await response.text();
@@ -157,9 +185,9 @@ const AddNewWorker = ({navigation}: Props) => {
         throw new Error('Server error');
       }
 
-      const {presignedUrl} = await response.json();
+      const {signedUrl, publicUrl} = await response.json();
 
-      const uploadToR2Response = await fetch(presignedUrl, {
+      const uploadResponse = await fetch(signedUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': contentType,
@@ -167,32 +195,33 @@ const AddNewWorker = ({navigation}: Props) => {
         body: blob,
       });
 
-      if (!uploadToR2Response.ok) {
-        console.error('Failed to upload file to R2');
+      if (!uploadResponse.ok) {
+        console.error('Failed to upload file to Firebase Storage');
+        return;
       }
-      console.log('Upload to R2 success');
-      return `${CLOUDFLARE_R2_PUBLIC_URL}${filename}`;
+      console.log('Upload to Firebase Storage success');
+
+      // publicUrl is the URL of the uploaded image
+      return publicUrl;
     } catch (error) {
       console.error('There was a problem with the fetch operation:', error);
     }
   };
 
-  const addNewWorker = async () => {
-    if (!title || !description || !image) {
-      console.log('Missing required fields');
-      return;
+  const onDisbledButton = () => {
+    if (!image || !title || !description) {
+      return true;
     }
-    setIsImageUpload(true);
-    const imageUrl = await uploadImageToCloudflare(image);
-    const data = {
-      title,
-      description,
-      image: imageUrl,
-    };
-    await createWorker(data);
-    setIsImageUpload(false);
-    navigation.goBack();
+    return false;
   };
+
+  if (isLoading || isImageUpload) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -219,7 +248,10 @@ const AddNewWorker = ({navigation}: Props) => {
         onChangeText={setDescription}
         style={styles.input}
       />
-      <TouchableOpacity style={styles.addButton} onPress={() => addNewWorker()}>
+      <TouchableOpacity
+        disabled={!onDisbledButton}
+        style={styles.addButton}
+        onPress={() => mutate()}>
         <Text style={styles.addButtonText}>บันทึก</Text>
       </TouchableOpacity>
     </View>

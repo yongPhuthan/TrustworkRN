@@ -232,22 +232,25 @@ const Quotation = ({navigation}: Props) => {
     audits: [defaultAudit],
     materials: [defaultMaterial],
   };
+  
 
   const quotationDefaultValues = {
     id: id,
     services: [],
     customer: defalutCustomer,
     vat7: 0,
-    taxName: 'notax',
+    taxType: 'NOTAX',
     taxValue: 0,
     summary: 0,
     summaryAfterDiscount: 0,
-    discountName: 'thb',
+    discountType: 'PERCENT',
+    discountPercentage: 0,
     discountValue: 0,
     allTotal: 0,
     dateOffer: initialDateOffer,
     dateEnd: initialDateEnd,
     docNumber: initialDocnumber,
+    workers: [],
     FCMToken: fcmToken,
     sellerSignature: '',
   };
@@ -507,13 +510,13 @@ const Quotation = ({navigation}: Props) => {
 
             <AddServices handleAddProductFrom={handleAddProductForm} />
             <Divider />
-            {/* <View>
+            <View>
           <Pressable
             onPress={() => navigation.navigate('ExistingWorkers', {id:companyID})}
             style={styles.btn}>
             <Text style={{color:'white'}}>เลือกทีมงานติดตั้ง</Text>
           </Pressable>
-        </View> */}
+        </View>
             {/* <Divider /> */}
             <Summary
               title={'ยอดรวม'}
