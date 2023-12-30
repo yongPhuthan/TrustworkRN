@@ -43,10 +43,7 @@ import {
 } from '@env';
 import {Store} from '../../redux/store';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import firebase, {
-  testFirebaseConnection,
-  testFunctionsConnection,
-} from '../../firebase';
+
 import {StackNavigationProp} from '@react-navigation/stack';
 
 interface AddMaterialModalProps {

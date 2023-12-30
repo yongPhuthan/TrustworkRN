@@ -5,6 +5,7 @@ import {
   Image,
   StyleSheet,
   Dimensions,
+  SafeAreaView, 
   TouchableOpacity,
   ActivityIndicator,
   FlatList,
@@ -33,7 +34,6 @@ import Modal from 'react-native-modal';
 import CustomCheckbox from '../../components/CustomCheckbox';
 import {useUser} from '../../providers/UserContext';
 import {Store} from '../../redux/store';
-import AddNewMaterial from '../materials/addNew';
 import {
   useForm,
   FormProvider,
@@ -42,6 +42,7 @@ import {
   Controller,
   set,
 } from 'react-hook-form';
+import AddNewWorker from './addNew';
 interface ExistingModalProps {
   isVisible: boolean;
   onClose: () => void;
@@ -49,7 +50,6 @@ interface ExistingModalProps {
 
 }
 
-const numColumns = 2;
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
 const ExistingWorkers = ({
@@ -75,7 +75,6 @@ const ExistingWorkers = ({
     state: {serviceList, selectedMaterials, code, serviceImages},
     dispatch,
   }: any = useContext(Store);
-  const servicListIndex = serviceList.findIndex(service => service.id === serviceId);
 
   const fetchExistingMaterials = async () => {
     if (!user) {
@@ -153,7 +152,7 @@ const ExistingWorkers = ({
   };
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <FontAwesomeIcon icon={faClose} size={32} color="gray" />
@@ -213,9 +212,9 @@ const ExistingWorkers = ({
             </Text>
           </TouchableOpacity>
         )}
-      </View>
+      </SafeAreaView>
 
-      <AddNewMaterial
+      <AddNewWorker
         isVisible={isOpenModal}
         onClose={() => setIsOpenModal(false)}
       />
