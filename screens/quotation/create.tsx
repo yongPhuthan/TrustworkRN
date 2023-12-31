@@ -2,8 +2,8 @@ import {
   StyleSheet,
   Text,
   View,
-  TextInput,
-  Pressable,
+  Image,
+  SafeAreaView,
   ScrollView,
   FlatList,
   Dimensions,
@@ -27,12 +27,22 @@ import Summary from '../../components/Summary';
 import Divider from '../../components/styles/Divider';
 import {NavigationContainer} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faCloudUpload,
+  faEdit,
+  faPlus,
+  faImages,
+  faPlusCircle,
+} from '@fortawesome/free-solid-svg-icons';
 import EditCustomer from '../../components/edit/customer/EditCustomer';
 import {
   useForm,
   Controller,
   FormProvider,
+  useWatch,
   useFieldArray,
+  set,
 } from 'react-hook-form';
 import {
   HOST_URL,
@@ -42,6 +52,7 @@ import {
 } from '@env';
 import Modal from 'react-native-modal';
 import firebase from '../../firebase';
+import {faCamera, faClose} from '@fortawesome/free-solid-svg-icons';
 import CardProject from '../../components/CardProject';
 import CardClient from '../../components/CardClient';
 import FooterBtn from '../../components/styles/FooterBtn';
@@ -69,6 +80,7 @@ import {
   customersValidationSchema,
 } from '../utils/validationSchema';
 import Addservices from '../../components/add/AddServices';
+import ExistingWorkers from '../../components/workers/existing';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
 }
@@ -107,20 +119,18 @@ const Quotation = ({navigation}: Props) => {
   const [productWarantyYear, setProductWarantyYear] = useState(0);
   const [skillWarantyYear, setSkillWarantyYear] = useState(0);
   const [editServicesModal, setEditServicesModal] = useState(false);
-
+  const [workerModal, setWorkerModal] = useState(false);
   // const [customerName, setCustomerName] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [docNumber, setDocnumber] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [token, setToken] = useState<FirebaseAuthTypes.User | null>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [workerPicker, setWorkerpicker] = useState(false);
+
   const [singatureModal, setSignatureModal] = useState(false);
   const [signature, setSignature] = useState('');
   const [serviceIndex, setServiceIndex] = useState(0);
   const quotationId = uuidv4();
   const [fcmToken, setFtmToken] = useState('');
-  const id = uuidv4();
-  const [discount, setDiscount] = useState('0');
 
   const [showEditServiceModal, setShowEditServiceModal] = useState(false);
   const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(
@@ -167,7 +177,11 @@ const Quotation = ({navigation}: Props) => {
       return data;
     }
   };
-  const {docnumber: initialDocnumber, initialDateOffer, initialDateEnd} = useMemo(() => {
+  const {
+    docnumber: initialDocnumber,
+    initialDateOffer,
+    initialDateEnd,
+  } = useMemo(() => {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -228,14 +242,13 @@ const Quotation = ({navigation}: Props) => {
     unit: 'ชุด',
     serviceImage: '',
     serviceImages: [],
-    quotationId: id,
+    quotationId,
     audits: [defaultAudit],
     materials: [defaultMaterial],
   };
-  
 
   const quotationDefaultValues = {
-    id: id,
+    id: quotationId,
     services: [],
     customer: defalutCustomer,
     vat7: 0,
@@ -264,23 +277,19 @@ const Quotation = ({navigation}: Props) => {
     control: methods.control,
     name: 'services',
   });
+  const customer = useWatch({
+    control: methods.control,
+    name: 'customer',
+  });
 
-  const customer = methods.getValues('customer');
-  const services = methods.getValues('services');
+  const workers = useWatch({
+    control: methods.control,
+    name: 'workers',
+  });
+
   const isCustomerDisabled = useMemo(() => {
     return customer.name === '' && customer.address === '';
   }, [customer.name, customer.address]);
-  const isServicesDisbled = useMemo(() => {
-    return services[0]?.title === '' || services[0]?.unitPrice === '';
-  }, [services]);
-
-  const totalPrice = useMemo(() => {
-    let total = 0;
-    for (let i = 0; i < methods.watch('services').length; i++) {
-      total += Number(methods.watch(`services[${i}].total`));
-    }
-    return methods.setValue
-  }, [ methods.watch('services')]);
 
   const isDisabled = !client_name || serviceList.length === 0;
 
@@ -322,16 +331,23 @@ const Quotation = ({navigation}: Props) => {
       setPickerVisible(!pickerVisible);
     }
   };
+
+  const useWorkers = () => {
+    if (!workerPicker) {
+      if (workers.length > 0) {
+        setWorkerModal(false);
+        setWorkerpicker(!workerPicker);
+      } else {
+        setWorkerModal(true);
+        setWorkerpicker(!workerPicker);
+      }
+    } else {
+      methods.setValue('workers', []);
+      setWorkerpicker(!workerPicker);
+    }
+  };
   const handleSignatureSuccess = () => {
     setSignatureModal(false);
-  };
-  const handleAddClientForm = () => {
-    navigation.navigate('AddCustomer');
-  };
-
-  const handleModal = () => {
-    console.log('SHOW');
-    setShowEditServiceModal(true);
   };
   const handleModalClose = () => {
     setVisibleModalIndex(null);
@@ -373,48 +389,9 @@ const Quotation = ({navigation}: Props) => {
   const handleButtonPress = async () => {
     setIsLoadingMutation(true);
     try {
-      const clientData = {
-        id: uuidv4(),
-        name: client_name,
-        address: client_address,
-        companyId: client_tax,
-        phone: client_tel,
-      };
-      const apiData = {
-        data: {
-          id: quotationId,
-          summary: totalPrice,
-          services: serviceList,
-          customer: clientData,
-          vat7: vat7Amount,
-          taxValue: vat3Amount,
-          taxName: '',
-          dateEnd,
-          discountValue: discountValue ? discountValue : 0,
-          discountName: 'percent',
-          dateOffer,
-          FCMToken: fcmToken,
-          docNumber,
-          skillWarantyYear,
-          productWarantyYear,
-          summaryAfterDiscount,
-          allTotal: totalPrice,
-          sellerSignature: '',
-          offerContract: idContractList,
-          userId: companyID,
-        },
-      };
-      if (vat3Amount > 0) {
-        apiData.data.taxName = 'vat3';
-        apiData.data.taxValue = vat3Amount;
-      } else if (vat5Amount > 0) {
-        apiData.data.taxName = 'vat5';
-        apiData.data.taxValue = vat5Amount;
-      } else {
-        apiData.data.taxName = 'none';
-        apiData.data.taxValue = 0;
-      }
-      navigation.navigate('DefaultContract', {data: apiData} as any);
+      navigation.navigate('DefaultContract', {
+        data: methods.getValues(),
+      } as any);
 
       setIsLoadingMutation(false);
     } catch (error: Error | AxiosError | any) {
@@ -436,12 +413,6 @@ const Quotation = ({navigation}: Props) => {
     methods.setValue('dateEnd', formattedEndDate);
   };
 
-
-  const [dateOffer, setDateOffer] = useState<String>(initialDateOffer);
-  const [dateEnd, setDateEnd] = useState<String>(initialDateEnd);
-
-
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -454,9 +425,11 @@ const Quotation = ({navigation}: Props) => {
   const handleRemoveService = (index: number) => {
     setVisibleModalIndex(null);
 
-    // Remove the field at the specified index using the remove method
     remove(index);
   };
+  console.log('workerpiker', workerPicker);
+  console.log('woker lenght', workers.length);
+
   return (
     <FormProvider {...methods}>
       <View style={{flex: 1}}>
@@ -510,19 +483,112 @@ const Quotation = ({navigation}: Props) => {
 
             <AddServices handleAddProductFrom={handleAddProductForm} />
             <Divider />
-            <View>
-          <Pressable
-            onPress={() => navigation.navigate('ExistingWorkers', {id:companyID})}
-            style={styles.btn}>
-            <Text style={{color:'white'}}>เลือกทีมงานติดตั้ง</Text>
-          </Pressable>
-        </View>
+
             {/* <Divider /> */}
             <Summary
               title={'ยอดรวม'}
               price={200}
               onValuesChange={handleValuesChange}
             />
+            <SmallDivider />
+            <View style={styles.signatureRow}>
+              <Text style={styles.signHeader}>เพิ่มทีมงานติดตั้ง</Text>
+              <Switch
+                trackColor={{false: '#767577', true: '#81b0ff'}}
+                thumbColor={workerPicker ? '#ffffff' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={() => useWorkers()}
+                value={workers.length > 0 ? true : false}
+                style={Platform.select({
+                  ios: {
+                    transform: [{scaleX: 0.7}, {scaleY: 0.7}],
+                    marginTop: 5,
+                  },
+                  android: {},
+                })}
+              />
+            </View>
+            {/* workers */}
+            {workers.length > 0 && (
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingVertical: 10,
+                }}>
+                <FlatList
+                  data={workers}
+                  horizontal={true}
+                  renderItem={({item, index}) => {
+                    return (
+                      <View style={styles.imageContainer}>
+                        <TouchableOpacity onPress={() => setWorkerModal(true)}>
+                          <Image
+                            source={{uri: item.image}}
+                            style={styles.image}
+                          />
+                          <Text>{item.name}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }}
+                  keyExtractor={(item, index) => index.toString()}
+                  ListFooterComponent={
+                    workers.length > 0 ? (
+                      <TouchableOpacity
+                        style={styles.addButtonContainer}
+                        onPress={() => {
+                          setWorkerModal(true);
+                          // navigation.navigate('GalleryScreen', {code});
+                        }}>
+                        <FontAwesomeIcon
+                          icon={faPlus}
+                          size={32}
+                          color="#0073BA"
+                        />
+                      </TouchableOpacity>
+                    ) : null
+                  }
+                  // ListEmptyComponent={
+                  //   <View>
+                  //     <TouchableOpacity
+                  //       style={{
+                  //         justifyContent: 'center',
+                  //         alignItems: 'center',
+                  //         marginBottom: 20,
+                  //         borderColor: '#0073BA',
+                  //         borderWidth: 1,
+                  //         borderRadius: 5,
+                  //         borderStyle: 'dashed',
+                  //         // marginHorizontal: 100,
+                  //         padding: 10,
+                  //         height: 150,
+                  //         width: 200,
+                  //       }}
+                  //       onPress={() => {
+                  //         setWorkerModal(true);
+                  //       }}>
+                  //       <FontAwesomeIcon
+                  //         icon={faImages}
+                  //         style={{marginVertical: 5, marginHorizontal: 50}}
+                  //         size={32}
+                  //         color="#0073BA"
+                  //       />
+                  //       <Text
+                  //         style={{
+                  //           textAlign: 'center',
+                  //           color: '#0073BA',
+                  //           fontFamily: 'Sukhumvit set',
+                  //         }}>
+                  //         เลือกภาพตัวอย่างผลงาน
+                  //       </Text>
+                  //     </TouchableOpacity>
+                  //   </View>
+                  // }
+                />
+              </View>
+            )}
             <SmallDivider />
             <View style={styles.signatureRow}>
               <Text style={styles.signHeader}>เพิ่มลายเซ็น</Text>
@@ -545,14 +611,20 @@ const Quotation = ({navigation}: Props) => {
               isVisible={singatureModal}
               style={styles.modal}
               onBackdropPress={() => setSignatureModal(false)}>
-              <View style={styles.containerModal}>
+              <SafeAreaView style={styles.containerModal}>
+              <View style={styles.header}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => setSignatureModal(false)}>
+          <FontAwesomeIcon icon={faClose} size={24} color="gray" />
+        </TouchableOpacity>
+      
+      </View>
                 <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
                 <SignatureComponent
                   onClose={() => setSignatureModal(false)}
                   setSignatureUrl={setSignature}
                   onSignatureSuccess={handleSignatureSuccess}
                 />
-              </View>
+              </SafeAreaView>
             </Modal>
           </View>
         </ScrollView>
@@ -579,6 +651,18 @@ const Quotation = ({navigation}: Props) => {
             serviceIndex={serviceIndex}
           />
         </Modal>
+        <Modal
+          isVisible={workerModal}
+          onBackdropPress={() => setWorkerModal(false)}
+          style={styles.modal}>
+          <ExistingWorkers
+            onClose={() => {
+              setWorkerpicker(!workerPicker);
+              setWorkerModal(false);
+            }}
+            isVisible={workerModal}
+          />
+        </Modal>
         <View>
           <FooterBtn
             btnText="ดำเนินการต่อ"
@@ -594,6 +678,8 @@ const Quotation = ({navigation}: Props) => {
 export default Quotation;
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
+const imageContainerWidth = windowWidth / 3 - 10;
+
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#e9f7ff',
@@ -621,6 +707,14 @@ const styles = StyleSheet.create({
   form: {
     border: '1px solid #0073BA',
     borderRadius: 10,
+  },
+  imageContainer: {
+    width: imageContainerWidth,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    flexDirection: 'column',
+    margin: 5,
+    position: 'relative',
   },
   modalContainer: {
     backgroundColor: 'white',
@@ -701,11 +795,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'Sukhumvit Set Bold',
   },
+  closeButton: {
+    paddingVertical: 10,
+  },
   header: {
     flexDirection: 'row',
-    marginTop: 40,
+    marginTop: 10,
     alignItems: 'flex-start',
+    paddingHorizontal: 20,
     justifyContent: 'flex-start',
+    paddingVertical: 10,
   },
   selectButton: {
     backgroundColor: '#0073BA',
@@ -819,15 +918,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   modal: {
-    marginTop: 100,
+    marginTop: 10,
     justifyContent: 'flex-start',
     alignItems: 'center',
     borderRadius: 10,
     height: windowHeight * 0.2,
   },
-  closeButton: {
-    paddingVertical: 10,
-  },
+
   headerModal: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
@@ -850,8 +947,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#19232e',
-    marginLeft: 20,
-
+alignSelf:'center',
     fontFamily: 'Sukhumvit set',
+  },
+  image: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 0,
+    resizeMode: 'cover',
+  },
+  addButtonContainer: {
+    width: 100,
+    margin: 5,
+    height: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: '#0073BA',
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderRadius: 4, // Optional, for rounded edges
   },
 });

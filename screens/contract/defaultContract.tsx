@@ -59,7 +59,7 @@ const DefaultContract = ({navigation}: Props) => {
   const [customer, setCustomer] = useState<Customer>();
   const textRequired = 'จำเป็นต้องระบุ';
   const {data: dataProps}: any = route?.params;
-  const quotation = dataProps.data;
+  const quotation = dataProps;
   const queryClient = useQueryClient();
 
   async function fetchContractByEmail() {

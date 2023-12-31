@@ -235,7 +235,7 @@ const Addservices = ({handleAddService, onClose}: Props) => {
             <Text style={styles.priceTitle}>ชื่อรายการ</Text>
             <Controller
               control={control}
-              name="title"
+              name="name"
               rules={{required: true}}
               render={({field: {onChange,onBlur, value}}) => (
                 <TextInput
@@ -256,7 +256,7 @@ const Addservices = ({handleAddService, onClose}: Props) => {
 
             <Controller
               control={control}
-              name="description"
+              name="mainSkill"
               defaultValue=""
               render={({field: {onChange, value}}) => (
                 <TextInput
@@ -523,8 +523,8 @@ const Addservices = ({handleAddService, onClose}: Props) => {
             isVisible={isModalVisible}
             serviceId={serviceID}
             onClose={() => setModalVisible(false)}
-            title={watch('title')}
-            description={watch('description')}
+            title={watch('name')}
+            description={watch('mainSkill')}
           />
           <ExistingMaterials
             serviceId={serviceID}

@@ -4,6 +4,7 @@ import {
   View,
   TextInput,
   ActivityIndicator,
+  SafeAreaView,
   Text,
   StyleSheet,
   Pressable,
@@ -112,15 +113,15 @@ const LoginScreen = ({navigation}: Props) => {
     };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Back Arrow Button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}>
-        <FontAwesomeIcon icon={faClose} size={26} color="#5C5F62" />
+        <FontAwesomeIcon icon={faArrowLeft} size={26} color="#5C5F62" />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Saletrusth</Text>
+      <Text style={styles.title}>Trusthwork</Text>
       <TextInput
         placeholder="อีเมล"
         style={styles.input}
@@ -155,7 +156,7 @@ const LoginScreen = ({navigation}: Props) => {
           </Text>
         )}
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 };
 

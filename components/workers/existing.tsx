@@ -18,8 +18,9 @@ import {
   faEdit,
   faExpand,
   faPlus,
-  faImages,
+  faCamera,
   faClose,
+  faCirclePlus,
 } from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {RouteProp} from '@react-navigation/native';
@@ -46,8 +47,6 @@ import AddNewWorker from './addNew';
 interface ExistingModalProps {
   isVisible: boolean;
   onClose: () => void;
-  serviceId: string;
-
 }
 
 const {width, height} = Dimensions.get('window');
@@ -55,7 +54,7 @@ const imageContainerWidth = width / 3 - 10;
 const ExistingWorkers = ({
   isVisible,
   onClose,
-  serviceId,
+  
 }: ExistingModalProps) => {
   const [workers, setWorkers] = useState<Workers[]>([]);
   const [isOpenModal, setIsOpenModal] = useState(false);
@@ -81,7 +80,7 @@ const ExistingWorkers = ({
       throw new Error('User not authenticated');
     } else {
       const idToken = await user.getIdToken(true);
-      let url = `${BACK_END_SERVER_URL}/api/services/queryMaterials?code=${encodeURIComponent(
+      let url = `${BACK_END_SERVER_URL}/api/company/getWorkers?code=${encodeURIComponent(
         code,
       )}`;
       const response = await fetch(url, {
@@ -92,7 +91,7 @@ const ExistingWorkers = ({
         },
       });
       const data = await response.json();
-
+console.log(data)
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -105,7 +104,7 @@ const ExistingWorkers = ({
     () => fetchExistingMaterials().then(res => res),
     {
       onSuccess: data => {
-        setWorkers(data);
+        setWorkers(data.workers);
       },
     },
   );
@@ -150,13 +149,27 @@ const ExistingWorkers = ({
   const handleAddNewProduct = () => {
     setIsOpenModal(true);
   };
+  console.log('workr')
   return (
-    <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
-      <SafeAreaView style={styles.container}>
+    < >
+      <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <FontAwesomeIcon icon={faClose} size={32} color="gray" />
+            <FontAwesomeIcon icon={faClose} size={24} color="gray" />
           </TouchableOpacity>
+          <Text style={{
+            fontSize: 16,
+            fontWeight: 'bold',
+            marginTop: 10,
+            textAlign: 'center',
+            marginBottom: 16,
+          
+          }}>เลือกทีมงานติดตั้ง</Text>
+          <TouchableOpacity
+              style={styles.onPlusButton}
+              onPress={() => setIsOpenModal(true)}>
+              <FontAwesomeIcon icon={faCirclePlus} size={24} color="gray" />
+            </TouchableOpacity>
         </View>
 
         <FlatList
@@ -198,7 +211,7 @@ const ExistingWorkers = ({
               <TouchableOpacity
                 onPress={handleAddNewProduct}
                 style={styles.emptyListButton}>
-                <Text style={styles.emptyListText}>+ เพิ่มรายการใหม่</Text>
+                <Text style={styles.emptyListText}>+ เพิ่มทีมงานใหม่</Text>
               </TouchableOpacity>
             </View>
           }
@@ -212,13 +225,15 @@ const ExistingWorkers = ({
             </Text>
           </TouchableOpacity>
         )}
-      </SafeAreaView>
-
+      </View>
+      <Modal isVisible={isOpenModal} style={styles.modal} onBackdropPress={() => setIsOpenModal(false)}>
+        
       <AddNewWorker
         isVisible={isOpenModal}
         onClose={() => setIsOpenModal(false)}
       />
-    </Modal>
+      </Modal>
+    </>
   );
 };
 
@@ -327,6 +342,10 @@ const styles = StyleSheet.create({
   modal: {
     justifyContent: 'flex-start',
     alignItems: 'center',
+    paddingTop: 10,
+    paddingHorizontal: 20, // Adjusted from 500 to a smaller value
+
+
   },
   closeButton: {
     paddingVertical: 10,
@@ -342,7 +361,9 @@ const styles = StyleSheet.create({
   selected: {
     backgroundColor: '#F2F2F2',
   },
-
+  onPlusButton: {
+    paddingVertical: 10,
+  },
   card: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
@@ -398,6 +419,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'Sukhumvit Set Bold',
   },
+  
   icon: {
     color: '#012b20',
   },

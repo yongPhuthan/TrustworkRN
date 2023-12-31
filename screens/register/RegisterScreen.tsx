@@ -151,7 +151,13 @@ const RegisterScreen = ({navigation}: Props) => {
         setUserLoading(false);
         // Proceed with additional client-side logic if needed
       } catch (serverError) {
-        console.error('Server-side user creation failed:', serverError);
+        Alert.alert(
+          'เกิดข้อผิดพลาด',
+          `Server-side user creation failed:, ${serverError}`, 
+          [{text: 'OK', onPress: () =>         setUserLoading(false)
+        }],
+          {cancelable: false},
+        );
         // Handle server-side error
       }
     } catch (error) {

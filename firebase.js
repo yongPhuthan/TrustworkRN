@@ -30,7 +30,7 @@ if (__DEV__) {
   // firebase.functions().useEmulator(emulatorHost, 5001);
   firebase.auth().useEmulator(`${emulatorHost}:9099`);
   // firebase.firestore().useEmulator(emulatorHost, 8080)
-  firebase.storage().useEmulator(emulatorHost,9199)
+  // firebase.storage().useEmulator(emulatorHost,9199)
 
   
   console.log('Using emulator at ' + emulatorHost);

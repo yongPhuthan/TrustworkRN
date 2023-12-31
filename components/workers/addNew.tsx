@@ -6,15 +6,19 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
+  Dimensions,
+  Alert,
   Image,
   StyleSheet,
 } from 'react-native';
-import Modal from 'react-native-modal';
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {CheckBox} from '@rneui/themed';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faCamera} from '@fortawesome/free-solid-svg-icons';
+import {faCamera, faClose} from '@fortawesome/free-solid-svg-icons';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
 import {RouteProp} from '@react-navigation/native';
+import {useForm, useWatch, Controller, set} from 'react-hook-form';
+import firebase from '../../firebase';
 import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
 import {Store} from '../../redux/store';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
@@ -28,82 +32,48 @@ import {
   ImageLibraryOptions,
   ImagePickerResponse,
 } from 'react-native-image-picker';
-
+import SaveButton from '../ui/Button/SaveButton';
 
 interface ExistingModalProps {
-    isVisible: boolean;
-    onClose: () => void;
-  
-  }
+  isVisible: boolean;
+  onClose: () => void;
+}
+enum WorkerStatus {
+  MAINWORKER = 'MAINWORKER',
+  OUTSOURCE = 'OUTSOURCE',
+}
 
-const AddNewWorker = ({
-    isVisible,
-    onClose,
-
-  }: ExistingModalProps) => {
+const AddNewWorker = ({isVisible, onClose}: ExistingModalProps) => {
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const queryClient = useQueryClient();
-  const [image, setImage] = useState<string | null>(null);
   const uriToBlobFunction = useUriToBlob();
   const [isImageUpload, setIsImageUpload] = useState(false);
   const user = useUser();
-  const createWorker = async () => {
-    if (!user || !user.email || !image || !title || !description) {
-      console.error('User or user email or Image is not available');
-      return;
-    }
-    const imageUrl = await uploadImageToFbStorage(image);
-    const data = {
-      title,
-      description,
-      image: imageUrl,
-    };
-    try {
-      const token = await user.getIdToken(true);
-      const response = await fetch(
-        `${BACK_END_SERVER_URL}/api/company/createWorker`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({data}),
-        },
-      );
-      if (!response.ok) {
-        if (response.status === 401) {
-          const errorData = await response.json();
-          if (
-            errorData.message ===
-            'Token has been revoked. Please reauthenticate.'
-          ) {
-          }
-          throw new Error(errorData.message);
-        }
-        throw new Error('Network response was not ok.');
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-  const {mutate, isLoading} = useMutation(createWorker, {
-    onSuccess: () => {
-      queryClient.invalidateQueries(['workers', code]);
-      onClose();
-    },
-    onError: () => {
-      console.log('onError');
+  const {
+    register,
+    handleSubmit,
+    control,
+    getValues,
+    watch,
+    setValue,
+    formState: {errors, isValid, isDirty},
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      name: '',
+      mainSkill: '',
+      image: '',
+      workerStatus: WorkerStatus.OUTSOURCE,
     },
   });
-
+  const image = watch('image');
   const {
     state: {code},
     dispatch,
   }: any = useContext(Store);
   const slugify = useSlugify();
-  const pickImage = async () => {
+  const pickImage = async onChange => {
     const options: ImageLibraryOptions = {
       mediaType: 'photo' as MediaType,
     };
@@ -120,7 +90,7 @@ const AddNewWorker = ({
 
         if (source.uri) {
           try {
-            setImage(source.uri);
+            onChange(source.uri); // Update the form field with the new image URI
             setIsImageUpload(false);
           } catch (error) {
             console.error('Error uploading image to Cloudflare:', error);
@@ -130,6 +100,70 @@ const AddNewWorker = ({
       }
     });
   };
+
+  const createWorker = async () => {
+    if (!user || !user.email || !isValid) {
+      console.error('User or user email or Image is not available');
+      return;
+    }
+  
+    try {
+      // Start the image upload and wait for it to finish
+      const imageUrl = await uploadImageToFbStorage(image);
+      if (!imageUrl) {
+        // Handle the case where the image upload fails
+        Alert.alert(
+          'Upload Failed',
+          'Failed to upload the image. Please try again.', 
+          [{text: 'OK'}],
+          {cancelable: false},
+        );
+        return;
+      }
+  
+      // Prepare the data with the URL of the uploaded image
+      const data = {
+        name: getValues('name'),
+        mainSkill: getValues('mainSkill'),
+        workerStatus: getValues('workerStatus'),
+        code,
+        image: imageUrl,
+      };
+  
+      // Proceed with creating the worker using the image URL
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/company/createWorker`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({data}),
+        },
+      );
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = errorData.message || 'An unexpected error occurred.';
+        throw new Error(errorMessage);
+      }
+  
+      // Handle successful worker creation here, if necessary
+  
+    } catch (err) {
+      // Handle errors from image upload or worker creation
+      console.error('An error occurred:', err);
+      Alert.alert(
+        'เกิดข้อผิดพลาด',
+        'An error occurred while creating the worker. Please try again.', 
+        [{text: 'OK', onPress: () => console.log('OK Pressed')}],
+        {cancelable: false},
+      );
+    }
+  };
+  
   const uploadImageToFbStorage = async (imagePath: string) => {
     if (!imagePath) {
       console.log('No image path provided');
@@ -156,116 +190,159 @@ const AddNewWorker = ({
         console.error('Unsupported file type:', fileType);
         return;
     }
-
-    const blob = (await uriToBlobFunction(imagePath)) as Blob;
     const filePath = __DEV__
       ? `Test/${code}/workers/${filename}`
       : `${code}/workers/${filename}`;
     try {
-      const token = await user.getIdToken(true);
+      const reference = firebase.storage().ref(filePath);
+      const task = reference.putFile(imagePath, { contentType });
 
-      const response = await fetch(
-        `${BACK_END_SERVER_URL}/api/upload/postImageApprove`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            filePath,
-            contentType: contentType,
-          }),
+    return new Promise((resolve, reject) => {
+      task.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload is ' + progress.toFixed(2) + '% done');
+          switch (snapshot.state) {
+            case firebase.storage.TaskState.PAUSED: // or 'paused'
+              console.log('Upload is paused');
+              break;
+            case firebase.storage.TaskState.RUNNING: // or 'running'
+              console.log('Upload is running');
+              break;
+          }        },
+        (error) => {
+          // Handle unsuccessful uploads
+          console.error('Upload failed:', error);
+          reject(error);
         },
+        async () => {
+          // Upload completed successfully, now we can get the download URL
+          const url = await reference.getDownloadURL();
+          console.log('Upload to Firebase Storage success', url);
+          resolve(url);
+        }
       );
-
-      if (!response.ok) {
-        const text = await response.text();
-        console.error('Server responded with:', text);
-        throw new Error('Server error');
-      }
-
-      const {signedUrl, publicUrl} = await response.json();
-
-      const uploadResponse = await fetch(signedUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': contentType,
-        },
-        body: blob,
-      });
-
-      if (!uploadResponse.ok) {
-        console.error('Failed to upload file to Firebase Storage');
-        return;
-      }
-      console.log('Upload to Firebase Storage success');
-
-      // publicUrl is the URL of the uploaded image
-      return publicUrl;
+    });
     } catch (error) {
       console.error('There was a problem with the fetch operation:', error);
     }
   };
-
-  const onDisbledButton = () => {
-    if (!image || !title || !description) {
-      return true;
-    }
-    return false;
-  };
+  const {mutate, isLoading} = useMutation(createWorker, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['workers', code]);
+      onClose();
+    },
+    onError: error => {
+      console.log('onError', error);
+      
+    },
+  });
 
   if (isLoading || isImageUpload) {
     return (
-      <View style={styles.container}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
         <ActivityIndicator size="large" />
       </View>
     );
   }
-
   return (
-    <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
-            <SafeAreaView style={styles.container}>
-      <TouchableOpacity onPress={pickImage} style={styles.imageUploader}>
-        {image ? (
-          <Image source={{uri: image}} style={styles.image} />
-        ) : (
-          <FontAwesomeIcon icon={faCamera} size={40} color="gray" />
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <FontAwesomeIcon icon={faClose} size={32} color="gray" />
+        </TouchableOpacity>
+      
+      </View>
+      <Controller
+        control={control}
+        name="image"
+        rules={{required: 'Image is required'}} // Add required rule here
+        render={({field: {onChange, value}}) => (
+          <TouchableOpacity
+            onPress={() => pickImage(onChange)}
+            style={styles.imageUploader}>
+            {value ? (
+              <Image source={{uri: value}} style={styles.image} />
+            ) : (
+              <FontAwesomeIcon icon={faCamera} size={40} color="gray" />
+            )}
+          </TouchableOpacity>
         )}
-      </TouchableOpacity>
-      <Text style={styles.label}>ชื่อช่าง</Text>
-
-      <TextInput
-        placeholder="ชื่อจริง นามสกุล ช่าง"
-        value={title}
-        onChangeText={setTitle}
-        style={styles.input}
       />
+
+      <Text style={styles.label}>ชื่อ-นามสกุล </Text>
+      {errors.name && <Text>**</Text>}
+      <Controller
+        control={control}
+        name="name"
+        rules={{required: true}}
+        render={({field: {onChange, onBlur, value}}) => (
+          <TextInput
+            placeholder="ชื่อจริง นามสกุล ช่าง"
+            onBlur={onBlur}
+            onChangeText={onChange}
+            value={value}
+            style={styles.input}
+          />
+        )}
+      />
+
+      {/* Description Input */}
       <Text style={styles.label}>เป็นช่างอะไร</Text>
-
-      <TextInput
-        placeholder="เช่น ช่างอลูมิเนียม"
-        value={description}
-        onChangeText={setDescription}
-        style={styles.input}
+      {errors.mainSkill && <Text>**</Text>}
+      <Controller
+        control={control}
+        name="mainSkill"
+        rules={{required: true}}
+        render={({field: {onChange, onBlur, value}}) => (
+          <TextInput
+            placeholder="เช่น ช่างอลูมิเนียม"
+            onBlur={onBlur}
+            onChangeText={onChange}
+            value={value}
+            style={styles.input}
+          />
+        )}
       />
-      <TouchableOpacity
-        disabled={!onDisbledButton}
-        style={styles.addButton}
-        onPress={() => mutate()}>
-        <Text style={styles.addButtonText}>บันทึก</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-    </Modal>
+      <Controller
+        control={control}
+        name="workerStatus"
+        render={({field: {onChange, value}}) => (
+          <View style={styles.checkBoxContainer}>
+            <CheckBox
+              title="ช่างหลักประจำทีม"
+              checked={value === WorkerStatus.MAINWORKER}
+              onPress={() => onChange(WorkerStatus.MAINWORKER)}
+            />
+            <CheckBox
+              title="ช่างทั่วไป"
+              checked={value === WorkerStatus.OUTSOURCE}
+              onPress={() => onChange(WorkerStatus.OUTSOURCE)}
+            />
+          </View>
+        )}
+      />
 
+      <SaveButton disabled={!isValid} onPress={() => mutate()} />
+    </View>
   );
 };
-
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
+    margin: 50,
+    paddingHorizontal: 20,
+
+    backgroundColor: '#ffffff',
+    width: windowWidth,
+    height: windowHeight,
   },
   imageUploader: {
     alignItems: 'center',
@@ -281,6 +358,7 @@ const styles = StyleSheet.create({
   input: {
     height: 40,
     borderColor: 'gray',
+    borderRadius: 8,
     borderWidth: 1,
     marginBottom: 16,
     paddingHorizontal: 8,
@@ -300,8 +378,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  header: {
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    paddingVertical: 10,
+  },
+  closeButton: {
+    paddingVertical: 10,
+  },
   modal: {
+    margin: 0,
+    marginTop: 10,
     justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  button: {
+    width: '90%',
+    top: '30%',
+    height: 50,
+    backgroundColor: '#012b20',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkBoxContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
 });
