@@ -1,31 +1,36 @@
 {
-    "companyUser": {
-        "id": "252f6cf1-7abf-48e6-b788-6265434a6200"
-    },
-    "contract": {
-        "projectName": "AWSDSD",
-        "signAddress": "GERRE"
-    },
+    "allTotal": "0",
     "customer": {
-        "id": "125a6f1d-8ac7-41d2-8656-1e0b059314d7",
-        "name": "ปลาทอง7777"
+        "address": "7/44 หมู่5 ต.อ้อมใหญ่ อ.สามพราน จ.นครปฐม",
+        "companyId": "110080067422",
+        "name": "พัฒนพง วงชัย",
+        "phone": "053306426"
     },
-    "id": "88bb5838-98eb-43bb-91d0-c895a44a7030",
-    "periodPercent": [{
-        "amount": 2619.6345423586,
-        "details": "STUTT",
-        "installment": 1,
-        "percentage": 50
-    }, {
-        "amount": 2619.6345423586,
-        "details": "FDFDF",
-        "installment": 2,
-        "percentage": 50
-    }],
+    "dateEnd": "07-01-2024",
+    "dateOffer": "31-12-2023",
+    "discountType": "PERCENT",
+    "discountValue": "1598",
+    "docNumber": "20231231677",
+    "id": "3bd267bf-d3e0-4ea4-a6ed-38362a45464d",
     "services": [{
-        "description": "ปลาทอง66",
-        "id": "d465f2dc-c042-45e7-ab80-2ce1f409a7d1",
-        "title": "ประทุม66"
+        "audits": [Array],
+        "companyId": "ebd620b0-e699-43c6-962e-f8bffab5137e",
+        "description": "กระจกเทมเปอร์ใส",
+        "discountType": "PERCENT",
+        "discountValue": "0",
+        "id": "398fbb5f-56de-4c8d-bf0c-c781c7208e13",
+        "materials": [Array],
+        "qty": 4,
+        "quotationId": "3bd267bf-d3e0-4ea4-a6ed-38362a45464d",
+        "serviceImages": [Array],
+        "title": "ประตูบานเฟี้ยมนิรภัยอ้อมใหญ่",
+        "total": "31960",
+        "unit": "à¸à¸¸à¸",
+        "unitPrice": "7990"
     }],
-    "workStatus": "ALL"
+    "status": "PENDING",
+    "summaryAfterDiscount": "30362",
+    "taxType": "NOTAX",
+    "taxValue": "0",
+    "vat7": "0"
 }

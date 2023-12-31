@@ -4,6 +4,7 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   StyleSheet,
+  Alert,
   TextInput,
   Platform,
   Text,
@@ -61,7 +62,7 @@ const DefaultContract = ({navigation}: Props) => {
   const {data: dataProps}: any = route?.params;
   const quotation = dataProps;
   const queryClient = useQueryClient();
-
+console.log('quotation',quotation)
   async function fetchContractByEmail() {
     if (!user || !user.email) {
       console.error('User or user email is not available');
@@ -140,8 +141,8 @@ const DefaultContract = ({navigation}: Props) => {
         throw new Error(errorData.message || 'Network response was not ok.');
       }
     } catch (err) {
-      // Propagate the error to the caller
-      throw err;
+      throw new Error(err);
+
     }
   };
 
@@ -178,7 +179,7 @@ const DefaultContract = ({navigation}: Props) => {
         throw new Error('Network response was not ok.');
       }
     } catch (err) {
-      console.log(err);
+      throw new Error(err);
     }
   };
 
@@ -215,7 +216,7 @@ const DefaultContract = ({navigation}: Props) => {
         throw new Error('Network response was not ok.');
       }
     } catch (err) {
-      console.log(err);
+      throw new Error(err);
     }
   };
   const {
@@ -275,8 +276,13 @@ const DefaultContract = ({navigation}: Props) => {
         navigation.navigate('DocViewScreen', {id: newId});
       },
       onError: (error: MyError) => {
-        console.error('There was a problem calling the function:', error);
-        console.log(error.response);
+        Alert.alert(
+          'เกิดข้อผิดพลาด',
+          `Server-side user creation failed:, ${error}`, 
+          [{text: 'OK', }],
+        
+          {cancelable: false},
+        );
       },
     },
   );
@@ -288,8 +294,13 @@ const DefaultContract = ({navigation}: Props) => {
       navigation.navigate('DocViewScreen', {id: newId});
     },
     onError: (error: MyError) => {
-      console.error('There was a problem calling the function:', error);
-      console.log(error.response);
+      Alert.alert(
+        'เกิดข้อผิดพลาด',
+        `Server-side user creation failed:, ${error}`, 
+        [{text: 'OK', }],
+      
+        {cancelable: false},
+      );
     },
   });
 
@@ -302,8 +313,13 @@ const DefaultContract = ({navigation}: Props) => {
         navigation.navigate('DocViewScreen', {id: newId});
       },
       onError: (error: MyError) => {
-        console.error('There was a problem calling the function:', error);
-        console.log(error.response);
+        Alert.alert(
+          'เกิดข้อผิดพลาด',
+          `Server-side user creation failed:, ${error}`, 
+          [{text: 'OK', }],
+        
+          {cancelable: false},
+        );
       },
     },
   );
@@ -361,25 +377,7 @@ const DefaultContract = ({navigation}: Props) => {
     }
   };
 
-  const handleBackPress = () => {
-    // If it's not the first step, decrement the step.
-    if (step > 1) {
-      setStep(step - 1);
-    } else {
-      ('');
-      //   reset({
-      //     warantyTimeWork: '',
-      //     workCheckEnd: '',
-      //     workCheckDay: '',
-      //     installingDay: '',
-      //     adjustPerDay: '',
-      //     workAfterGetDeposit: '',
-      //     prepareDay: '',
-      //     finishedDay: '',
-      //   });
-      navigation.goBack();
-    }
-  };
+
   function safeToString(value) {
     return value !== undefined && value !== null ? value.toString() : '';
   }
@@ -405,7 +403,7 @@ const DefaultContract = ({navigation}: Props) => {
               <TextInput
                 keyboardType="number-pad"
                 textAlign="center"
-                textAlignVertical="bottom"
+                textAlignVertical="center"
                 defaultValue={defaultValue}
                 onBlur={onBlur}
                 onChangeText={val => {
@@ -416,7 +414,7 @@ const DefaultContract = ({navigation}: Props) => {
                 }}
                 style={{
                   width: 30,
-                  height: 45,
+                  // height: 45,
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'center',

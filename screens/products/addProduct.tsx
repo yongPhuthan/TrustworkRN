@@ -65,10 +65,7 @@ const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
 const AddProductForm = ({navigation, route}: Props) => {
   // const {control, handleSubmit, watch} = useForm<FormData>();
-  const [count, setCount] = useState(0);
   const {quotationId, onAddService} = route.params;
-  const [discountPercent, setDiscountPercent] = useState(0);
-  const [qty, setQuantity] = useState(1);
   const [isModalVisible, setModalVisible] = useState(false);
   const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
   const [serviceImages, setServiceImages] = useState<string[]>([]);
@@ -123,24 +120,26 @@ const AddProductForm = ({navigation, route}: Props) => {
     defaultValue: [],
   });
   const [unitPrice, quantity] = useWatch({
-    control:methods.control,
+    control: methods.control,
     name: ['unitPrice', 'qty'], // Watching multiple fields
   });
 
   useEffect(() => {
     const unitPriceNum = Number(unitPrice);
     const quantityNum = Number(quantity);
-  
+
     if (isFinite(unitPriceNum) && isFinite(quantityNum)) {
       const total = unitPriceNum * quantityNum;
       methods.setValue('total', total);
     }
   }, [unitPrice, quantity, methods.setValue]);
 
-
-
   const isButtonDisbled = useMemo(() => {
-    return materials.length > 0 && audits?.length > 0 && title !== null || '' && unitPrice !== null || '';
+    return (
+      (materials.length > 0 && audits?.length > 0 && title !== null) ||
+      ('' && unitPrice !== null) ||
+      ''
+    );
   }, [audits, materials, title, unitPrice]);
 
   return (
@@ -247,8 +246,11 @@ const AddProductForm = ({navigation, route}: Props) => {
                 render={({field: {onChange, onBlur, value}}) => (
                   <TextInput
                     style={styles.inputName}
+                    multiline
                     onBlur={onBlur}
                     onChangeText={onChange}
+                    numberOfLines={2}
+                    textAlignVertical="top"
                     value={value}
                   />
                 )}
@@ -266,7 +268,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                     keyboardType="name-phone-pad"
                     multiline
                     textAlignVertical="top"
-                    numberOfLines={4}
+                    numberOfLines={2}
                     style={styles.inputAddress}
                     onChangeText={onChange}
                     value={value}
@@ -293,7 +295,6 @@ const AddProductForm = ({navigation, route}: Props) => {
                       style={[styles.input, {textAlign: 'right'}]}
                       placeholder="0"
                       onBlur={onBlur}
-                      
                       keyboardType="number-pad"
                       onChangeValue={value => {
                         onChange(value);
@@ -313,41 +314,41 @@ const AddProductForm = ({navigation, route}: Props) => {
 
                 {/* START COUNTER BUTTON */}
                 <View style={styles.containerCounter}>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => {
-                    const newQty = Math.max(0, methods.watch('qty') - 1);
-                    methods.setValue('qty', newQty);
-                  }}>
-                  <Text style={styles.buttonText}>-</Text>
-                </TouchableOpacity>
-                <Controller
-                  control={methods.control}
-                  name="qty"
-                  render={({field: {value}}) => (
-                    <TextInput
-                      style={styles.counter}
-                      placeholder="10"
-                      keyboardType="number-pad"
-                      onChangeText={text => {
-                        const newQty = parseInt(text, 10);
-                        if (!isNaN(newQty)) {
-                          methods.setValue('qty', newQty);
-                        }
-                      }}
-                      value={methods.watch('qty').toString()}
-                    />
-                  )}
-                />
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => {
-                    const newQty = methods.watch('qty') + 1;
-                    methods.setValue('qty', newQty); 
-                  }}>
-                  <Text style={styles.buttonText}>+</Text>
-                </TouchableOpacity>
-              </View>
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => {
+                      const newQty = Math.max(0, methods.watch('qty') - 1);
+                      methods.setValue('qty', newQty);
+                    }}>
+                    <Text style={styles.buttonText}>-</Text>
+                  </TouchableOpacity>
+                  <Controller
+                    control={methods.control}
+                    name="qty"
+                    render={({field: {value}}) => (
+                      <TextInput
+                        style={styles.counter}
+                        placeholder="10"
+                        keyboardType="number-pad"
+                        onChangeText={text => {
+                          const newQty = parseInt(text, 10);
+                          if (!isNaN(newQty)) {
+                            methods.setValue('qty', newQty);
+                          }
+                        }}
+                        value={methods.watch('qty').toString()}
+                      />
+                    )}
+                  />
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => {
+                      const newQty = methods.watch('qty') + 1;
+                      methods.setValue('qty', newQty);
+                    }}>
+                    <Text style={styles.buttonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
 
                 {/* END COUNTER BUTTON */}
               </View>
@@ -369,22 +370,24 @@ const AddProductForm = ({navigation, route}: Props) => {
               </View>
               <SmallDivider />
               <View style={styles.summary}>
-              <Text style={styles.priceSum}>รวมเป็นเงิน:</Text>
+                <Text style={styles.priceSum}>รวมเป็นเงิน:</Text>
 
-              <Controller
-                control={methods.control}
-                name="total"
-                defaultValue={0}
-                render={({field: {value}}) => (
-                  <TextInput
-                    style={styles.priceSummary}
-                    placeholder="0"
-                    value={value ? new Intl.NumberFormat().format(value) : '0'}
-                    editable={false}
-                  />
-                )}
-              />
-            </View>
+                <Controller
+                  control={methods.control}
+                  name="total"
+                  defaultValue={0}
+                  render={({field: {value}}) => (
+                    <TextInput
+                      style={styles.priceSummary}
+                      placeholder="0"
+                      value={
+                        value ? new Intl.NumberFormat().format(value) : '0'
+                      }
+                      editable={false}
+                    />
+                  )}
+                />
+              </View>
               <View
                 style={{
                   ...Platform.select({
@@ -519,7 +522,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                <SaveButton disabled={false} onPress={handleDone} />
+                <SaveButton disabled={!isButtonDisbled} onPress={handleDone} />
               </View>
             </View>
             <SelectAudit

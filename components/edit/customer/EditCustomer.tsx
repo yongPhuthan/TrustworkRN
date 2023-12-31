@@ -55,108 +55,106 @@ const EditCustomer = ({onClose}: Props) => {
   };
 
   return (
-    <ScrollView style={{width: '100%'}}>
-      <View style={styles.subContainer}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.onCloseButton}
-            onPress={() => onClose()}>
-            <FontAwesomeIcon icon={faClose} size={24} color="gray" />
-          </TouchableOpacity>
-        </View>
-        <Text
-          style={{
-            alignSelf: 'center',
-            fontSize: 18,
-            fontWeight: 'bold',
-            marginBottom: 20,
-            marginTop: 20,
-          }}>
-          แก้ไขลูกค้า
-        </Text>
-        <Text style={styles.label}>ชื่อลูกค้า</Text>
-        <Controller
-          control={control}
-          name="customer.name"
-          rules={{required: true}}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
+    <View style={styles.subContainer}>
+    <View style={styles.header}>
+      <TouchableOpacity
+        style={styles.onCloseButton}
+        onPress={() => onClose()}>
+        <FontAwesomeIcon icon={faClose} size={24} color="gray" />
+      </TouchableOpacity>
+    </View>
+    <Text
+      style={{
+        alignSelf: 'center',
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 20,
+        marginTop: 20,
+      }}>
+      แก้ไขลูกค้า
+    </Text>
+    <Text style={styles.label}>ชื่อลูกค้า</Text>
+    <Controller
+      control={control}
+      name="customer.name"
+      rules={{required: true}}
+      render={({field: {onChange, onBlur, value}}) => (
+        <TextInput
+          style={styles.inputName}
+          onBlur={onBlur}
+          onChangeText={onChange}
+          value={value}
         />
-        {errors.name && <Text style={styles.errorText}>ต้องใส่ชื่อลูกค้า</Text>}
+      )}
+    />
+    {errors.name && <Text style={styles.errorText}>ต้องใส่ชื่อลูกค้า</Text>}
 
-        <Text style={styles.label}>ที่อยู่</Text>
-        <Controller
-          control={control}
-          name="customer.address"
-          rules={{required: true}}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              keyboardType="name-phone-pad"
-              multiline
-              textAlignVertical="top"
-              numberOfLines={4}
-              style={styles.inputAddress}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
+    <Text style={styles.label}>ที่อยู่</Text>
+    <Controller
+      control={control}
+      name="customer.address"
+      rules={{required: true}}
+      render={({field: {onChange, onBlur, value}}) => (
+        <TextInput
+          keyboardType="name-phone-pad"
+          multiline
+          textAlignVertical="top"
+          numberOfLines={4}
+          style={styles.inputAddress}
+          onBlur={onBlur}
+          onChangeText={onChange}
+          value={value}
         />
-        {errors.address && (
-          <Text style={styles.errorText}>ต้องใส่ที่อยู่ลูกค้า</Text>
-        )}
+      )}
+    />
+    {errors.address && (
+      <Text style={styles.errorText}>ต้องใส่ที่อยู่ลูกค้า</Text>
+    )}
 
-        <Text style={styles.label}>เบอร์โทรศัพท์</Text>
-        <Controller
-          control={control}
-          name="customer.phone"
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              // placeholder="เบอร์โทรศัพท์"
-              keyboardType="phone-pad"
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
+    <Text style={styles.label}>เบอร์โทรศัพท์</Text>
+    <Controller
+      control={control}
+      name="customer.phone"
+      render={({field: {onChange, onBlur, value}}) => (
+        <TextInput
+          // placeholder="เบอร์โทรศัพท์"
+          keyboardType="phone-pad"
+          style={styles.inputName}
+          onBlur={onBlur}
+          onChangeText={onChange}
+          value={value}
         />
+      )}
+    />
 
-        <Text style={styles.label}>เลขทะเบียนภาษี (ถ้ามี)</Text>
-        <Controller
-          control={control}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              // placeholder="เลขทะเบียนภาษี(ถ้ามี)"
-              keyboardType="number-pad"
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-          name="customer.companyId"
+    <Text style={styles.label}>เลขทะเบียนภาษี (ถ้ามี)</Text>
+    <Controller
+      control={control}
+      render={({field: {onChange, onBlur, value}}) => (
+        <TextInput
+          // placeholder="เลขทะเบียนภาษี(ถ้ามี)"
+          keyboardType="number-pad"
+          style={styles.inputName}
+          onBlur={onBlur}
+          onChangeText={onChange}
+          value={value}
         />
-        <TouchableOpacity
-          disabled={
-            !getValues('customer.name') || !getValues('customer.address')
-          }
-          onPress={handleSubmit(onSubmit)}
-          style={[
-            styles.button,
-            (!getValues('customer.name') || !getValues('customer.address')) &&
-              styles.buttonDisabled,
-          ]}>
-          <Text style={styles.buttonText}>{`บันทึก`}</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      )}
+      name="customer.companyId"
+    />
+    <TouchableOpacity
+      disabled={
+        !getValues('customer.name') || !getValues('customer.address')
+      }
+      onPress={handleSubmit(onSubmit)}
+      style={[
+        styles.button,
+        (!getValues('customer.name') || !getValues('customer.address')) &&
+          styles.buttonDisabled,
+      ]}>
+      <Text style={styles.buttonText}>{`บันทึก`}</Text>
+    </TouchableOpacity>
+  </View>
   );
 };
 

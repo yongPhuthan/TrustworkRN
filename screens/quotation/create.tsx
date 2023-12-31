@@ -116,8 +116,7 @@ const Quotation = ({navigation}: Props) => {
   const user = useUser();
   const [vat3Amount, setVat3Amount] = useState(0);
   // const {fetchCompanyUser} = useFetchCompanyUser();
-  const [productWarantyYear, setProductWarantyYear] = useState(0);
-  const [skillWarantyYear, setSkillWarantyYear] = useState(0);
+
   const [editServicesModal, setEditServicesModal] = useState(false);
   const [workerModal, setWorkerModal] = useState(false);
   // const [customerName, setCustomerName] = useState('');
@@ -137,46 +136,7 @@ const Quotation = ({navigation}: Props) => {
     null,
   );
   const dataSignature = {};
-  const fetchCompanyUser = async () => {
-    if (!user) {
-      throw new Error('User not authenticated');
-    } else {
-      const idToken = await user.getIdToken(true);
-      const {email} = user;
-      if (!email) {
-        throw new Error('Email not found');
-      }
 
-      let url = `${BACK_END_SERVER_URL}/api/company/getCompanySeller?email=${encodeURIComponent(
-        email,
-      )}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-
-      // Register the device for remote messages
-      await firebase.messaging().requestPermission();
-
-      // Now, get the FCM token
-      const fcmToken = await firebase.messaging().getToken();
-      if (fcmToken) {
-        console.log('fcmToken', fcmToken);
-        setFtmToken(fcmToken);
-      }
-
-      return data;
-    }
-  };
   const {
     docnumber: initialDocnumber,
     initialDateOffer,
@@ -251,6 +211,7 @@ const Quotation = ({navigation}: Props) => {
     id: quotationId,
     services: [],
     customer: defalutCustomer,
+    companyUser:null,
     vat7: 0,
     taxType: 'NOTAX',
     taxValue: 0,
@@ -277,6 +238,48 @@ const Quotation = ({navigation}: Props) => {
     control: methods.control,
     name: 'services',
   });
+
+  const fetchCompanyUser = async () => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    } else {
+      const idToken = await user.getIdToken(true);
+      const {email} = user;
+      if (!email) {
+        throw new Error('Email not found');
+      }
+
+      let url = `${BACK_END_SERVER_URL}/api/company/getCompanySeller?email=${encodeURIComponent(
+        email,
+      )}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+
+      // Register the device for remote messages
+      await firebase.messaging().requestPermission();
+
+      // Now, get the FCM token
+      const fcmToken = await firebase.messaging().getToken();
+      if (fcmToken) {
+        methods.setValue('FCMToken', fcmToken);
+      }
+
+      return data;
+    }
+  };
+
+
   const customer = useWatch({
     control: methods.control,
     name: 'customer',
@@ -286,12 +289,15 @@ const Quotation = ({navigation}: Props) => {
     control: methods.control,
     name: 'workers',
   });
-
+const services = useWatch({
+    control: methods.control,
+    name: 'services',
+  });
   const isCustomerDisabled = useMemo(() => {
     return customer.name === '' && customer.address === '';
   }, [customer.name, customer.address]);
 
-  const isDisabled = !client_name || serviceList.length === 0;
+  const isDisabled = !customer.name || services.length === 0;
 
   const {data, isLoading, isError} = useQuery(
     ['companyUser', email],
@@ -299,7 +305,7 @@ const Quotation = ({navigation}: Props) => {
     {
       onSuccess: data => {
         setCompanyUser(data);
-
+        methods.setValue('companyUser', data.user);
         dispatch(stateAction.get_companyID(data.user.id));
       },
     },
@@ -317,10 +323,6 @@ const Quotation = ({navigation}: Props) => {
     setVat7Amount(vat7Amount);
     setVat3Amount(vat3Amount);
   };
-
-  // const handleCustomerNameChange = (value: string) => {
-  //   setCustomerName(value);
-  // };
 
   const useSignature = () => {
     if (companyUser?.signature) {
@@ -366,26 +368,13 @@ const Quotation = ({navigation}: Props) => {
       await firebase.auth().signOut();
     }
   };
-  const handleEditServiceCallback = useCallback(
-    index => {
-      setServiceIndex(index);
-      handleModalClose();
-      setEditServicesModal(true);
-    },
-    [setServiceIndex, handleModalClose, setEditServicesModal],
-  );
+
   const handleEditService = (index: number, currentValue) => {
     setShowEditServiceModal(!showEditServiceModal);
     handleModalClose();
     navigation.navigate('EditProductForm', {index, currentValue, update});
   };
 
-  const handleEditClient = () => {
-    navigation.navigate('EditClientForm');
-  };
-  const handleCustomerAddressChange = (value: string) => {
-    setCustomerAddress(value);
-  };
   const handleButtonPress = async () => {
     setIsLoadingMutation(true);
     try {
@@ -420,15 +409,12 @@ const Quotation = ({navigation}: Props) => {
       </View>
     );
   }
-  const idContractList = selectedContract.map((obj: any) => obj.id);
 
   const handleRemoveService = (index: number) => {
     setVisibleModalIndex(null);
-
     remove(index);
   };
-  console.log('workerpiker', workerPicker);
-  console.log('woker lenght', workers.length);
+ 
 
   return (
     <FormProvider {...methods}>
@@ -692,7 +678,7 @@ const styles = StyleSheet.create({
   },
   modalFull: {
     margin: 0,
-    marginTop: 50,
+    marginTop: 40,
     justifyContent: 'flex-start',
     alignItems: 'center',
     width: windowWidth,
@@ -802,9 +788,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 10,
     alignItems: 'flex-start',
-    paddingHorizontal: 20,
     justifyContent: 'flex-start',
-    paddingVertical: 10,
+    paddingVertical: 5,
   },
   selectButton: {
     backgroundColor: '#0073BA',

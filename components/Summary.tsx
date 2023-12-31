@@ -86,9 +86,9 @@ const Summary = (props: Props) => {
     control,
     name: 'vat7',
   });
-  const total = useWatch({
+  const allTotal = useWatch({
     control,
-    name: 'total',
+    name: 'allTotal',
   });
   useEffect(() => {
     const sum = services.reduce((acc, curr) => acc + (curr.total || 0), 0);
@@ -123,10 +123,8 @@ const Summary = (props: Props) => {
     setValue('discountValue', calculatedDiscountValue);
     setValue('summary', sum);
     setValue('summaryAfterDiscount', calculatedSummaryAfterDiscount);
-    setValue('total', calculatedSummaryAfterDiscount + vat7Amount - taxValue);
+    setValue('allTotal', calculatedSummaryAfterDiscount + vat7Amount - taxValue);
   }, [services, discountPercentage, vat7Picker, pickerVisible, selectedValue]);
-  
-
 
   return (
     <View style={styles.container}>
@@ -249,7 +247,7 @@ const Summary = (props: Props) => {
       <View style={styles.summaryTotal}>
         <Text style={styles.totalSummary}>รวมทั้งสิ้น</Text>
         <Text style={styles.totalSummary}>
-        {new Intl.NumberFormat().format(total)}
+        {new Intl.NumberFormat().format(allTotal)}
         </Text>
       </View>
     </View>
