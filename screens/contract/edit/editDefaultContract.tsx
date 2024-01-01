@@ -45,9 +45,8 @@ type QuotationRouteParams = {
   quotationId: string;
 };
 
-const EditDefaultContract = ({navigation}: Props) => {
-  const route =
-    useRoute<RouteProp<Record<string, QuotationRouteParams>, string>>();
+const EditDefaultContract = ({navigation, route}: Props) => {
+
 
   const [defaultContractValues, setDefaultContractValues] =
     useState<DefaultContractType>();

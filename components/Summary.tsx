@@ -11,27 +11,28 @@ import React, {useState, useContext, useEffect} from 'react';
 import RNPickerSelect from 'react-native-picker-select';
 import Divider from './styles/Divider';
 import SmallDivider from './styles/SmallDivider';
-import {useForm, Controller, useFormContext, useWatch, set} from 'react-hook-form';
-
-type Props = {
-  title: string;
-  price: number;
-  onValuesChange: (
-    total: number,
-    discountValue: number,
-    sumAfterDiscount: number,
-    vat7Amount: number,
-    vat3Amount: number,
-  ) => void;
-};
+import {
+  useForm,
+  Controller,
+  useFormContext,
+  useWatch,
+  set,
+} from 'react-hook-form';
+import Decimal from 'decimal.js';
 
 const windowWidth = Dimensions.get('window').width;
 
-const Summary = (props: Props) => {
-  const [selectedValue, setSelectedValue] = useState(0);
-  const [pickerVisible, setPickerVisible] = useState(false);
+type Props = {
+  vat7Props: boolean;
+  taxProps: number;
+  pickerTaxProps: boolean;
+};
+
+const Summary = ({vat7Props, taxProps,pickerTaxProps}: Props) => {
+  const [selectedValue, setSelectedValue] = useState(taxProps);
+  const [pickerVisible, setPickerVisible] = useState(pickerTaxProps);
   const [discount, setDiscount] = useState('0');
-  const [vat7Picker, setVat7Picker] = useState(false);
+  const [vat7Picker, setVat7Picker] = useState(vat7Props);
   const [vat7Value, setVat7Value] = useState(0);
   const context = useFormContext();
   const {
@@ -78,10 +79,6 @@ const Summary = (props: Props) => {
     name: 'summaryAfterDiscount',
   });
 
-  const taxValue = useWatch({
-    control,
-    name: 'taxValue',
-  });
   const vat7 = useWatch({
     control,
     name: 'vat7',
@@ -90,48 +87,77 @@ const Summary = (props: Props) => {
     control,
     name: 'allTotal',
   });
+
+  const taxType = useWatch({
+    control,
+    name: 'taxType',
+  });
+  const taxValue = useWatch({
+    control,
+    name: 'taxValue',
+  });
   useEffect(() => {
-    const sum = services.reduce((acc, curr) => acc + (curr.total || 0), 0);
-  
-    // Parse discountPercentage, treat empty string as 0
-    const parsedDiscountPercentage = discountPercentage === '' ? 0 : parseFloat(discountPercentage);
-    const calculatedDiscountValue = (sum * parsedDiscountPercentage) / 100;
-    const calculatedSummaryAfterDiscount = sum - calculatedDiscountValue;
+    const sum = services.reduce((acc, curr) => {
+      const total = curr.total ? new Decimal(curr.total) : new Decimal(0);
+      return new Decimal(acc).plus(total);
+    }, new Decimal(0));
+
+    const parsedDiscountPercentage = discountPercentage
+      ? new Decimal(discountPercentage)
+      : new Decimal(0);
+    const calculatedDiscountValue = sum
+      .times(parsedDiscountPercentage)
+      .div(100);
+    const calculatedSummaryAfterDiscount = sum.minus(calculatedDiscountValue);
   
     let taxType = 'NOTAX';
     let taxValue = 0;
-  
-    const vat7Amount = vat7Picker ? calculatedSummaryAfterDiscount * 0.07 : 0;
-  
-    if (pickerVisible && selectedValue) {
-      switch (selectedValue) {
-        case 3:
-          taxType = 'TAX3';
-          taxValue = calculatedSummaryAfterDiscount * 0.03;
-          break;
-        case 5:
-          taxType = 'TAX5';
-          taxValue = calculatedSummaryAfterDiscount * 0.05;
-          break;
-        // Add more cases here if needed
-      }
-    }
-  
-    setValue('vat7', vat7Amount);
-    setValue('taxType', taxType);
-    setValue('taxValue', taxValue);
-    setValue('discountValue', calculatedDiscountValue);
-    setValue('summary', sum);
-    setValue('summaryAfterDiscount', calculatedSummaryAfterDiscount);
-    setValue('allTotal', calculatedSummaryAfterDiscount + vat7Amount - taxValue);
-  }, [services, discountPercentage, vat7Picker, pickerVisible, selectedValue]);
+    const vat7Amount = vat7Picker
+      ? calculatedSummaryAfterDiscount.times(0.07)
+      : new Decimal(0);
 
+      if (pickerVisible && selectedValue) {
+        switch (selectedValue) {
+          case 3:
+            taxType = 'TAX3';
+            taxValue = calculatedSummaryAfterDiscount * 0.03;
+            break;
+          case 5:
+            taxType = 'TAX5';
+            taxValue = calculatedSummaryAfterDiscount * 0.05;
+            break;
+          // Add more cases here if needed
+        }
+      }
+
+    setValue('vat7', vat7Amount.toString(), {shouldDirty: true});
+    setValue('taxType', taxType, {shouldDirty: true});
+    setValue('taxValue', taxValue.toString(), {shouldDirty: true});
+    setValue('discountValue', calculatedDiscountValue.toString(), {
+      shouldDirty: true,
+    });
+    setValue('summary', sum.toString(), {shouldDirty: true});
+    setValue(
+      'summaryAfterDiscount',
+      calculatedSummaryAfterDiscount.toString(),
+      {shouldDirty: true},
+    );
+    setValue(
+      'allTotal',
+      calculatedSummaryAfterDiscount
+        .plus(vat7Amount)
+        .minus(taxValue)
+        .toString(),
+      {shouldDirty: true},
+    );
+  }, [services, discountPercentage, vat7Picker, pickerVisible, selectedValue]);
+  console.log('vat7', vat7);
   return (
     <View style={styles.container}>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>ยอดรวม</Text>
         <Text style={styles.summaryPrice}>
-         {new Intl.NumberFormat().format(summary)}
+          {new Intl.NumberFormat().format(summary)}
         </Text>
       </View>
       <View style={styles.summary}>
@@ -198,7 +224,7 @@ const Summary = (props: Props) => {
             />
           </View>
           <Text style={styles.summaryText}>
-          {new Intl.NumberFormat().format(taxValue)}
+            {new Intl.NumberFormat().format(taxValue)}
           </Text>
         </View>
       )}
@@ -240,14 +266,14 @@ const Summary = (props: Props) => {
                 marginVertical: 10,
               },
             })}>
-           {new Intl.NumberFormat().format(vat7)}
+            {new Intl.NumberFormat().format(vat7)}
           </Text>
         </View>
       )}
       <View style={styles.summaryTotal}>
         <Text style={styles.totalSummary}>รวมทั้งสิ้น</Text>
         <Text style={styles.totalSummary}>
-        {new Intl.NumberFormat().format(allTotal)}
+          {new Intl.NumberFormat().format(allTotal)}
         </Text>
       </View>
     </View>

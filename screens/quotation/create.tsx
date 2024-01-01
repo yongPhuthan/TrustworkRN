@@ -87,16 +87,6 @@ interface Props {
 
 const Quotation = ({navigation}: Props) => {
   const {
-    state: {
-      client_name,
-      selectedContract,
-      serviceList,
-      client_address,
-      client_tel,
-      client_tax,
-      isEmulator,
-      companyID,
-    },
     dispatch,
   }: any = useContext(Store);
   // const { data, isLoading } = useQuery('data', fetchData);
@@ -472,9 +462,15 @@ const services = useWatch({
 
             {/* <Divider /> */}
             <Summary
-              title={'ยอดรวม'}
-              price={200}
-              onValuesChange={handleValuesChange}
+               vat7Props={Number(methods.watch('vat7')) === 0 ? false : true}
+               taxProps={
+                 methods.watch('taxType') !== 'NOTAX'
+                   ? methods.watch('taxType') === 'TAX3'
+                     ? 3
+                     : 5
+                   : 0
+               }
+               pickerTaxProps={methods.watch('taxType') !== 'NOTAX' ? true : false}
             />
             <SmallDivider />
             <View style={styles.signatureRow}>

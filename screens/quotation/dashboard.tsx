@@ -141,7 +141,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       console.error('User or user email is not available');
       return;
     }
-    console.log('BACK_END_SERVER_URL3', BACK_END_SERVER_URL);
+    console.log('user dashboard', user);
 
     try {
       const token = await user.getIdToken(true);
@@ -185,9 +185,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       console.log('data after', data);
       return data;
     } catch (err) {
-      // Handle or throw the error depending on your error handling strategy
       console.error('Error fetching dashboard data:', err);
-      await auth().signOut();
       throw err;
     }
   }
@@ -320,22 +318,22 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
   const editQuotation = async (services, customer, quotation) => {
     setIsLoadingAction(true);
-    await dispatch(stateAction.reset_service_list());
-    await dispatch(stateAction.reset_contract());
-    await dispatch(stateAction.reset_audit());
-    await dispatch(stateAction.client_name(''));
-    await dispatch(stateAction.client_address(''));
-    await dispatch(stateAction.client_tel(''));
-    await dispatch(stateAction.client_tax(''));
-    await dispatch(stateAction.client_name(customer.name));
-    await dispatch(stateAction.client_address(customer.address));
-    await dispatch(stateAction.client_tel(customer.phone));
-    await dispatch(stateAction.client_tax(customer.companyId));
-    await dispatch(stateAction.service_list(services));
+    // await dispatch(stateAction.reset_service_list());
+    // await dispatch(stateAction.reset_contract());
+    // await dispatch(stateAction.reset_audit());
+    // await dispatch(stateAction.client_name(''));
+    // await dispatch(stateAction.client_address(''));
+    // await dispatch(stateAction.client_tel(''));
+    // await dispatch(stateAction.client_tax(''));
+    // await dispatch(stateAction.client_name(customer.name));
+    // await dispatch(stateAction.client_address(customer.address));
+    // await dispatch(stateAction.client_tel(customer.phone));
+    // await dispatch(stateAction.client_tax(customer.companyId));
+    // await dispatch(stateAction.service_list(services));
     dispatch(stateAction.get_companyID(data[0].id));
     setIsLoadingAction(false);
 
-    navigation.navigate('EditQuotation', {quotation, company: data[0]});
+    navigation.navigate('EditQuotation', {quotation, company: data[0],services});
   };
   const FilterButton = ({filter, isActive, onPress}) => {
     const displayText = filterLabels[filter] || filter;
@@ -547,6 +545,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     // navigation.navigate('GalleryScreen', {code: companyData?.code});
     navigation.navigate('CreateQuotation');
   };
+  console.log('data', data[1]);
   return (
     <>
       <View>

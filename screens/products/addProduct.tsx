@@ -56,6 +56,8 @@ import SaveButton from '../../components/ui/Button/SaveButton';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {serviceValidationSchema} from '../utils/validationSchema';
 import CurrencyInput from 'react-native-currency-input';
+import Decimal from 'decimal.js';
+
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'AddProduct'>;
   route: RouteProp<ParamListBase, 'AddProduct'>;
@@ -65,7 +67,7 @@ const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
 const AddProductForm = ({navigation, route}: Props) => {
   // const {control, handleSubmit, watch} = useForm<FormData>();
-  const {quotationId, onAddService} = route.params;
+  const {quotationId,onAddService} = route.params;
   const [isModalVisible, setModalVisible] = useState(false);
   const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
   const [serviceImages, setServiceImages] = useState<string[]>([]);
@@ -78,8 +80,6 @@ const AddProductForm = ({navigation, route}: Props) => {
   }: any = useContext(Store);
 
   const handleDone = data => {
-    console.log('data new add service', data);
-    console.log('or wathc', methods.watch());
     onAddService(methods.watch());
     navigation.goBack();
   };
@@ -125,14 +125,14 @@ const AddProductForm = ({navigation, route}: Props) => {
   });
 
   useEffect(() => {
-    const unitPriceNum = Number(unitPrice);
-    const quantityNum = Number(quantity);
-
-    if (isFinite(unitPriceNum) && isFinite(quantityNum)) {
-      const total = unitPriceNum * quantityNum;
-      methods.setValue('total', total);
+    const unitPrice = new Decimal(methods.watch('unitPrice') || 0);
+    const quantity = new Decimal(methods.watch('qty') || 0);
+  
+    if (unitPrice.isFinite() && quantity.isFinite()) {
+      const total = unitPrice.times(quantity);
+      methods.setValue('total', total.toString());
     }
-  }, [unitPrice, quantity, methods.setValue]);
+  }, [methods.watch('unitPrice'), methods.watch('qty'), methods.setValue]);
 
   const isButtonDisbled = useMemo(() => {
     return (
@@ -522,7 +522,9 @@ const AddProductForm = ({navigation, route}: Props) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                <SaveButton disabled={!isButtonDisbled} onPress={handleDone} />
+                                  <SaveButton disabled={false} onPress={handleDone} />
+
+                {/* <SaveButton disabled={!isButtonDisbled} onPress={handleDone} /> */}
               </View>
             </View>
             <SelectAudit

@@ -1,36 +1,39 @@
 {
-    "allTotal": "0",
+    "allTotal": "25631.28",
     "customer": {
-        "address": "7/44 หมู่5 ต.อ้อมใหญ่ อ.สามพราน จ.นครปฐม",
-        "companyId": "110080067422",
-        "name": "พัฒนพง วงชัย",
+        "address": "7/44 หมู่ 5 ถนน.เพชรเกษม ต.อ้อมใหญ่",
+        "companyId": "1100800667422",
+        "name": "ปฐมพล มณจี",
         "phone": "053306426"
     },
     "dateEnd": "07-01-2024",
     "dateOffer": "31-12-2023",
     "discountType": "PERCENT",
-    "discountValue": "1598",
-    "docNumber": "20231231677",
-    "id": "3bd267bf-d3e0-4ea4-a6ed-38362a45464d",
+    "discountValue": "0",
+    "docNumber": "20231231481",
+    "id": "ca9b589a-b383-492b-8e56-26ed7534d50b",
     "services": [{
         "audits": [Array],
         "companyId": "ebd620b0-e699-43c6-962e-f8bffab5137e",
-        "description": "กระจกเทมเปอร์ใส",
+        "description": "รายละเอีดย",
         "discountType": "PERCENT",
         "discountValue": "0",
-        "id": "398fbb5f-56de-4c8d-bf0c-c781c7208e13",
+        "id": "d3000d05-e8f1-4c79-be64-e3328f3ae746",
         "materials": [Array],
-        "qty": 4,
-        "quotationId": "3bd267bf-d3e0-4ea4-a6ed-38362a45464d",
+        "qty": 3,
+        "quotationId": "ca9b589a-b383-492b-8e56-26ed7534d50b",
         "serviceImages": [Array],
-        "title": "ประตูบานเฟี้ยมนิรภัยอ้อมใหญ่",
-        "total": "31960",
-        "unit": "à¸à¸¸à¸",
-        "unitPrice": "7990"
+        "title": "ประสิท วงดี555",
+        "total": "26424",
+        "unit": "ชุด",
+        "unitPrice": "8808"
     }],
     "status": "PENDING",
-    "summaryAfterDiscount": "30362",
-    "taxType": "NOTAX",
-    "taxValue": "0",
-    "vat7": "0"
+    "summaryAfterDiscount": "26424",
+    "taxType": "TAX3",
+    "taxValue": "792.72",
+    "vat7": "0",
+    "workers": [{
+        "worker": [Object]
+    }]
 }

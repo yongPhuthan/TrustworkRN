@@ -53,6 +53,11 @@ export type Quotation = {
   docNumber: string;
   FCMToken: string;
   sellerSignature: string;
+  taxType: string;
+  sellerId: string;
+  discountType : string;
+  discountPercentage : number;
+  workers : Workers[];
   // ...other fields as per your schema
 };
 

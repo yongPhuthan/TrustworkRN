@@ -20,6 +20,7 @@ const App = () => {
   return (
     <Provider>
       <QueryClientProvider client={queryClient}>
+        
         <AuthCheckedNavigation />
       </QueryClientProvider>
     </Provider>

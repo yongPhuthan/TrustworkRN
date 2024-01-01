@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import React, {useState, useContext, useEffect, useRef} from 'react';
 import Modal from 'react-native-modal';
-
+import Decimal from 'decimal.js';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AddServices from './AddServices';
 import {Store} from '../redux/store';

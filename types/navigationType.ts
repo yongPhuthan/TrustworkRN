@@ -40,8 +40,13 @@ export type ParamListBase = {
   Dashboard: undefined;
   ContractCard: undefined;
   SelectAudit: Audit;
-  DefaultContract: undefined;
-  EditDefaultContract: any;
+  DefaultContract: {
+    data : Quotation
+  };
+  EditDefaultContract: {
+    data : Quotation
+    quotationId: string;  
+  };
   DashboardQuotation: undefined;
   SelectContract: {id: string};
   EditProductForm: {
@@ -103,7 +108,7 @@ export type ParamListBase = {
     text: string;
     data: Quotation;
   };
-  EditQuotation: {quotation: Quotation; company: CompanyUser};
+  EditQuotation: {quotation: Quotation; company: CompanyUser,services:Service[]};
   EditQuotationScreen: {id: string};
   EditContractOption: {id: string};
   QuotationScreen: undefined;

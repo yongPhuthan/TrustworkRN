@@ -38,17 +38,10 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {v4 as uuidv4} from 'uuid';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import Decimal from 'decimal.js';
+
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {
-  FormData,
-  ServiceList,
-  EditProductList,
-  Service,
-  SelectedMaterialData,
-  AuditData,
-  Audit,
-  SelectedAuditData,
-} from '../../types/docType';
+
 import {ParamListBase} from '../../types/navigationType';
 import SmallDivider from '../../components/styles/SmallDivider';
 import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
@@ -56,6 +49,7 @@ import SaveButton from '../../components/ui/Button/SaveButton';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {serviceValidationSchema} from '../utils/validationSchema';
 import CurrencyInput from 'react-native-currency-input';
+import ServiceContext from '../../providers/ServiceContext';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'EditProductForm'>;
@@ -64,7 +58,10 @@ type Props = {
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
 const EditProductForm = ({navigation, route}: Props) => {
-  const {currentValue, update, index} = route.params;
+  const {currentValue, index,update} = route.params;
+
+console.log('currentValue',currentValue)
+
   const defaultService = {
     id: currentValue.id,
     title: currentValue.title,
@@ -74,7 +71,6 @@ const EditProductForm = ({navigation, route}: Props) => {
     discountPercent: currentValue.discountPercent,
     total: currentValue.total,
     unit: currentValue.unit,
-    serviceImage: '',
     serviceImages: currentValue.serviceImages,
     quotationId: currentValue.quotationId,
     audits: currentValue.audits,
@@ -100,29 +96,36 @@ const EditProductForm = ({navigation, route}: Props) => {
     state: {serviceList, selectedAudit, code, companyID},
     dispatch,
   }: any = useContext(Store);
+  const { updateService } = useContext(ServiceContext);
 
   useEffect(() => {
-    const unitPrice = Number(methods.watch('unitPrice'));
-    const quantity = Number(methods.watch('qty'));
-  
-    if (isFinite(unitPrice) && isFinite(quantity)) {
-      const total = unitPrice * quantity;
-      methods.setValue('total', total);
+    const unitPrice = new Decimal(methods.watch('unitPrice') || 0);
+    const quantity = new Decimal(methods.watch('qty') || 0);
+
+    if (unitPrice.isFinite() && quantity.isFinite()) {
+      const total = unitPrice.times(quantity);
+      methods.setValue('total', total.toString(), {shouldDirty: true}); 
     }
   }, [methods.watch('unitPrice'), methods.watch('qty'), methods.setValue]);
 
   const isButtonDisbled = useMemo(() => {
-    return methods.watch('materials')?.length > 0 && methods.watch('audits')?.length > 0 && methods.watch('title') !== null || '' && methods.watch('unitPrice') !== null || '';
+    return (
+      (methods.watch('materials')?.length > 0 &&
+        methods.watch('audits')?.length > 0 &&
+        methods.watch('title') !== null) ||
+      ('' && methods.watch('unitPrice') !== null) ||
+      ''
+    );
   }, [methods.watch()]);
   const handleDone = () => {
-    update(index,methods.watch());
+    update(index, methods.watch());
     navigation.goBack();
   };
 
   return (
     <>
       <FormProvider {...methods}>
-      <View style={{flex: 1}}>
+        <View style={{flex: 1}}>
           <ScrollView style={styles.container}>
             <View style={styles.subContainer}>
               <View
@@ -269,7 +272,6 @@ const EditProductForm = ({navigation, route}: Props) => {
                       style={[styles.input, {textAlign: 'right'}]}
                       placeholder="0"
                       onBlur={onBlur}
-                      
                       keyboardType="number-pad"
                       onChangeValue={value => {
                         onChange(value);
@@ -289,41 +291,41 @@ const EditProductForm = ({navigation, route}: Props) => {
 
                 {/* START COUNTER BUTTON */}
                 <View style={styles.containerCounter}>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => {
-                    const newQty = Math.max(0, methods.watch('qty') - 1);
-                    methods.setValue('qty', newQty);
-                  }}>
-                  <Text style={styles.buttonText}>-</Text>
-                </TouchableOpacity>
-                <Controller
-                  control={methods.control}
-                  name="qty"
-                  render={({field: {value}}) => (
-                    <TextInput
-                      style={styles.counter}
-                      placeholder="10"
-                      keyboardType="number-pad"
-                      onChangeText={text => {
-                        const newQty = parseInt(text, 10);
-                        if (!isNaN(newQty)) {
-                          methods.setValue('qty', newQty);
-                        }
-                      }}
-                      value={methods.watch('qty').toString()}
-                    />
-                  )}
-                />
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => {
-                    const newQty = methods.watch('qty') + 1;
-                    methods.setValue('qty', newQty); 
-                  }}>
-                  <Text style={styles.buttonText}>+</Text>
-                </TouchableOpacity>
-              </View>
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => {
+                      const newQty = Math.max(0, methods.watch('qty') - 1);
+                      methods.setValue('qty', newQty);
+                    }}>
+                    <Text style={styles.buttonText}>-</Text>
+                  </TouchableOpacity>
+                  <Controller
+                    control={methods.control}
+                    name="qty"
+                    render={({field: {value}}) => (
+                      <TextInput
+                        style={styles.counter}
+                        placeholder="10"
+                        keyboardType="number-pad"
+                        onChangeText={text => {
+                          const newQty = parseInt(text, 10);
+                          if (!isNaN(newQty)) {
+                            methods.setValue('qty', newQty);
+                          }
+                        }}
+                        value={methods.watch('qty').toString()}
+                      />
+                    )}
+                  />
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => {
+                      const newQty = methods.watch('qty') + 1;
+                      methods.setValue('qty', newQty);
+                    }}>
+                    <Text style={styles.buttonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
 
                 {/* END COUNTER BUTTON */}
               </View>
@@ -345,22 +347,24 @@ const EditProductForm = ({navigation, route}: Props) => {
               </View>
               <SmallDivider />
               <View style={styles.summary}>
-              <Text style={styles.priceSum}>รวมเป็นเงิน:</Text>
+                <Text style={styles.priceSum}>รวมเป็นเงิน:</Text>
 
-              <Controller
-                control={methods.control}
-                name="total"
-                defaultValue={0}
-                render={({field: {value}}) => (
-                  <TextInput
-                    style={styles.priceSummary}
-                    placeholder="0"
-                    value={value ? new Intl.NumberFormat().format(value) : '0'}
-                    editable={false}
-                  />
-                )}
-              />
-            </View>
+                <Controller
+                  control={methods.control}
+                  name="total"
+                  defaultValue={0}
+                  render={({field: {value}}) => (
+                    <TextInput
+                      style={styles.priceSummary}
+                      placeholder="0"
+                      value={
+                        value ? new Intl.NumberFormat().format(value) : '0 บาท'
+                      }
+                      editable={false}
+                    />
+                  )}
+                />
+              </View>
               <View
                 style={{
                   ...Platform.select({
@@ -495,7 +499,9 @@ const EditProductForm = ({navigation, route}: Props) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                <SaveButton disabled={!isButtonDisbled} onPress={handleDone} />
+                                  <SaveButton disabled={false} onPress={handleDone} />
+
+                {/* <SaveButton disabled={!isButtonDisbled} onPress={handleDone} /> */}
               </View>
             </View>
             <SelectAudit
