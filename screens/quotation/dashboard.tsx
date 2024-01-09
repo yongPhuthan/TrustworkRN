@@ -276,7 +276,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     }
   }, [user]);
 
-  if (isQuery || !data) {
+  if (isQuery ) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator />
@@ -284,14 +284,16 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     );
   }
 
-  if (error || !companyData) {
-    if (user) {
-      if (!companyData) {
-        navigation.navigate('CreateCompanyScreen');
-      }
-    } else {
-      navigation.navigate('FirstAppScreen');
-    }
+  if (error ) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Error fetching dashboard data</Text>
+        <TouchableOpacity onPress={() => refetch()}>
+          <Text>Try again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+
   }
 
   const handleModal = (item, index) => {
@@ -535,17 +537,12 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   );
 
   const createNewQuotation = () => {
-    dispatch(stateAction.reset_service_list());
-    dispatch(stateAction.reset_contract());
-    dispatch(stateAction.reset_audit());
-    dispatch(stateAction.client_name(''));
-    dispatch(stateAction.client_address(''));
-    dispatch(stateAction.client_tel(''));
-    dispatch(stateAction.client_tax(''));
+    if (!companyData) {
+      navigation.navigate('CreateCompanyScreen');
+    }
     // navigation.navigate('GalleryScreen', {code: companyData?.code});
     navigation.navigate('CreateQuotation');
   };
-  console.log('data', data[1]);
   return (
     <>
       <View>

@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
@@ -16,6 +17,7 @@ import {
 } from 'react-native';
 
 import {CheckBox} from '@rneui/themed';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import CryptoJS from 'crypto-js';
 import React, {useState, useEffect, useCallback} from 'react';
 import {
@@ -31,7 +33,7 @@ import {
   ImagePickerResponse,
   Asset,
 } from 'react-native-image-picker';
-import {useMutation} from '@tanstack/react-query';
+import {useMutation, useQuery} from '@tanstack/react-query';
 
 import storage from '@react-native-firebase/storage';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
@@ -76,13 +78,10 @@ const createCompanySeller = async ({data, token}) => {
       body: JSON.stringify(data),
     });
 
-    console.log('Response:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Network response was not ok: ${errorText}`);
     }
-    
 
     // return await response.json(); // Assuming the response is JSON
   } catch (error) {
@@ -90,6 +89,8 @@ const createCompanySeller = async ({data, token}) => {
     throw new Error('There was an error processing the request');
   }
 };
+
+
 
 const CreateCompanyScreen = ({navigation}: Props) => {
   const [bizName, setBizName] = useState('');
@@ -110,7 +111,7 @@ const CreateCompanyScreen = ({navigation}: Props) => {
   const [address, setAddress] = useState<string>('');
   const [userLastName, setUserLastName] = useState<string>('');
   const [userName, setUserName] = useState<string>('');
-  const [companyNumber, setCompanyNumber] = useState<string>('');
+  const [categories, setCategories] = useState([]);
   const [responseLog, setResponseLog] = useState<string | null>(null);
   const [code, setCode] = useState<string | null>(null);
   const windowWidth = Dimensions.get('window').width;
@@ -121,23 +122,17 @@ const CreateCompanyScreen = ({navigation}: Props) => {
   const isNextDisabledPage1 =
     !bizName || !userName || !userLastName || !selectedCategories.length;
   const isNextDisabledPage2 = !address || !mobileTel;
-  const isNextDisabledPage3 =
-    !email || !password || !confirmPassword || !registrationCode;
 
-  const CLOUDFLARE_ENDPOINT = __DEV__
-    ? CLOUDFLARE_WORKER_DEV
-    : CLOUDFLARE_WORKER;
 
-  const categories: object[] = [
-    {key: '2', value: 'อลูมิเนียม'},
-    {key: '3', value: 'ฝ้าซีลาย'},
-    {key: '5', value: 'งานเหล็กลังคา'},
-    {key: '6', value: 'งานกระเบื้อง'},
-    {key: '7', value: 'งานปูน'},
-  ];
 
   useEffect(() => {
     setCode(Math.floor(100000 + Math.random() * 900000).toString());
+    const API_URL = `${BACK_END_SERVER_URL}/api/company/getCategories`;
+
+    fetch(API_URL)
+    .then(response => response.json())
+    .then(data => setCategories(data.map(category => ({ key: category.id.toString(), value: category.name }))))
+    .catch(error => console.error('Error fetching categories:', error));
 
   }, []);
   const handleNextPage = () => {
@@ -148,81 +143,22 @@ const CreateCompanyScreen = ({navigation}: Props) => {
       setPage(page - 1);
     }
   };
-  const slugifyString = (str: string) => {
-    return str
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/\./g, '-')
-      .replace(/-+/g, '-')
-      .replace(/[^a-z0-9-]/g, '-');
-  };
+
   const {mutate, isLoading, isError} = useMutation(createCompanySeller, {
     onSuccess: () => {
-      navigation.navigate('DashboardQuotation');
+      //clear navigation stack
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'DashboardQuotation'}],
+      });
+      // navigation.navigate('DashboardQuotation');
     },
     onError: (error: any) => {
       console.error('There was a problem calling the function:', error);
       console.log(error.response);
     },
   });
-  async function getSignedUrl(filename) {
-    try {
-      const response = await fetch(
-        `${BACK_END_SERVER_URL}/api/storage/getLogoSignedUrl`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            // Include authorization headers if required
-          },
-          body: JSON.stringify({filename}),
-        },
-      );
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok.');
-      }
-
-      const data = await response.json();
-      return data.signedUrl;
-    } catch (error) {
-      console.error('Error fetching signed URL:', error);
-      throw error;
-    }
-  }
-
-  async function uploadFileToFirebase(file, signedUrl) {
-    try {
-      const response = await fetch(signedUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload file to Firebase.');
-      }
-
-      console.log('File uploaded successfully.');
-    } catch (error) {
-      console.error('Error uploading file to Firebase:', error);
-      throw error;
-    }
-  }
-  async function handleFileUpload(file) {
-    try {
-      const filename = 'uploads/' + file.name; // Example path in Firebase storage
-      const signedUrl = await getSignedUrl(filename);
-
-      await uploadFileToFirebase(file, signedUrl);
-      console.log('File uploaded successfully to Firebase.');
-    } catch (error) {
-      console.error('Error in file upload process:', error);
-    }
-  }
   const selectImage = (): void => {
     const options: ImageLibraryOptions = {
       mediaType: 'photo' as MediaType,
@@ -248,12 +184,12 @@ const CreateCompanyScreen = ({navigation}: Props) => {
 
   const uploadImageToServer = async (imageUri: string): Promise<void> => {
     setIsImageUpload(true);
-  
+
     // Determine storage path based on development or production mode
     const storagePath = __DEV__
       ? `Test/${code}/logo/${imageUri.substring(imageUri.lastIndexOf('/') + 1)}`
       : `${code}/logo/${imageUri.substring(imageUri.lastIndexOf('/') + 1)}`;
-  
+
     try {
       // Fetch the signed URL from your backend
       const signedUrlResponse: Response = await fetch(
@@ -270,36 +206,37 @@ const CreateCompanyScreen = ({navigation}: Props) => {
           }),
         },
       );
-  
+
       if (!signedUrlResponse.ok) {
         throw new Error('Unable to get signed URL');
       }
-  
+
       const {signedUrl} = await signedUrlResponse.json();
-  
+
       // Fetch the image and convert to blob
       const image: Response = await fetch(imageUri);
       const blob: Blob = await image.blob();
-  
+
       // Upload the image blob to the signed URL
       const uploadResponse: Response = await fetch(signedUrl, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'image/jpeg', 
-          
+          'Content-Type': 'image/jpeg',
         },
         body: blob,
       });
-  
+
       if (!uploadResponse.ok) {
         throw new Error('Failed to upload image');
       }
-  
+
       console.log('Image uploaded successfully');
-  
+
       // Construct the access URL
-      const accessUrl =  `https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/${encodeURIComponent(storagePath)}?alt=media`;
-      
+      const accessUrl = `https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/${encodeURIComponent(
+        storagePath,
+      )}?alt=media`;
+
       setLogo(accessUrl);
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -307,7 +244,6 @@ const CreateCompanyScreen = ({navigation}: Props) => {
       setIsImageUpload(false);
     }
   };
-  
 
   const handleFunction = async () => {
     const data = {
@@ -316,11 +252,11 @@ const CreateCompanyScreen = ({navigation}: Props) => {
       userLastName,
       code,
       userPosition,
-      rules: [selectedCategories],
+      categoryId: Number(selectedCategories),
       address,
       officeTel,
       mobileTel,
-      email:user?.email,
+      email: user?.email,
       bizType,
       logo: logo ? logo : 'NONE',
       companyNumber: taxID,
@@ -328,48 +264,8 @@ const CreateCompanyScreen = ({navigation}: Props) => {
     console.log(data);
     mutate({data, token: user?.uid});
   };
+  console.log('categories',categories)
 
-  async function uriToBlob(uri) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        // Log the blob type and size for debugging
-        console.log(
-          `Blob created with type: ${xhr.response.type} and size: ${xhr.response.size} bytes`,
-        );
-        resolve(xhr.response);
-      };
-      xhr.onerror = function () {
-        reject(new Error('URI to Blob failed'));
-      };
-      xhr.responseType = 'blob';
-      xhr.open('GET', uri, true);
-      xhr.send(null);
-    });
-  }
-  const handlePress = async () => {
-    try {
-      const response = await fetch(
-        `${CLOUDFLARE_ENDPOINT}gallery?code=` + code,
-      );
-
-      if (!response.ok) {
-        throw new Error('Server responded with status: ' + response.status);
-      }
-
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.indexOf('application/json') !== -1) {
-        const data = await response.json();
-        console.log(data);
-        setResponseLog(JSON.stringify(data));
-      } else {
-        throw new Error('Received non-JSON response');
-      }
-    } catch (error) {
-      console.error('Error fetching images:', error);
-    }
-  };
-console.log('userPosition',userPosition)
   const renderPage = () => {
     switch (page) {
       case 1:
@@ -392,11 +288,12 @@ console.log('userPosition',userPosition)
                 <ActivityIndicator size="small" color="gray" />
               ) : logo ? (
                 <Image
-                source={{ uri: logo }}
-                style={{ width: 100, aspectRatio: 1, resizeMode: 'contain' }}
-                onError={(e) => console.log('Failed to load image:', e.nativeEvent.error)}
-              />
-              
+                  source={{uri: logo}}
+                  style={{width: 100, aspectRatio: 1, resizeMode: 'contain'}}
+                  onError={e =>
+                    console.log('Failed to load image:', e.nativeEvent.error)
+                  }
+                />
               ) : (
                 <View>
                   <FontAwesomeIcon
@@ -472,7 +369,7 @@ console.log('userPosition',userPosition)
             <SelectList
               setSelected={(val: object[]) => setSelectedCategories(val)}
               data={categories}
-              save="value"
+              save="key"
               placeholder={'เลือกหมวดหมู่ธุรกิจ'}
             />
             <View
@@ -597,14 +494,19 @@ console.log('userPosition',userPosition)
         return null;
     }
   };
-
+console.log('categoryId',selectedCategories)
   return (
-    <KeyboardAvoidingView
-      style={{flex: 1}}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
-      <View style={{marginTop: 40, paddingHorizontal: 20}}>{renderPage()}</View>
-    </KeyboardAvoidingView>
+    <KeyboardAwareScrollView
+      style={{ flex: 1 }}
+      resetScrollToCoords={{ x: 0, y: 0 }}
+      scrollEnabled={true}
+      extraHeight={200} // Adjust this value as needed
+      enableOnAndroid={true}
+    >
+      <View style={{ marginTop: 40, paddingHorizontal: 20 }}>
+        {renderPage()}
+      </View>
+    </KeyboardAwareScrollView>
   );
 };
 

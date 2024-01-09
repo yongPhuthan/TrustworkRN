@@ -136,7 +136,7 @@ const EditQuotation = ({navigation, route}: Props) => {
     workers: quotation.workers.map((item: any) => item.worker),
     sellerSignature: quotation.sellerSignature,
   };
-
+  
   const methods = useForm<any>({
     mode: 'all',
     defaultValues: quotationDefaultValues,

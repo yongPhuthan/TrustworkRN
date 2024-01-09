@@ -100,7 +100,10 @@ const LoginScreen = ({navigation}: Props) => {
         if (token) {
           await AsyncStorage.setItem('userToken', token);
           setIsLoading(false);
-          navigation.navigate('DashboardQuotation');
+          navigation.reset({
+            index: 0,
+            routes: [{name: 'DashboardQuotation'}],
+          });
         } else {
           console.error('Token is undefined after login');
           setIsLoading(false);

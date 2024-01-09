@@ -26,6 +26,7 @@ import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
 import {CustomerForm, ServiceList, CompanyUser} from '../../types/docType';
 import SaveButton from '../ui/Button/SaveButton';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 interface Props {
   onClose: Function;
@@ -49,7 +50,15 @@ const AddCustomer = ({onClose}: Props) => {
   };
 
   return (
+    
     <View style={styles.subContainer}>
+            <KeyboardAwareScrollView
+      style={{ flex: 1 }}
+      resetScrollToCoords={{ x: 0, y: 0 }}
+      scrollEnabled={true}
+      extraHeight={200} // Adjust this value as needed
+      enableOnAndroid={true}
+    >
     <View style={styles.header}>
       <TouchableOpacity
         style={styles.onCloseButton}
@@ -156,6 +165,7 @@ const AddCustomer = ({onClose}: Props) => {
       ]}>
       <Text style={styles.buttonText}>{`บันทึก`}</Text>
     </TouchableOpacity>
+    </KeyboardAwareScrollView>
   </View>
   );
 };

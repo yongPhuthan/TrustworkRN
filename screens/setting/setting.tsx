@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Alert,
   NativeModules,
 } from 'react-native';
 import React, {useState, useEffect, useContext} from 'react';
@@ -59,12 +60,26 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
     dispatch,
   }: any = useContext(Store);
   const [logo, setLogo] = useState<string | null>(null);
-  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   const toggleLogoutModal = () => {
-    setIsLogoutModalVisible(!isLogoutModalVisible);
+    Alert.alert(
+      "Logout", // หัวข้อ
+      "ยืนยันออกจากระบบ ?", // ข้อความ
+      [
+        { 
+          text: "ยกเลิก", 
+          onPress: () => console.log("Cancel Pressed"), 
+          style: "cancel"
+        },
+        { 
+          text: "ออกจากระบบ", 
+          onPress: handleLogout 
+        }
+      ]
+    );
   };
+  
   const businessDetails = [
     {id: 2, title: 'Business Address', value: company?.address || ''},
   ];
@@ -99,9 +114,8 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
   const handleLogout = async () => {
     try {
       await firebase.auth().signOut();
-      navigation.navigate('FirstAppScreen');
 
-      toggleLogoutModal();
+      navigation.navigate('FirstAppScreen');
     } catch (error) {
       console.error('Failed to sign out: ', error);
     }
@@ -162,7 +176,7 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
             <TouchableOpacity
               style={{alignItems: 'center', marginBottom: 24}}
               onPress={handleLogoUpload}>
-              {logo ? (
+              {logo && logo !== 'NONE' ? (
                 <Image
                   source={{
                     uri: logo,
@@ -346,43 +360,7 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
         </ScrollView>
       )}
 
-      <Modal isVisible={isLogoutModalVisible}>
-        <View style={{backgroundColor: 'white', padding: 20, borderRadius: 10}}>
-          <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15}}>
-            Logout
-          </Text>
-          <Text style={{fontSize: 16, marginBottom: 20}}>
-            ยืนยันออกจากระบบ ?
-          </Text>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              width: '100%',
-            }}>
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#ccc',
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                borderRadius: 5,
-              }}
-              onPress={toggleLogoutModal}>
-              <Text style={{fontSize: 16}}>ยกเลิก</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#f00',
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                borderRadius: 5,
-              }}
-              onPress={handleLogout}>
-              <Text style={{fontSize: 16, color: 'white'}}>ออกจากระบบ</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+
     </>
   );
 };

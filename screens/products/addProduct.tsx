@@ -5,6 +5,8 @@ import React, {
   useMemo,
   useCallback,
 } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
 import {
   View,
   TextInput,
@@ -145,6 +147,13 @@ const AddProductForm = ({navigation, route}: Props) => {
   return (
     <>
       <FormProvider {...methods}>
+      <KeyboardAwareScrollView
+      style={{ flex: 1 }}
+      resetScrollToCoords={{ x: 0, y: 0 }}
+      scrollEnabled={true}
+      extraHeight={200} // Adjust this value as needed
+      enableOnAndroid={true}
+    >
         <View style={{flex: 1}}>
           <ScrollView style={styles.container}>
             <View style={styles.subContainer}>
@@ -547,6 +556,7 @@ const AddProductForm = ({navigation, route}: Props) => {
             />
           </ScrollView>
         </View>
+        </KeyboardAwareScrollView>
       </FormProvider>
     </>
   );
