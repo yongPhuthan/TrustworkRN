@@ -42,7 +42,7 @@ import {
   faImages,
   faPlusCircle,
 } from '@fortawesome/free-solid-svg-icons';
-import * as stateAction from '../../redux/actions';
+import {Snackbar, Appbar, Button} from 'react-native-paper';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {v4 as uuidv4} from 'uuid';
@@ -146,6 +146,26 @@ const AddProductForm = ({navigation, route}: Props) => {
 
   return (
     <>
+     <Appbar.Header  elevated mode='center-aligned' style={{
+      backgroundColor:'white'
+      
+     }}>
+        <Appbar.BackAction
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
+        <Appbar.Content title="เพิ่มสินค้า-บริการ"  titleStyle={{ fontSize: 20 }}/>
+        <Button
+          // loading={postLoading}
+          disabled={!isButtonDisbled  }
+          mode="contained"
+          buttonColor={'#1b52a7'}
+          onPress={()=>{}}
+          >
+          {'บันทึก'}
+        </Button>
+      </Appbar.Header>
       <FormProvider {...methods}>
       <KeyboardAwareScrollView
       style={{ flex: 1 }}
@@ -531,7 +551,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                                  <SaveButton disabled={false} onPress={handleDone} />
+                                  {/* <SaveButton disabled={false} onPress={handleDone} /> */}
 
                 {/* <SaveButton disabled={!isButtonDisbled} onPress={handleDone} /> */}
               </View>

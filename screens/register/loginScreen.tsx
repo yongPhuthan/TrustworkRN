@@ -21,16 +21,8 @@ import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
-  faAlignLeft,
-  faArrowCircleLeft,
   faArrowLeft,
-  faArrowLeftLong,
-  faArrowRotateBack,
-  faBackward,
-  faClose,
-  faLeftLong,
-  faLeftRight,
-  faTentArrowTurnLeft,
+
 } from '@fortawesome/free-solid-svg-icons';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'LoginScreen'>;
@@ -58,62 +50,35 @@ const LoginScreen = ({navigation}: Props) => {
   };
 
   const isFormValid = isEmailValid(email) && password.length > 0;
-//   const handleLogin = async () => {
-//     console.log('Check BaKcEnd', BACK_END_SERVER_URL);
 
-//     setIsLoading(true);
+  const handleLogin = async () => {
+    setIsLoading(true);
 
-//     try {
-//       const response = await fetch(`${BACK_END_SERVER_URL}/api/authservice/login`, {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify({email, password}),
-//       });
-
-//       const data = await response.json();
-//       if (data.token) {
-//         await AsyncStorage.setItem('userToken', data.token);
-//         navigation.navigate('DashboardQuotation');
-//       } else {
-//         console.error('Token is undefined after login');
-//       }
-//     } catch (error) {
-//       Alert.alert('Error', error.message);
-//     }
-
-//     setIsLoading(false);
-//   };
-
-    const handleLogin = async () => {
-      setIsLoading(true);
-
-      try {
-        const userCredential = await auth().signInWithEmailAndPassword(
-          email,
-          password,
-        );
-        const user = userCredential.user;
-        const token = await user.getIdToken();
-        console.log('Token after login:', token); // Log the token
-        if (token) {
-          await AsyncStorage.setItem('userToken', token);
-          setIsLoading(false);
-          navigation.reset({
-            index: 0,
-            routes: [{name: 'DashboardQuotation'}],
-          });
-        } else {
-          console.error('Token is undefined after login');
-          setIsLoading(false);
-        }
-      } catch (error) {
-        Alert.alert('Error', error.message);
+    try {
+      const userCredential = await auth().signInWithEmailAndPassword(
+        email,
+        password,
+      );
+      const user = userCredential.user;
+      const token = await user.getIdToken();
+      console.log('Token after login:', token); // Log the token
+      if (token) {
+        await AsyncStorage.setItem('userToken', token);
         setIsLoading(false);
-
+        navigation.reset({
+          index: 0,
+          routes: [{name: 'DashboardQuotation'}],
+        });
+      } else {
+        console.error('Token is undefined after login');
+        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      Alert.alert('Login Error', 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>

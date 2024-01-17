@@ -32,6 +32,7 @@ export type ParamListBase = {
     onAddService: OnAddService;
     quotationId: string;
   };
+  ExistingContract: undefined;
   TopUpScreen: undefined;
   LayoutScreen: undefined;
   CreateContractScreen: {id: string};

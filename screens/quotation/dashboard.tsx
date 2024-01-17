@@ -24,7 +24,7 @@ import {
   faCogs,
   faPlus,
   faSheetPlastic,
-  faUserCog,
+  faBars,
 } from '@fortawesome/free-solid-svg-icons';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import Lottie from 'lottie-react-native';
@@ -34,6 +34,8 @@ import * as stateAction from '../../redux/actions';
 import {DashboardScreenProps} from '../../types/navigationType';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useUser} from '../../providers/UserContext';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
+
 import {
   check,
   PERMISSIONS,
@@ -41,9 +43,12 @@ import {
   checkNotifications,
   requestNotifications,
 } from 'react-native-permissions';
+import { Drawer } from 'react-native-paper';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(true);
+  const [activeMenu, setActiveMenu] = React.useState('');
+
   const user = useUser();
   const {width, height} = Dimensions.get('window');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
@@ -56,9 +61,10 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   >(null);
 
   const {
-    state: {isEmulator, client_name, client_address, client_tax, client_tel},
     dispatch,
   }: any = useContext(Store);
+
+
   const requestNotificationPermission = async () => {
     try {
       const {status} = await requestNotifications(['alert', 'badge', 'sound']);
@@ -546,24 +552,13 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   return (
     <>
       <View>
-        <HeaderRNE
+        {/* <HeaderRNE
           containerStyle={{
             backgroundColor: '#ffffffff',
             borderBottomColor: 'white',
           }}
-          leftComponent={
-            <Text
-              style={{
-                color: '#000000',
-                fontSize: 18,
-                fontWeight: 'bold',
-                marginLeft: 5,
-                width: 100,
-              }}
-              onPress={() => {}}>
-              Trusthwork
-            </Text>
-          }
+     
+
           rightComponent={
             <TouchableOpacity
               onPress={() => {
@@ -572,7 +567,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               <FontAwesomeIcon icon={faCog} color="#1f303cff" size={22} />
             </TouchableOpacity>
           }
-        />
+        /> */}
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -622,10 +617,10 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
       <FAB
         icon={<FontAwesomeIcon icon={faPlus} size={20} color="white" />}
-        color="#012b20"
-        // color="#0073BA"
+        // color="#012b20"
+        color="#1b72e8"
         style={{
-          backgroundColor: '#1f303cff',
+          backgroundColor: '#1b52a7',
           position: 'absolute',
           right: 16,
           bottom: 25,
@@ -677,7 +672,7 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 10,
-    backgroundColor: '#012b20',
+    backgroundColor: '#1b52a7',
     borderRadius: 28,
     height: 56,
     width: 56,
@@ -764,6 +759,7 @@ const styles = StyleSheet.create({
     height: 40,
   },
   activeFilter: {
+    // backgroundColor:'#1b72e8',
     backgroundColor: '#1f303cff',
     color: 'white',
   },

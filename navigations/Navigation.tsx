@@ -58,6 +58,9 @@ import EditDefaultContract from '../screens/contract/edit/editDefaultContract';
 import CreateContractScreen from '../screens/contract/createContractScreen';
 import Selectworks from '../screens/submit/selectworks';
 import SendWorks from '../screens/submit/sendWorks';
+import DashboardDrawer from './dashboardDrawer';
+import ExistingContract from '../screens/contract/existingContract';
+
 
 const Theme = {
   ...DefaultTheme,
@@ -77,7 +80,7 @@ const Navigation = ({initialRouteName}) => {
     {name: 'DocViewScreen', component: DocViewScreen},
     {name: 'FirstAppScreen', component: FirstAppScreen},
     {name: 'LoginScreen', component: LoginScreen},
-    {name: 'DashboardQuotation', component: Dashboard},
+    {name: 'DashboardQuotation', component: DashboardDrawer},
   ];
 
   const commonScreenOptions = {
@@ -113,7 +116,7 @@ const Navigation = ({initialRouteName}) => {
           component={Quotation}
           options={{
             ...commonScreenOptions,
-            headerShown: true,
+            headerShown: false,
             title: 'สร้างใบเสนอราคา',
             headerBackTitle: '',
 
@@ -129,7 +132,7 @@ const Navigation = ({initialRouteName}) => {
           component={AddProductForm}
           options={{
             ...commonScreenOptions,
-            headerShown: true,
+            headerShown: false,
             title: 'เพิ่มรายการ-สินค้า',
             headerBackTitleVisible: false,
             headerStyle: {
@@ -321,6 +324,20 @@ const Navigation = ({initialRouteName}) => {
             headerTintColor: 'black',
           }}
         />
+         <Stack.Screen
+          name="ExistingContract"
+          component={ExistingContract}
+          options={{
+            ...commonScreenOptions,
+            headerShown: true,
+            title: 'ตั้งค่าสัญญา',
+            headerBackTitleVisible: false,
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
         <Stack.Screen
           name="ExistingWorkers"
           component={ExistingWorkers}
@@ -457,7 +474,7 @@ const Navigation = ({initialRouteName}) => {
           component={DefaultContract}
           options={{
             ...commonScreenOptions,
-            headerShown: true,
+            headerShown: false,
             title: 'รายละเอียดสัญญา',
             headerBackTitleVisible: false,
 

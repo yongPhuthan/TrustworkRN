@@ -404,7 +404,7 @@ const CreateCompanyScreen = ({navigation}: Props) => {
             <Text>ที่อยู่ร้าน</Text>
             <TextInput
               placeholder="ที่อยู่ร้าน"
-              style={[styles.input, {height: 100}]} // Set height as needed
+              style={[styles.input, { height: 100, textAlignVertical: 'top' }]} 
               numberOfLines={3}
               value={address}
               onChangeText={setAddress}
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   input: {
-    borderRadius: 10,
+    borderRadius: 4,
     marginVertical: 10,
     height: 50,
     borderWidth: 0.5,

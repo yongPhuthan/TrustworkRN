@@ -85,3 +85,15 @@ export const serviceValidationSchema = yup.object().shape({
   audits: yup.array().of(selectedAuditDataSchema),
   materials: yup.array().of(selectedMaterialDataSchema),
 });
+
+export const defaultContractSchema = yup.object().shape({
+  productWarantyYear: yup.number().required(' required').positive().integer(),
+  skillWarantyYear: yup.number().required('required').positive().integer(),
+  installingDay: yup.number().required('required').positive().integer(),
+  workAfterGetDeposit: yup.number().required('required').positive().integer(),
+  prepareDay: yup.number().required('required').positive().integer(),
+  finishedDay: yup.number().required('required').positive().integer(),
+  workCheckDay: yup.number().required('required').positive().integer(),
+  workCheckEnd: yup.number().required('required').positive().integer(),
+  adjustPerDay: yup.number().required('required').positive().integer(),
+});

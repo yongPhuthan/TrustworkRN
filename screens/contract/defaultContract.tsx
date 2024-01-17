@@ -1,6 +1,6 @@
 import React, {useState, useContext, useCallback, useRef} from 'react';
 import {
-  Button,
+  
   SafeAreaView,
   KeyboardAvoidingView,
   StyleSheet,
@@ -13,8 +13,14 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import {yupResolver} from '@hookform/resolvers/yup';
+import {defaultContractSchema} from '../utils/validationSchema';
+
 import messaging from '@react-native-firebase/messaging';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {ProgressBar, Appbar, Button} from 'react-native-paper';
+
 import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import {v4 as uuidv4} from 'uuid';
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
@@ -58,11 +64,10 @@ const DefaultContract = ({navigation}: Props) => {
   const [step, setStep] = useState(1);
   const [contract, setContract] = useState<DefaultContractType>();
   const [customer, setCustomer] = useState<Customer>();
-  const textRequired = 'จำเป็นต้องระบุ';
   const {data: dataProps}: any = route?.params;
   const quotation = dataProps;
+  const textRequired = '* จำเป็น';
   const queryClient = useQueryClient();
-console.log('quotation',quotation)
   async function fetchContractByEmail() {
     if (!user || !user.email) {
       console.error('User or user email is not available');
@@ -219,6 +224,19 @@ console.log('quotation',quotation)
       throw new Error(err);
     }
   };
+
+  const defaultValues = {
+    warantyTimeWork: 0,
+    workCheckEnd: 0,
+    workCheckDay: 0,
+    installingDay: 0,
+    adjustPerDay: 0,
+    workAfterGetDeposit: 0,
+    prepareDay: 0,
+    finishedDay: 0,
+    productWarantyYear: 0,
+    skillWarantyYear: 0,
+  };
   const {
     handleSubmit,
     control,
@@ -228,18 +246,9 @@ console.log('quotation',quotation)
     formState: {errors, isDirty, dirtyFields, isValid},
   } = useForm({
     mode: 'onChange',
-    defaultValues: {
-      warantyTimeWork: 0,
-      workCheckEnd: 0,
-      workCheckDay: 0,
-      installingDay: 0,
-      adjustPerDay: 0,
-      workAfterGetDeposit: 0,
-      prepareDay: 0,
-      finishedDay: 0,
-      productWarantyYear: 0,
-      skillWarantyYear: 0,
-    },
+    defaultValues,
+    resolver: yupResolver(defaultContractSchema),
+
   });
   const {data, isLoading, isError} = useQuery({
     queryKey: ['ContractByEmail'],
@@ -267,31 +276,20 @@ console.log('quotation',quotation)
     },
   });
 
-  const {mutate: createContractAndQuotationMutation} = useMutation(
-    createContractAndQuotation,
-    {
-      onSuccess: data => {
-        queryClient.invalidateQueries(['dashboardData']);
-        const newId = quotation.id.slice(0, 8);
-        navigation.navigate('DocViewScreen', {id: newId});
-      },
-      onError: (error: MyError) => {
-        Alert.alert(
-          'เกิดข้อผิดพลาด',
-          `Server-side user creation failed:, ${error}`, 
-          [{text: 'OK', }],
-        
-          {cancelable: false},
-        );
-      },
-    },
-  );
-
-  const {mutate: createQuotationMutation} = useMutation(createQuotation, {
+  const mutationFunction = async (apiData) => {
+    if (!contract) {
+      return createContractAndQuotation(apiData);
+    } else if (isDirty) {
+      return updateDefaultContractAndCreateQuotation(apiData);
+    } else {
+      return createQuotation(apiData);
+    }
+  };
+  const { mutate: dynamicMutation, isLoading:isMutationLoading } = useMutation(mutationFunction, {
     onSuccess: data => {
       queryClient.invalidateQueries(['dashboardData']);
-      const newId = quotation.id.slice(0, 8);
-      navigation.navigate('DocViewScreen', {id: newId});
+      // const newId = quotation.id.slice(0, 8);
+      navigation.navigate('DocViewScreen', {id});
     },
     onError: (error: MyError) => {
       Alert.alert(
@@ -304,24 +302,105 @@ console.log('quotation',quotation)
     },
   });
 
-  const {mutate: updateContractMutation} = useMutation(
-    updateDefaultContractAndCreateQuotation,
-    {
-      onSuccess: data => {
-        queryClient.invalidateQueries(['dashboardData']);
-        const newId = quotation.id.slice(0, 8);
-        navigation.navigate('DocViewScreen', {id: newId});
-      },
-      onError: (error: MyError) => {
-        Alert.alert(
-          'เกิดข้อผิดพลาด',
-          `Server-side user creation failed:, ${error}`, 
-          [{text: 'OK', }],
-        
-          {cancelable: false},
-        );
-      },
-    },
+  const watchedValues: any = watch();
+  const dirtyValues = Object.keys(dirtyFields).reduce((acc, key) => {
+    if (key in watchedValues) {
+      acc[key] = watchedValues[key as keyof DefaultContractType];
+    }
+    return acc;
+  }, {} as DefaultContractType);
+
+  const handleDonePress = async () => {
+    setIsLoadingMutation(true);
+  
+    try {
+      const apiData = {
+        data: quotation,
+        contract: isDirty ? dirtyValues : defaultContractValues,
+      };
+  
+      dynamicMutation(apiData);
+      setIsLoadingMutation(false);
+    } catch (error: Error | MyError | any) {
+      setIsLoadingMutation(false);
+    }
+  };
+  
+
+
+
+
+
+  function safeToString(value) {
+    return value !== undefined && value !== null ? value.toString() : '';
+  }
+
+  const renderTextInput = (
+    name: any,
+    label: string,
+    defaultValue: string = '',
+  ) => (
+    <>
+      {errors[name] && (
+        <Text
+          style={{
+            alignSelf: 'flex-end',
+            marginTop: 10,
+          }}>
+          {textRequired}
+        </Text>
+      )}
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginTop: 10,
+        }}>
+        <Text style={styles.label}>{label}</Text>
+
+        <View style={styles.inputContainerForm}>
+          <Controller
+            control={control}
+            rules={{required: 'This field is required'}}
+            render={({
+              field: {onChange, onBlur, value},
+              fieldState: {error},
+            }) => (
+              <>
+                <TextInput
+                  keyboardType="number-pad"
+                  textAlign="center"
+                  textAlignVertical="center"
+                  
+                  defaultValue={defaultValue}
+                  onBlur={onBlur}
+                  value={value}
+                  onChangeText={val => {
+                    const numericValue = Number(val);
+                    if (!isNaN(numericValue)) {
+                      onChange(numericValue);
+                    }
+                  }}
+                  style={{
+                    width: 30,
+                    // height: 45,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  placeholderTextColor="#A6A6A6"
+                />
+              </>
+            )}
+            name={name}
+          />
+
+          <Text style={styles.inputSuffix}>วัน</Text>
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+    </>
   );
 
   if (isLoading) {
@@ -338,117 +417,40 @@ console.log('quotation',quotation)
       </View>
     );
   }
-  const watchedValues: DefaultContractType = watch();
-  const dirtyValues = Object.keys(dirtyFields).reduce((acc, key) => {
-    if (key in watchedValues) {
-      acc[key] = watchedValues[key as keyof DefaultContractType];
-    }
-    return acc;
-  }, {} as DefaultContractType);
-
-  const handleDonePress = async () => {
-    setIsLoadingMutation(true);
-
-    try {
-      const apiData = {
-        data: quotation,
-        contract: dirtyValues,
-      };
-      console.log('apiData before mutation', JSON.stringify(apiData));
-
-      if (!contract) {
-        createContractAndQuotationMutation(apiData);
-      } else if (isDirty) {
-        updateContractMutation({...apiData});
-      } else {
-        const newData = {
-          data: quotation,
-          contract: defaultContractValues,
-        };
-        // console.log('newData before mutation' ,JSON.stringify(newData))
-        createQuotationMutation(newData);
-      }
-
-      setIsLoadingMutation(false);
-    } catch (error: Error | MyError | any) {
-      console.error('There was a problem calling the function:', error);
-      console.log(error.response);
-      setIsLoadingMutation(false);
-    }
-  };
-
-
-  function safeToString(value) {
-    return value !== undefined && value !== null ? value.toString() : '';
-  }
-
-  const renderTextInput = (
-    name: any,
-    label: string,
-    defaultValue: string = '',
-  ) => (
-    <>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          marginTop: 10,
-        }}>
-        <Text style={styles.label}>{label}</Text>
-
-        <View style={styles.inputContainerForm}>
-          <Controller
-            control={control}
-            render={({field: {onChange, onBlur, value}}) => (
-              <TextInput
-                keyboardType="number-pad"
-                textAlign="center"
-                textAlignVertical="center"
-                defaultValue={defaultValue}
-                onBlur={onBlur}
-                onChangeText={val => {
-                  const numericValue = Number(val);
-                  if (!isNaN(numericValue)) {
-                    onChange(numericValue);
-                  }
-                }}
-                style={{
-                  width: 30,
-                  // height: 45,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-                placeholderTextColor="#A6A6A6"
-              />
-            )}
-            name={name}
-            rules={{required: true}}
-          />
-
-          <Text style={styles.inputSuffix}>วัน</Text>
-        </View>
-      </View>
-      {errors[name] && (
-        <Text
-          style={{
-            alignSelf: 'flex-end',
-          }}>
-          {textRequired}
-        </Text>
-      )}
-      <View style={styles.divider} />
-    </>
-  );
   return (
     <>
+      <Appbar.Header  style={{
+          backgroundColor: 'white',
+        }} elevated mode='center-aligned'>
+        <Appbar.BackAction
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
+        <Appbar.Content title="ข้อเสนอสัญญา" titleStyle={{
+          fontSize:18,
+          fontWeight:'bold'
+        }} />
+        <Button
+          loading={isMutationLoading}
+          disabled={!isValid || isMutationLoading }
+          mode="contained"
+          buttonColor={'#1b72e8'}
+          onPress={handleDonePress}
+          style={{marginRight: 5}}>
+          {'บันทึก'}
+        </Button>
+      </Appbar.Header>
+      <ProgressBar progress={1} color={'#1b52a7'} />
+
+      <KeyboardAwareScrollView>
       {contract ? (
         <SafeAreaView style={{flex: 1}}>
           <KeyboardAvoidingView
             style={{flex: 1}}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
-            <ScrollView style={styles.containerForm}>
+            <View style={styles.containerForm}>
               <View style={styles.formInput}>
                 {renderTextInput(
                   'productWarantyYear',
@@ -496,61 +498,39 @@ console.log('quotation',quotation)
                   safeToString(contract.adjustPerDay),
                 )}
               </View>
-            </ScrollView>
+            </View>
           </KeyboardAvoidingView>
-          <FooterBtn
-            btnText="บันทึก"
-            disabled={!isValid}
-            onPress={handleDonePress}
-          />
+        
         </SafeAreaView>
       ) : (
-        // ... Same for the other part of the ternary operator ...
         <SafeAreaView style={{flex: 1}}>
-          <KeyboardAvoidingView
-            style={{flex: 1}}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
-            <ScrollView style={styles.containerForm}>
-              <View style={styles.formInput}>
-                <SmallDivider />
+        <View style={styles.containerForm}>
+          <View style={styles.formInput}>
+            <SmallDivider />
 
-                {renderTextInput(
-                  'productWarantyYear',
-                  'รับประกันวัสดุอุปกรณ์กี่ปี',
-                )}
-                {renderTextInput(
-                  'skillWarantyYear',
-                  'รับประกันงานติดตั้งกี่ปี',
-                )}
-                {renderTextInput('installingDay', 'Installing Day')}
-                {renderTextInput(
-                  'workAfterGetDeposit',
-                  'Work After Get Deposit',
-                )}
-                {renderTextInput('prepareDay', 'Prepare Days')}
-                {renderTextInput('finishedDay', 'Finished Days')}
-                {renderTextInput('workCheckDay', 'Work Check Day')}
-                {renderTextInput('workCheckEnd', 'Work Check End')}
-                {renderTextInput('adjustPerDay', 'Adjust Per Days')}
-              </View>
-            </ScrollView>
-            <FooterBtn
-              btnText="บันทึกใบเสนอราคา"
-              disabled={!isValid || !isDirty}
-              onPress={handleDonePress}
-            />
+            {renderTextInput('productWarantyYear', 'productWarantyYear')}
+            {renderTextInput(
+              'skillWarantyYear',
+              'รับประกันงานติดตั้งกี่ปี',
+            )}
+            {renderTextInput('installingDay', 'Installing Day')}
+            {renderTextInput(
+              'workAfterGetDeposit',
+              'Work After Get Deposit',
+            )}
+            {renderTextInput('prepareDay', 'Prepare Days')}
+            {renderTextInput('finishedDay', 'Finished Days')}
+            {renderTextInput('workCheckDay', 'Work Check Day')}
+            {renderTextInput('workCheckEnd', 'Work Check End')}
+            {renderTextInput('adjustPerDay', 'Adjust Per Days')}
+          </View>
+        </View>
 
-            {/* <ContractFooter
-              finalStep={false}
-              onBack={handleBackPress}
-              onNext={handleDonePress}
-              isLoading={isLoading}
-              disabled={!isValid || !isDirty}
-            /> */}
-          </KeyboardAvoidingView>
-        </SafeAreaView>
+     
+      </SafeAreaView>
       )}
+      </KeyboardAwareScrollView>
+     
     </>
   );
 };

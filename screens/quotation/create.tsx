@@ -12,6 +12,8 @@ import {
   Platform,
   Switch,
 } from 'react-native';
+import {ProgressBar, MD3Colors, Appbar, Button} from 'react-native-paper';
+
 import {v4 as uuidv4} from 'uuid';
 import React, {
   useState,
@@ -86,9 +88,7 @@ interface Props {
 }
 
 const Quotation = ({navigation}: Props) => {
-  const {
-    dispatch,
-  }: any = useContext(Store);
+  const {dispatch}: any = useContext(Store);
   // const { data, isLoading } = useQuery('data', fetchData);
   const [email, setEmail] = useState('');
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
@@ -201,7 +201,7 @@ const Quotation = ({navigation}: Props) => {
     id: quotationId,
     services: [],
     customer: defalutCustomer,
-    companyUser:null,
+    companyUser: null,
     vat7: 0,
     taxType: 'NOTAX',
     taxValue: 0,
@@ -269,7 +269,6 @@ const Quotation = ({navigation}: Props) => {
     }
   };
 
-
   const customer = useWatch({
     control: methods.control,
     name: 'customer',
@@ -279,7 +278,7 @@ const Quotation = ({navigation}: Props) => {
     control: methods.control,
     name: 'workers',
   });
-const services = useWatch({
+  const services = useWatch({
     control: methods.control,
     name: 'services',
   });
@@ -404,256 +403,289 @@ const services = useWatch({
     setVisibleModalIndex(null);
     remove(index);
   };
- 
 
   return (
-    <FormProvider {...methods}>
-      <View style={{flex: 1}}>
-        <ScrollView style={styles.container}>
-          <View style={styles.subContainerHead}>
-            <DatePickerButton
-              label="วันที่เสนอราคา"
-              date="today"
-              onDateSelected={handleStartDateSelected}
-            />
-            <DocNumber
-              label="เลขที่เอกสาร"
-              onChange={handleInvoiceNumberChange}
-              value={methods.watch('docNumber')}
-            />
-            <DatePickerButton
-              label="ยืนราคาถึงวันที่ี"
-              date="sevenDaysFromNow"
-              onDateSelected={handleEndDateSelected}
-            />
-          </View>
-          <View style={styles.subContainer}>
-            {!isCustomerDisabled ? (
-              <CardClient handleEditClient={() => setEditCustomerModal(true)} />
-            ) : (
-              <AddClient handleAddClient={() => setAddCustomerModal(true)} />
-            )}
+    <>
+      <Appbar.Header
+        elevated
+        mode="center-aligned"
+        
+        
+        style={{
+          backgroundColor: 'white',
+        }}>
+        <Appbar.BackAction
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
+        <Appbar.Content title="สร้างใบเสนอราคา" titleStyle={{ fontSize:18,
+          fontWeight:'bold'}} />
+        <Button
+          // loading={postLoading}
+          disabled={!isDisabled}
+          mode="contained"
+          buttonColor={'#1b72e8'}
+          onPress={handleButtonPress}>
+          {'ไปต่อ'}
+        </Button>
+      </Appbar.Header>
+      <ProgressBar progress={0.5} color={'#1b52a7'} />
 
-            <View style={styles.header}>
-              <Icon
-                style={styles.icon}
-                name="briefcase"
-                size={20}
-                color="#19232e"
+      <FormProvider {...methods}>
+        <View style={{flex: 1}}>
+          <ScrollView style={styles.container}>
+            <View style={styles.subContainerHead}>
+              <DatePickerButton
+                label="วันที่เสนอราคา"
+                date="today"
+                onDateSelected={handleStartDateSelected}
               />
-              <Text style={styles.label}>บริการ-สินค้า</Text>
+              <DocNumber
+                label="เลขที่เอกสาร"
+                onChange={handleInvoiceNumberChange}
+                value={methods.watch('docNumber')}
+              />
+              <DatePickerButton
+                label="ยืนราคาถึงวันที่ี"
+                date="sevenDaysFromNow"
+                onDateSelected={handleEndDateSelected}
+              />
             </View>
-            {fields.length > 0 &&
-              fields.map((field: any, index: number) => (
-                <CardProject
-                  handleModalClose={handleModalClose}
-                  visibleModalIndex={visibleModalIndex === index}
-                  setVisibleModalIndex={() => setVisibleModalIndex(index)}
-                  index={index}
-                  handleRemoveService={() => handleRemoveService(index)}
-                  handleEditService={() => handleEditService(index, field)}
-                  serviceList={field}
-                  key={field.id}
+            <View style={styles.subContainer}>
+              {!isCustomerDisabled ? (
+                <CardClient
+                  handleEditClient={() => setEditCustomerModal(true)}
                 />
-              ))}
+              ) : (
+                <AddClient handleAddClient={() => setAddCustomerModal(true)} />
+              )}
 
-            <AddServices handleAddProductFrom={handleAddProductForm} />
-            <Divider />
+              <View style={styles.header}>
+                <Icon
+                  style={styles.icon}
+                  name="briefcase"
+                  size={20}
+                  color="#19232e"
+                />
+                <Text style={styles.label}>บริการ-สินค้า</Text>
+              </View>
+              {fields.length > 0 &&
+                fields.map((field: any, index: number) => (
+                  <CardProject
+                    handleModalClose={handleModalClose}
+                    visibleModalIndex={visibleModalIndex === index}
+                    setVisibleModalIndex={() => setVisibleModalIndex(index)}
+                    index={index}
+                    handleRemoveService={() => handleRemoveService(index)}
+                    handleEditService={() => handleEditService(index, field)}
+                    serviceList={field}
+                    key={field.id}
+                  />
+                ))}
 
-            {/* <Divider /> */}
-            <Summary
-               vat7Props={Number(methods.watch('vat7')) === 0 ? false : true}
-               taxProps={
-                 methods.watch('taxType') !== 'NOTAX'
-                   ? methods.watch('taxType') === 'TAX3'
-                     ? 3
-                     : 5
-                   : 0
-               }
-               pickerTaxProps={methods.watch('taxType') !== 'NOTAX' ? true : false}
-            />
-            <SmallDivider />
-            <View style={styles.signatureRow}>
-              <Text style={styles.signHeader}>เพิ่มทีมงานติดตั้ง</Text>
-              <Switch
-                trackColor={{false: '#767577', true: '#81b0ff'}}
-                thumbColor={workerPicker ? '#ffffff' : '#f4f3f4'}
-                ios_backgroundColor="#3e3e3e"
-                onValueChange={() => useWorkers()}
-                value={workers.length > 0 ? true : false}
-                style={Platform.select({
-                  ios: {
-                    transform: [{scaleX: 0.7}, {scaleY: 0.7}],
-                    marginTop: 5,
-                  },
-                  android: {},
-                })}
+              <AddServices handleAddProductFrom={handleAddProductForm} />
+              <Divider />
+
+              {/* <Divider /> */}
+              <Summary
+                vat7Props={Number(methods.watch('vat7')) === 0 ? false : true}
+                taxProps={
+                  methods.watch('taxType') !== 'NOTAX'
+                    ? methods.watch('taxType') === 'TAX3'
+                      ? 3
+                      : 5
+                    : 0
+                }
+                pickerTaxProps={
+                  methods.watch('taxType') !== 'NOTAX' ? true : false
+                }
               />
-            </View>
-            {/* workers */}
-            {workers.length > 0 && (
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  paddingVertical: 10,
-                }}>
-                <FlatList
-                  data={workers}
-                  horizontal={true}
-                  renderItem={({item, index}) => {
-                    return (
-                      <View style={styles.imageContainer}>
-                        <TouchableOpacity onPress={() => setWorkerModal(true)}>
-                          <Image
-                            source={{uri: item.image}}
-                            style={styles.image}
-                          />
-                          <Text>{item.name}</Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }}
-                  keyExtractor={(item, index) => index.toString()}
-                  ListFooterComponent={
-                    workers.length > 0 ? (
-                      <TouchableOpacity
-                        style={styles.addButtonContainer}
-                        onPress={() => {
-                          setWorkerModal(true);
-                          // navigation.navigate('GalleryScreen', {code});
-                        }}>
-                        <FontAwesomeIcon
-                          icon={faPlus}
-                          size={32}
-                          color="#0073BA"
-                        />
-                      </TouchableOpacity>
-                    ) : null
-                  }
-                  // ListEmptyComponent={
-                  //   <View>
-                  //     <TouchableOpacity
-                  //       style={{
-                  //         justifyContent: 'center',
-                  //         alignItems: 'center',
-                  //         marginBottom: 20,
-                  //         borderColor: '#0073BA',
-                  //         borderWidth: 1,
-                  //         borderRadius: 5,
-                  //         borderStyle: 'dashed',
-                  //         // marginHorizontal: 100,
-                  //         padding: 10,
-                  //         height: 150,
-                  //         width: 200,
-                  //       }}
-                  //       onPress={() => {
-                  //         setWorkerModal(true);
-                  //       }}>
-                  //       <FontAwesomeIcon
-                  //         icon={faImages}
-                  //         style={{marginVertical: 5, marginHorizontal: 50}}
-                  //         size={32}
-                  //         color="#0073BA"
-                  //       />
-                  //       <Text
-                  //         style={{
-                  //           textAlign: 'center',
-                  //           color: '#0073BA',
-                  //           fontFamily: 'Sukhumvit set',
-                  //         }}>
-                  //         เลือกภาพตัวอย่างผลงาน
-                  //       </Text>
-                  //     </TouchableOpacity>
-                  //   </View>
-                  // }
+              <SmallDivider />
+              <View style={styles.signatureRow}>
+                <Text style={styles.signHeader}>เพิ่มทีมงานติดตั้ง</Text>
+                <Switch
+                  trackColor={{false: '#767577', true: '#81b0ff'}}
+                  thumbColor={workerPicker ? '#ffffff' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={() => useWorkers()}
+                  value={workers.length > 0 ? true : false}
+                  style={Platform.select({
+                    ios: {
+                      transform: [{scaleX: 0.7}, {scaleY: 0.7}],
+                      marginTop: 5,
+                    },
+                    android: {},
+                  })}
                 />
               </View>
-            )}
-            <SmallDivider />
-            <View style={styles.signatureRow}>
-              <Text style={styles.signHeader}>เพิ่มลายเซ็น</Text>
-              <Switch
-                trackColor={{false: '#767577', true: '#81b0ff'}}
-                thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
-                ios_backgroundColor="#3e3e3e"
-                onValueChange={() => useSignature()}
-                value={signature ? true : false}
-                style={Platform.select({
-                  ios: {
-                    transform: [{scaleX: 0.7}, {scaleY: 0.7}],
-                    marginTop: 5,
-                  },
-                  android: {},
-                })}
-              />
-            </View>
-            <Modal
-              isVisible={singatureModal}
-              style={styles.modal}
-              onBackdropPress={() => setSignatureModal(false)}>
-              <SafeAreaView style={styles.containerModal}>
-              <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => setSignatureModal(false)}>
-          <FontAwesomeIcon icon={faClose} size={24} color="gray" />
-        </TouchableOpacity>
-      
-      </View>
-                <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
-                <SignatureComponent
-                  onClose={() => setSignatureModal(false)}
-                  setSignatureUrl={setSignature}
-                  onSignatureSuccess={handleSignatureSuccess}
+              {/* workers */}
+              {workers.length > 0 && (
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingVertical: 10,
+                  }}>
+                  <FlatList
+                    data={workers}
+                    horizontal={true}
+                    renderItem={({item, index}) => {
+                      return (
+                        <View style={styles.imageContainer}>
+                          <TouchableOpacity
+                            onPress={() => setWorkerModal(true)}>
+                            <Image
+                              source={{uri: item.image}}
+                              style={styles.image}
+                            />
+                            <Text>{item.name}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }}
+                    keyExtractor={(item, index) => index.toString()}
+                    ListFooterComponent={
+                      workers.length > 0 ? (
+                        <TouchableOpacity
+                          style={styles.addButtonContainer}
+                          onPress={() => {
+                            setWorkerModal(true);
+                            // navigation.navigate('GalleryScreen', {code});
+                          }}>
+                          <FontAwesomeIcon
+                            icon={faPlus}
+                            size={32}
+                            color="#0073BA"
+                          />
+                        </TouchableOpacity>
+                      ) : null
+                    }
+                    // ListEmptyComponent={
+                    //   <View>
+                    //     <TouchableOpacity
+                    //       style={{
+                    //         justifyContent: 'center',
+                    //         alignItems: 'center',
+                    //         marginBottom: 20,
+                    //         borderColor: '#0073BA',
+                    //         borderWidth: 1,
+                    //         borderRadius: 5,
+                    //         borderStyle: 'dashed',
+                    //         // marginHorizontal: 100,
+                    //         padding: 10,
+                    //         height: 150,
+                    //         width: 200,
+                    //       }}
+                    //       onPress={() => {
+                    //         setWorkerModal(true);
+                    //       }}>
+                    //       <FontAwesomeIcon
+                    //         icon={faImages}
+                    //         style={{marginVertical: 5, marginHorizontal: 50}}
+                    //         size={32}
+                    //         color="#0073BA"
+                    //       />
+                    //       <Text
+                    //         style={{
+                    //           textAlign: 'center',
+                    //           color: '#0073BA',
+                    //           fontFamily: 'Sukhumvit set',
+                    //         }}>
+                    //         เลือกภาพตัวอย่างผลงาน
+                    //       </Text>
+                    //     </TouchableOpacity>
+                    //   </View>
+                    // }
+                  />
+                </View>
+              )}
+              <SmallDivider />
+              <View style={styles.signatureRow}>
+                <Text style={styles.signHeader}>เพิ่มลายเซ็น</Text>
+                <Switch
+                  trackColor={{false: '#767577', true: '#81b0ff'}}
+                  thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={() => useSignature()}
+                  value={signature ? true : false}
+                  style={Platform.select({
+                    ios: {
+                      transform: [{scaleX: 0.7}, {scaleY: 0.7}],
+                      marginTop: 5,
+                    },
+                    android: {},
+                  })}
                 />
-              </SafeAreaView>
-            </Modal>
-          </View>
-        </ScrollView>
-        <Modal
-          isVisible={addCustomerModal}
-          style={styles.modalFull}
-          onBackdropPress={() => setAddCustomerModal(false)}>
-          <AddCustomer onClose={() => setAddCustomerModal(false)} />
-        </Modal>
-        <Modal
-          isVisible={editCustomerModal}
-          style={styles.modalFull}
-          onBackdropPress={() => setEditCustomerModal(false)}>
-          <EditCustomer onClose={() => setEditCustomerModal(false)} />
-        </Modal>
+              </View>
+              <Modal
+                isVisible={singatureModal}
+                style={styles.modal}
+                onBackdropPress={() => setSignatureModal(false)}>
+                <SafeAreaView style={styles.containerModal}>
+                  <View style={styles.header}>
+                    <TouchableOpacity
+                      style={styles.closeButton}
+                      onPress={() => setSignatureModal(false)}>
+                      <FontAwesomeIcon icon={faClose} size={24} color="gray" />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
+                  <SignatureComponent
+                    onClose={() => setSignatureModal(false)}
+                    setSignatureUrl={setSignature}
+                    onSignatureSuccess={handleSignatureSuccess}
+                  />
+                </SafeAreaView>
+              </Modal>
+            </View>
+          </ScrollView>
+          <Modal
+            isVisible={addCustomerModal}
+            style={styles.modalFull}
+            onBackdropPress={() => setAddCustomerModal(false)}>
+            <AddCustomer onClose={() => setAddCustomerModal(false)} />
+          </Modal>
+          <Modal
+            isVisible={editCustomerModal}
+            style={styles.modalFull}
+            onBackdropPress={() => setEditCustomerModal(false)}>
+            <EditCustomer onClose={() => setEditCustomerModal(false)} />
+          </Modal>
 
-        <Modal
-          isVisible={editServicesModal}
-          style={styles.modalServiceFull}
-          onBackdropPress={() => setEditServicesModal(false)}>
-          <EditProductForm
-            quotationId={quotationId}
-            onClose={() => setEditServicesModal(false)}
-            serviceIndex={serviceIndex}
-          />
-        </Modal>
-        <Modal
-          isVisible={workerModal}
-          onBackdropPress={() => setWorkerModal(false)}
-          style={styles.modal}>
-          <ExistingWorkers
-            onClose={() => {
-              setWorkerpicker(!workerPicker);
-              setWorkerModal(false);
-            }}
+          <Modal
+            isVisible={editServicesModal}
+            style={styles.modalServiceFull}
+            onBackdropPress={() => setEditServicesModal(false)}>
+            <EditProductForm
+              quotationId={quotationId}
+              onClose={() => setEditServicesModal(false)}
+              serviceIndex={serviceIndex}
+            />
+          </Modal>
+          <Modal
             isVisible={workerModal}
-          />
-        </Modal>
-        <View>
+            onBackdropPress={() => setWorkerModal(false)}
+            style={styles.modal}>
+            <ExistingWorkers
+              onClose={() => {
+                setWorkerpicker(!workerPicker);
+                setWorkerModal(false);
+              }}
+              isVisible={workerModal}
+            />
+          </Modal>
+          {/* <View>
           <FooterBtn
             btnText="ดำเนินการต่อ"
             disabled={isDisabled}
             onPress={handleButtonPress}
           />
+        </View> */}
         </View>
-      </View>
-    </FormProvider>
+      </FormProvider>
+    </>
   );
 };
 
@@ -928,7 +960,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#19232e',
-alignSelf:'center',
+    alignSelf: 'center',
     fontFamily: 'Sukhumvit set',
   },
   image: {

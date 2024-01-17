@@ -3,6 +3,8 @@ import {Provider} from 'react-native-paper';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import Navigation from './navigations/navigation';
 import withAuthCheck from './providers/withAuthCheck';
+import { NavigationContainer } from '@react-navigation/native';
+
 import {FormProvider, useForm} from 'react-hook-form';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {

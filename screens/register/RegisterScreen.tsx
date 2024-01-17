@@ -10,17 +10,24 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Button,
+  
   ActivityIndicator,
   Pressable,
   Dimensions,
   TextInput,
 } from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faArrowLeft,
+
+} from '@fortawesome/free-solid-svg-icons';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firebase from '../../firebase';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {ParamListBase} from '../../types/navigationType';
+import { Button } from 'react-native-paper';
+
 import {useUser} from '../../providers/UserContext';
 import {
   BACK_END_SERVER_URL,
@@ -121,7 +128,6 @@ const RegisterScreen = ({navigation}: Props) => {
         );
       }
       if (!user || !user.email) {
-        console.error('User or user email is not available');
         return;
       }
       try {
@@ -138,14 +144,11 @@ const RegisterScreen = ({navigation}: Props) => {
             body: JSON.stringify({email: user.email, uid: user.uid}),
           },
         );
-        console.log('response', response);
         if (!response.ok) {
           throw new Error('Failed to create user on the server');
         }
-        console.log('responseOK');
 
         const responseData = await response.json();
-        console.log('Server response:', responseData);
         navigation.navigate('CreateCompanyScreen');
 
         setUserLoading(false);
@@ -175,7 +178,12 @@ const RegisterScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={{marginTop: 10, paddingHorizontal: 10}}>
       {/* Add your input fields... */}
-      <View style={{marginTop: 40, paddingHorizontal: 40}}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}>
+        <FontAwesomeIcon icon={faArrowLeft} size={26} color="#5C5F62" />
+      </TouchableOpacity>
+      <View style={{marginTop: 40, paddingHorizontal: 20}}>
         <Text style={styles.title}>สมัครสมาชิก</Text>
         <Text>อีเมลล์</Text>
         <TextInput
@@ -213,7 +221,8 @@ const RegisterScreen = ({navigation}: Props) => {
         />
         {error && <Text style={styles.errorText}>{error.message}</Text>}
 
-        <Pressable
+        <Button
+        mode='contained'
           style={[
             styles.pressable,
             styles.getStartedButton,
@@ -226,7 +235,7 @@ const RegisterScreen = ({navigation}: Props) => {
           ) : (
             <Text style={styles.pressableText}>ลงทะเบียน</Text>
           )}
-        </Pressable>
+        </Button>
       </View>
     </SafeAreaView>
   );
@@ -278,7 +287,6 @@ const styles = StyleSheet.create({
   },
   pressable: {
     width: '100%',
-    paddingVertical: 12,
     borderRadius: 4,
     marginVertical: 20,
   },
@@ -298,6 +306,11 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 30,
+    left: 16,
   },
 });
 export default RegisterScreen;
