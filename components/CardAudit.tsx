@@ -53,6 +53,7 @@ const CardAudit = ({
   
   return (
     <View style={[styles.container, checked && styles.selected]}>
+      
       <View style={styles.titleContainer}>
         <CheckBox
         checkedIcon={<FontAwesomeIcon icon={faSquareCheck} size={20} color="black" />}

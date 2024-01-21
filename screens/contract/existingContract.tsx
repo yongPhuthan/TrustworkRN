@@ -8,9 +8,11 @@ import {
   Text,
   View,
   ActivityIndicator,
-  TextInput,
+
   TouchableOpacity,
 } from 'react-native';
+import Decimal from 'decimal.js';
+
 import messaging from '@react-native-firebase/messaging';
 import {Snackbar, Appbar, Button} from 'react-native-paper';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
@@ -40,6 +42,7 @@ import Lottie from 'lottie-react-native';
 import EditInstallment from '../../components/editInstallment';
 import {ParamListBase} from '../../types/navigationType';
 import FooterBtn from '../../components/styles/FooterBtn';
+import {TextInput,Divider} from 'react-native-paper';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ExistingContract'>;
@@ -169,6 +172,30 @@ const ExistingContract = ({navigation}: Props) => {
     defaultValues,
     resolver: yupResolver(defaultContractSchema),
   });
+
+  const watchedValues: any = watch();
+  const dirtyValues = Object.keys(dirtyFields).reduce((acc, key) => {
+    if (key in watchedValues) {
+      acc[key] = Number(watchedValues[key as keyof DefaultContractType]);
+    }
+    return acc;
+  }, {} as DefaultContractType);
+
+  React.useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button
+        loading={postLoading}
+        disabled={!isValid || postLoading || !isDirty}
+        mode="contained"
+        buttonColor={'#1b52a7'}
+        onPress={handleDonePress}
+      >
+        {'บันทึก'}
+      </Button>
+      ),
+    });
+  }, [navigation, isDirty, isValid,dirtyValues]);  
   const {data, isLoading, isError} = useQuery({
     queryKey: ['DefaultContract'],
     queryFn: fetchContractByEmail,
@@ -237,13 +264,9 @@ const ExistingContract = ({navigation}: Props) => {
       </View>
     );
   }
-  const watchedValues: any = watch();
-  const dirtyValues = Object.keys(dirtyFields).reduce((acc, key) => {
-    if (key in watchedValues) {
-      acc[key] = Number(watchedValues[key as keyof DefaultContractType]);
-    }
-    return acc;
-  }, {} as DefaultContractType);
+
+
+
 
   const handleDonePress = async () => {
     setIsLoadingMutation(true);
@@ -263,15 +286,7 @@ const ExistingContract = ({navigation}: Props) => {
     defaultValue: string = '',
   ) => (
     <>
-      {errors[name] && (
-        <Text
-          style={{
-            alignSelf: 'flex-end',
-            marginTop: 10,
-          }}>
-          {textRequired}
-        </Text>
-      )}
+    
       <View
         style={{
           flexDirection: 'row',
@@ -280,8 +295,7 @@ const ExistingContract = ({navigation}: Props) => {
         }}>
         <Text style={styles.label}>{label}</Text>
 
-        <View style={styles.inputContainerForm}>
-          <Controller
+        <Controller
             control={control}
             rules={{required: 'This field is required'}}
             render={({
@@ -292,9 +306,12 @@ const ExistingContract = ({navigation}: Props) => {
                 <TextInput
                   keyboardType="number-pad"
                   textAlign="center"
+                  error={!!error}
+                  mode="outlined"
                   textAlignVertical="center"
                   defaultValue={defaultValue}
                   onBlur={onBlur}
+                  right={<TextInput.Affix text="วัน" />}
                   value={value}
                   onChangeText={val => {
                     const numericValue = Number(val);
@@ -302,31 +319,23 @@ const ExistingContract = ({navigation}: Props) => {
                       onChange(numericValue);
                     }
                   }}
-                  style={{
-                    width: 30,
-                    // height: 45,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  placeholderTextColor="#A6A6A6"
+                 
                 />
               </>
             )}
             name={name}
           />
 
-          <Text style={styles.inputSuffix}>วัน</Text>
-        </View>
       </View>
+      <Divider style={{marginTop:10}} />
 
-      <View style={styles.divider} />
     </>
   );
 
+
   return (
     <>
-      <Appbar.Header style={{
+      {/* <Appbar.Header style={{
           backgroundColor: 'white',
         }} elevated mode='center-aligned'>
         <Appbar.BackAction
@@ -347,7 +356,7 @@ const ExistingContract = ({navigation}: Props) => {
           style={{marginRight: 15}}>
           {'บันทึก'}
         </Button>
-      </Appbar.Header>
+      </Appbar.Header> */}
       <KeyboardAwareScrollView>
       {contract ? (
         <SafeAreaView style={{flex: 1}}>
@@ -529,9 +538,8 @@ const styles = StyleSheet.create({
   label: {
     // fontFamily: 'sukhumvit set',
     fontSize: 16,
-    fontWeight: '400',
-    marginTop: 15,
-    marginBottom: 10,
+    marginTop: 20,
+
   },
   inputForm: {
     // backgroundColor: '#F5F5F5',

@@ -31,6 +31,7 @@ export type ParamListBase = {
   AddProduct: {
     onAddService: OnAddService;
     quotationId: string;
+    currentValue:Service | null
   };
   ExistingContract: undefined;
   TopUpScreen: undefined;
@@ -65,7 +66,9 @@ export type ParamListBase = {
   SignUpScreen: undefined;
   LoginScreen: undefined;
   CompanyUserFormScreen: undefined;
-  ExistingSignature: any;
+  ExistingSignature: {
+    company: CompanyUser
+  }
   ContactInfoScreen: undefined;
   ExistingCategories: undefined;
   GalleryScreen: {code: string | undefined};

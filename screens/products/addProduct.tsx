@@ -5,11 +5,10 @@ import React, {
   useMemo,
   useCallback,
 } from 'react';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 import {
   View,
-  TextInput,
   Text,
   Platform,
   ScrollView,
@@ -22,8 +21,8 @@ import {
   TouchableOpacity,
   Pressable,
 } from 'react-native';
+
 import {Header as HeaderRNE, HeaderProps} from '@rneui/themed';
-import Divider from '../../components/styles/Divider';
 import {
   useForm,
   FormProvider,
@@ -42,7 +41,7 @@ import {
   faImages,
   faPlusCircle,
 } from '@fortawesome/free-solid-svg-icons';
-import {Snackbar, Appbar, Button} from 'react-native-paper';
+import {Snackbar, Appbar, Button, IconButton} from 'react-native-paper';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {v4 as uuidv4} from 'uuid';
@@ -58,7 +57,9 @@ import SaveButton from '../../components/ui/Button/SaveButton';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {serviceValidationSchema} from '../utils/validationSchema';
 import CurrencyInput from 'react-native-currency-input';
-import Decimal from 'decimal.js';
+import {TextInput, List, Text as TextPaper} from 'react-native-paper';
+
+import Decimal from 'decimal.js-light';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'AddProduct'>;
@@ -69,7 +70,7 @@ const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
 const AddProductForm = ({navigation, route}: Props) => {
   // const {control, handleSubmit, watch} = useForm<FormData>();
-  const {quotationId,onAddService} = route.params;
+  const {quotationId, onAddService, currentValue} = route.params;
   const [isModalVisible, setModalVisible] = useState(false);
   const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
   const [serviceImages, setServiceImages] = useState<string[]>([]);
@@ -101,8 +102,8 @@ const AddProductForm = ({navigation, route}: Props) => {
     materials: [],
   };
   const methods = useForm<any>({
-    mode: 'all',
-    defaultValues: defaultService,
+    mode: 'onChange',
+    defaultValues: currentValue ? currentValue : defaultService,
     resolver: yupResolver(serviceValidationSchema),
   });
   const audits = useWatch({
@@ -116,26 +117,42 @@ const AddProductForm = ({navigation, route}: Props) => {
     defaultValue: '',
   });
 
+  const qty = useWatch({
+    control: methods.control,
+    name: 'qty',
+  });
+  const unit = useWatch({
+    control: methods.control,
+    name: 'unit',
+  });
+
   const materials = useWatch({
     control: methods.control,
     name: 'materials',
     defaultValue: [],
   });
+
   const [unitPrice, quantity] = useWatch({
     control: methods.control,
-    name: ['unitPrice', 'qty'], // Watching multiple fields
+    name: ['unitPrice', 'qty'],
   });
 
   useEffect(() => {
-    const unitPrice = new Decimal(methods.watch('unitPrice') || 0);
-    const quantity = new Decimal(methods.watch('qty') || 0);
+    const unitPriceValue = methods.watch('unitPrice') || 0;
+    const quantityValue = methods.watch('qty') || 0;
   
-    if (unitPrice.isFinite() && quantity.isFinite()) {
-      const total = unitPrice.times(quantity);
-      methods.setValue('total', total.toString());
-    }
-  }, [methods.watch('unitPrice'), methods.watch('qty'), methods.setValue]);
-
+    const unitPrice = new Decimal(unitPriceValue);
+    const quantity = new Decimal(quantityValue);
+  
+    const total = unitPrice.times(quantity);
+    methods.setValue('total', total.toString());
+  
+  }, [
+    methods.watch('unitPrice'),
+    methods.watch('qty'),
+    methods.setValue,
+    methods.formState.isDirty,
+  ]);
   const isButtonDisbled = useMemo(() => {
     return (
       (materials.length > 0 && audits?.length > 0 && title !== null) ||
@@ -146,436 +163,456 @@ const AddProductForm = ({navigation, route}: Props) => {
 
   return (
     <>
-     <Appbar.Header  elevated mode='center-aligned' style={{
-      backgroundColor:'white'
-      
-     }}>
+      <Appbar.Header
+        elevated
+        mode="center-aligned"
+        style={{
+          backgroundColor: 'white',
+        }}>
         <Appbar.BackAction
           onPress={() => {
             navigation.goBack();
           }}
         />
-        <Appbar.Content title="เพิ่มสินค้า-บริการ"  titleStyle={{ fontSize: 20 }}/>
+        <Appbar.Content
+          title="เพิ่มสินค้า-บริการ"
+          titleStyle={{fontSize: 20}}
+        />
         <Button
           // loading={postLoading}
-          disabled={!isButtonDisbled  }
+          disabled={
+            currentValue ? !methods.formState.isDirty : !isButtonDisbled
+          }
           mode="contained"
           buttonColor={'#1b52a7'}
-          onPress={()=>{}}
-          >
+          onPress={handleDone}>
           {'บันทึก'}
         </Button>
       </Appbar.Header>
       <FormProvider {...methods}>
-      <KeyboardAwareScrollView
-      style={{ flex: 1 }}
-      resetScrollToCoords={{ x: 0, y: 0 }}
-      scrollEnabled={true}
-      extraHeight={200} // Adjust this value as needed
-      enableOnAndroid={true}
-    >
-        <View style={{flex: 1}}>
-          <ScrollView style={styles.container}>
-            <View style={styles.subContainer}>
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}>
-                {isImageUpload ? (
-                  <ActivityIndicator size="small" color="#0073BA" />
-                ) : (
-                  <FlatList
-                    data={methods.watch('serviceImages')}
-                    horizontal={true}
-                    renderItem={({item, index}) => {
-                      return (
-                        <View style={styles.imageContainer}>
+        <KeyboardAwareScrollView
+          style={{flex: 1}}
+          resetScrollToCoords={{x: 0, y: 0}}
+          scrollEnabled={true}
+          extraHeight={200} // Adjust this value as needed
+          enableOnAndroid={true}>
+          <View style={{flex: 1}}>
+            <ScrollView style={styles.container}>
+              <View style={styles.subContainer}>
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                  {isImageUpload ? (
+                    <ActivityIndicator size="small" color="#0073BA" />
+                  ) : (
+                    <FlatList
+                      data={methods.watch('serviceImages')}
+                      horizontal={true}
+                      renderItem={({item, index}) => {
+                        return (
+                          <View style={styles.imageContainer}>
+                            <TouchableOpacity
+                              onPress={() => setModalImagesVisible(true)}>
+                              <Image
+                                source={{uri: item}}
+                                style={styles.image}
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        );
+                      }}
+                      keyExtractor={(item, index) => index.toString()}
+                      ListFooterComponent={
+                        serviceImages.length > 0 ? (
                           <TouchableOpacity
-                            onPress={() => setModalImagesVisible(true)}>
-                            <Image source={{uri: item}} style={styles.image} />
+                            style={styles.addButtonContainer}
+                            onPress={() => {
+                              setModalImagesVisible(true);
+                              // navigation.navigate('GalleryScreen', {code});
+                            }}>
+                            <FontAwesomeIcon
+                              icon={faPlus}
+                              size={32}
+                              color="#0073BA"
+                            />
+                          </TouchableOpacity>
+                        ) : null
+                      }
+                      ListEmptyComponent={
+                        <View>
+                          <TouchableOpacity
+                            style={{
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              marginBottom: 20,
+                              borderColor: '#0073BA',
+                              borderWidth: imageUrl == null ? 1 : 0,
+                              borderRadius: 5,
+                              borderStyle: 'dashed',
+                              // marginHorizontal: 100,
+                              padding: 10,
+                              height: imageUrl == null ? 100 : 150,
+                              width: imageUrl == null ? 200 : 'auto',
+                            }}
+                            onPress={() => {
+                              setModalImagesVisible(true);
+
+                            }}>
+                            <FontAwesomeIcon
+                              icon={faImages}
+                              style={{marginVertical: 5, marginHorizontal: 50}}
+                              size={32}
+                              color="#0073BA"
+                            />
+                            <Text
+                              style={{
+                                textAlign: 'center',
+                                color: '#0073BA',
+                                fontFamily: 'Sukhumvit set',
+                              }}>
+                              เลือกภาพตัวอย่างผลงาน
+                            </Text>
                           </TouchableOpacity>
                         </View>
-                      );
-                    }}
-                    keyExtractor={(item, index) => index.toString()}
-                    ListFooterComponent={
-                      serviceImages.length > 0 ? (
-                        <TouchableOpacity
-                          style={styles.addButtonContainer}
-                          onPress={() => {
-                            setModalImagesVisible(true);
-                            // navigation.navigate('GalleryScreen', {code});
-                          }}>
-                          <FontAwesomeIcon
-                            icon={faPlus}
-                            size={32}
-                            color="#0073BA"
-                          />
-                        </TouchableOpacity>
-                      ) : null
-                    }
-                    ListEmptyComponent={
-                      <View>
-                        <TouchableOpacity
-                          style={{
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            marginBottom: 20,
-                            borderColor: '#0073BA',
-                            borderWidth: imageUrl == null ? 1 : 0,
-                            borderRadius: 5,
-                            borderStyle: 'dashed',
-                            // marginHorizontal: 100,
-                            padding: 10,
-                            height: imageUrl == null ? 100 : 150,
-                            width: imageUrl == null ? 200 : 'auto',
-                          }}
-                          onPress={() => {
-                            setModalImagesVisible(true);
-
-                            // navigation.navigate('GalleryScreen', {code});
-                          }}>
-                          <FontAwesomeIcon
-                            icon={faImages}
-                            style={{marginVertical: 5, marginHorizontal: 50}}
-                            size={32}
-                            color="#0073BA"
-                          />
-                          <Text
-                            style={{
-                              textAlign: 'center',
-                              color: '#0073BA',
-                              fontFamily: 'Sukhumvit set',
-                            }}>
-                            เลือกภาพตัวอย่างผลงาน
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    }
-                  />
-                )}
-              </View>
-              <View style={styles.rowContainer}>
-                <Text style={styles.priceTitle}>ชื่อรายการ</Text>
-                {methods.formState.errors?.title?.message && (
-                  <Text style={styles.errorText}>
-                    {typeof methods.formState.errors.title.message === 'string'
-                      ? methods.formState.errors.title.message
-                      : ''}
-                  </Text>
-                )}
-              </View>
-
-              <Controller
-                control={methods.control}
-                name="title"
-                rules={{required: true}}
-                render={({field: {onChange, onBlur, value}}) => (
-                  <TextInput
-                    style={styles.inputName}
-                    multiline
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    numberOfLines={2}
-                    textAlignVertical="top"
-                    value={value}
-                  />
-                )}
-              />
-
-              <Text style={styles.priceTitle}>รายละเอียด</Text>
-
-              <Controller
-                control={methods.control}
-                name="description"
-                defaultValue=""
-                render={({field: {onChange, value}}) => (
-                  <TextInput
-                    placeholder="รายละเอียด..."
-                    keyboardType="name-phone-pad"
-                    multiline
-                    textAlignVertical="top"
-                    numberOfLines={2}
-                    style={styles.inputAddress}
-                    onChangeText={onChange}
-                    value={value}
-                  />
-                )}
-              />
-              {methods.formState.errors?.unitPrice?.message && (
-                <Text style={{color: 'red', alignSelf: 'flex-end'}}>
-                  {typeof methods.formState.errors.unitPrice.message ===
-                  'string'
-                    ? methods.formState.errors.unitPrice.message
-                    : ''}
-                </Text>
-              )}
-              <View style={styles.summary}>
-                <Text style={styles.priceHead}>ราคา:</Text>
+                      }
+                    />
+                  )}
+                </View>
                 <Controller
                   control={methods.control}
-                  name="unitPrice"
+                  name="title"
                   rules={{required: true}}
-                  defaultValue=""
-                  render={({field: {onChange, onBlur, value}}) => (
-                    <CurrencyInput
-                      style={[styles.input, {textAlign: 'right'}]}
-                      placeholder="0"
+                  render={({
+                    field: {onChange, onBlur, value},
+                    fieldState: {error},
+                  }) => (
+                    <TextInput
+                      multiline
+                      label={'ชื่อรายการ'}
                       onBlur={onBlur}
-                      keyboardType="number-pad"
-                      onChangeValue={value => {
-                        onChange(value);
-                      }}
+                      error={!!error}
+                      mode="outlined"
+                      onChangeText={onChange}
+                      numberOfLines={2}
+                      textAlignVertical="top"
                       value={value}
-                      delimiter=","
-                      suffix=" บาท"
-                      separator="."
-                      precision={0}
-                      minValue={0}
                     />
                   )}
                 />
-              </View>
-              <View style={styles.summary}>
-                <Text style={styles.price}>จำนวน:</Text>
 
-                {/* START COUNTER BUTTON */}
-                <View style={styles.containerCounter}>
-                  <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => {
-                      const newQty = Math.max(0, methods.watch('qty') - 1);
-                      methods.setValue('qty', newQty);
-                    }}>
-                    <Text style={styles.buttonText}>-</Text>
-                  </TouchableOpacity>
-                  <Controller
-                    control={methods.control}
-                    name="qty"
-                    render={({field: {value}}) => (
-                      <TextInput
-                        style={styles.counter}
-                        placeholder="10"
-                        keyboardType="number-pad"
-                        onChangeText={text => {
-                          const newQty = parseInt(text, 10);
-                          if (!isNaN(newQty)) {
-                            methods.setValue('qty', newQty);
-                          }
-                        }}
-                        value={methods.watch('qty').toString()}
-                      />
-                    )}
-                  />
-                  <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => {
-                      const newQty = methods.watch('qty') + 1;
-                      methods.setValue('qty', newQty);
-                    }}>
-                    <Text style={styles.buttonText}>+</Text>
-                  </TouchableOpacity>
-                </View>
 
-                {/* END COUNTER BUTTON */}
-              </View>
-              <View style={styles.summary}>
-                <Text style={styles.price}>หน่วย:</Text>
                 <Controller
                   control={methods.control}
-                  name="unit"
-                  defaultValue="ชุด"
-                  render={({field: {onChange, value}}) => (
+                  name="description"
+                  defaultValue=""
+                  render={({field: {onChange, value}, fieldState: {error}}) => (
                     <TextInput
-                      style={styles.price}
-                      keyboardType="default"
+                      label={'รายละเอียด'}
+                      keyboardType="name-phone-pad"
+                      multiline
+                      style={{marginTop: 10}}
+                      mode="outlined"
+                      textAlignVertical="top"
+                      error={!!error}
+                      numberOfLines={4}
                       onChangeText={onChange}
                       value={value}
                     />
                   )}
                 />
-              </View>
-              <SmallDivider />
-              <View style={styles.summary}>
-                <Text style={styles.priceSum}>รวมเป็นเงิน:</Text>
-
+               
                 <Controller
                   control={methods.control}
-                  name="total"
-                  defaultValue={0}
-                  render={({field: {value}}) => (
-                    <TextInput
-                      style={styles.priceSummary}
-                      placeholder="0"
-                      value={
-                        value ? new Intl.NumberFormat().format(value) : '0'
-                      }
-                      editable={false}
-                    />
+                  name="unitPrice"
+                  rules={{required: true}}
+                  defaultValue=""
+                  render={({
+                    field: {onChange, onBlur, value},
+                    fieldState: {error},
+                  }) => (
+                    <CurrencyInput
+  placeholder="0"
+  onBlur={onBlur}
+  renderTextInput={(textInputProps: any) => (
+    <TextInput
+      left={<TextInput.Affix text={'ราคา/หน่วย'} />}
+      contentStyle={{
+        textAlign: 'center',
+      }}
+      right={<TextInput.Affix text={'บาท'} />}
+      {...textInputProps}
+      mode="outlined"
+      textAlignVertical='center'
+      keyboardType="number-pad"
+      textAlign='center'
+      error={!!error}
+      style={{
+        marginTop: 10,
+      }}
+    />
+  )}
+  onChangeValue={(newValue) => {
+    onChange(newValue);
+  }}
+  value={value.toString()}
+  delimiter=","
+  separator="."
+  precision={0}
+  minValue={0}
+/>
+
                   )}
                 />
-              </View>
-              <View
-                style={{
-                  ...Platform.select({
-                    ios: {
-                      paddingVertical: 10,
-                    },
-                    android: {
-                      paddingVertical: 0,
-                    },
-                  }),
-                }}></View>
-              <SmallDivider />
+                <View style={styles.summary}>
+                  <Text style={styles.price}></Text>
 
-              <View>
-                {audits.length > 0 ? (
-                  <View style={styles.cardContainer}>
-                    <Text
-                      style={{
-                        marginBottom: 5,
-                        marginTop: 20,
-                        fontFamily: 'Sukhumvit Set Bold',
+                  {/* START COUNTER BUTTON */}
+                  {/* <View style={styles.containerCounter}>
+                  <IconButton
+                    style={styles.button}
+                    icon={'minus'}
+                    onPress={() => {
+                      const newQty = Math.max(0, methods.watch('qty') - 1);
+                      methods.setValue('qty', newQty);
+                    }}>
+                  </IconButton>
+                  <Controller
+                    control={methods.control}
+                    name="qty"
+                    render={({field: {value}}) => (
+                      <Text style={{
+                        fontWeight:"bold",
+                       
+                      }} >{value}</Text>
+                    )}
+                  />
+                  <IconButton
+                    style={styles.button}
+                    icon={'plus'}
+                    onPress={() => {
+                      const newQty = methods.watch('qty') + 1;
+                      methods.setValue('qty', newQty);
+                    }}>
+                  </IconButton>
+                </View> */}
 
-                        fontSize: 16,
+                  <Controller
+                    control={methods.control}
+                    name="qty"
+                    rules={{required: 'This field is required'}}
+                    render={({
+                      field: {onChange, onBlur, value},
+                      fieldState: {error},
+                    }) => (
+                      <>
+                        <TextInput
+                          keyboardType="number-pad"
+                          textAlign="center"
+                          mode="outlined"
+                          onChangeText={val => {
+                            const numericValue = Number(val);
+                            if (!isNaN(numericValue)) {
+                              onChange(numericValue);
+                            }
+                          }}
+                          defaultValue={qty}
+                          value={String(value)}
+                          onBlur={onBlur}
+                          error={!!error}
+                          left={<TextInput.Affix text={'จำนวน'} />}
+                          textAlignVertical="center"
+                          right={<TextInput.Affix text={unit} />}
+                        />
+                      </>
+                    )}
+                  />
+                  {/* END COUNTER BUTTON */}
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: 10,
+                    marginTop: 20,
+                  }}>
+                  <TextPaper variant="headlineMedium">รวม</TextPaper>
 
-                        color: '#333',
-                      }}>
-                      มาตรฐานของบริการนี้:
-                    </Text>
-                    {audits?.map((item: any) => (
-                      <TouchableOpacity
-                        key={item.AuditData.id}
-                        style={styles.card}
-                        onPress={() => setModalVisible(true)}>
-                        <Text style={styles.cardTitle}>
-                          {item.AuditData.auditShowTitle}
-                        </Text>
-                        <Icon name="chevron-right" size={24} color="gray" />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.selectButton}
-                    onPress={() => setModalVisible(true)}>
-                    <View style={styles.containerButton}>
-                      <FontAwesomeIcon
-                        icon={faPlusCircle}
-                        color="#0073BA"
-                        size={14}
-                      />
-                      <Text style={styles.selectButtonText}>
-                        เลือกมาตรฐานการทำงาน
+                  <Controller
+                    control={methods.control}
+                    name="total"
+                    defaultValue={0}
+                    render={({field: {value}}) => (
+                      <TextPaper variant="displaySmall">
+                        {new Intl.NumberFormat('th-TH', {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 2,
+                        }).format(new Decimal(value).toNumber())}
+                      </TextPaper>
+                    )}
+                  />
+                </View>
+                <View
+                  style={{
+                    ...Platform.select({
+                      ios: {
+                        paddingVertical: 10,
+                      },
+                      android: {
+                        paddingVertical: 0,
+                      },
+                    }),
+                  }}></View>
+                <SmallDivider />
+
+                <View>
+                  {methods.watch('audits')?.length > 0 ? (
+                    <View style={styles.cardContainer}>
+                      <Text
+                        style={{
+                          marginBottom: 5,
+                          marginTop: 20,
+                          fontFamily: 'Sukhumvit Set Bold',
+                          fontWeight: 'bold',
+                          fontSize: 16,
+                          color: '#333',
+                        }}>
+                        มาตรฐานของบริการนี้:
                       </Text>
+                      {methods.watch('audits')?.map((item: any) => (
+                        <TouchableOpacity
+                          key={item.AuditData.id}
+                          style={styles.card}
+                          onPress={() => setModalVisible(true)}>
+                          <Text style={styles.cardTitle}>
+                            {item.AuditData.auditShowTitle}
+                          </Text>
+                          <Icon name="chevron-right" size={24} color="gray" />
+                        </TouchableOpacity>
+                      ))}
                     </View>
-                  </TouchableOpacity>
-                )}
-              </View>
-              <View
-                style={{
-                  ...Platform.select({
-                    ios: {
-                      paddingVertical: 10,
-                    },
-                    android: {
-                      paddingVertical: 10,
-                    },
-                  }),
-                }}></View>
-              <SmallDivider />
-              <View>
-                {materials?.length > 0 ? (
-                  <View style={styles.cardContainer}>
-                    <Text
-                      style={{
-                        marginBottom: 5,
-                        marginTop: 20,
-                        fontSize: 16,
-                        fontFamily: 'Sukhumvit Set Bold',
-                        fontWeight: 'bold',
-                        color: '#333',
-                      }}>
-                      วัสดุอุปกรณ์ที่ใช้
-                    </Text>
-                    {materials?.map((item: any, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.card}
-                        onPress={() => setIsModalMaterialsVisible(true)}>
-                        <Text style={styles.cardTitle}>
-                          {item.materialData.name}
-                        </Text>
-                        <Icon name="chevron-right" size={24} color="gray" />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                ) : (
-                  <View>
+                  ) : (
                     <TouchableOpacity
                       style={styles.selectButton}
-                      onPress={() => setIsModalMaterialsVisible(true)}>
+                      onPress={() => setModalVisible(true)}>
                       <View style={styles.containerButton}>
                         <FontAwesomeIcon
                           icon={faPlusCircle}
                           color="#0073BA"
                           size={14}
                         />
-
                         <Text style={styles.selectButtonText}>
-                          เลือกวัสดุอุปกรณ์
+                          เลือกมาตรฐานการทำงาน
                         </Text>
                       </View>
                     </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-              <View
-                style={{
-                  ...Platform.select({
-                    ios: {
-                      paddingVertical: 10,
-                    },
-                    android: {
-                      paddingVertical: 10,
-                    },
-                  }),
-                }}></View>
-              <SmallDivider />
-              <View
-                style={{
-                  width: '100%',
-                  alignSelf: 'center',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                                  {/* <SaveButton disabled={false} onPress={handleDone} /> */}
+                  )}
+                </View>
+                <View
+                  style={{
+                    ...Platform.select({
+                      ios: {
+                        paddingVertical: 10,
+                      },
+                      android: {
+                        paddingVertical: 10,
+                      },
+                    }),
+                  }}></View>
+                <SmallDivider />
+                <View>
+                  {methods.watch('materials')?.length > 0 ? (
+                    <View style={styles.cardContainer}>
+                      <Text
+                        style={{
+                          marginBottom: 5,
+                          marginTop: 20,
+                          fontSize: 16,
+                          fontFamily: 'Sukhumvit Set Bold',
+                          fontWeight: 'bold',
+                          color: '#333',
+                        }}>
+                        วัสดุอุปกรณ์ที่ใช้
+                      </Text>
+                      {methods.watch('materials')?.map((item: any, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={styles.card}
+                          onPress={() => setIsModalMaterialsVisible(true)}>
+                          <Text style={styles.cardTitle}>
+                            {item.materialData.name}
+                          </Text>
+                          <Icon name="chevron-right" size={24} color="gray" />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  ) : (
+                    <View>
+                      <TouchableOpacity
+                        style={styles.selectButton}
+                        onPress={() => setIsModalMaterialsVisible(true)}>
+                        <View style={styles.containerButton}>
+                          <FontAwesomeIcon
+                            icon={faPlusCircle}
+                            color="#0073BA"
+                            size={14}
+                          />
 
-                {/* <SaveButton disabled={!isButtonDisbled} onPress={handleDone} /> */}
+                          <Text style={styles.selectButtonText}>
+                            เลือกวัสดุอุปกรณ์
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+                <View
+                  style={{
+                    ...Platform.select({
+                      ios: {
+                        paddingVertical: 10,
+                      },
+                      android: {
+                        paddingVertical: 10,
+                      },
+                    }),
+                  }}></View>
+                <SmallDivider />
+                <View
+                  style={{
+                    width: '100%',
+                    alignSelf: 'center',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  {/* <SaveButton disabled={false} onPress={handleDone} /> */}
+
+                  {/* <SaveButton disabled={!isButtonDisbled} onPress={handleDone} /> */}
+                </View>
               </View>
-            </View>
-            <SelectAudit
-              isVisible={isModalVisible}
-              serviceId={methods.watch('id')}
-              onClose={() => setModalVisible(false)}
-              title={methods.watch('title')}
-              description={methods.watch('description')}
-            />
-            <ExistingMaterials
-              serviceId={serviceID}
-              isVisible={isModalMaterialsVisible}
-              onClose={() => setIsModalMaterialsVisible(false)}
-            />
-            <GalleryScreen
-              isVisible={isModalImagesVisible}
-              onClose={() => setModalImagesVisible(false)}
-              serviceImages={serviceImages}
-              setServiceImages={setServiceImages}
-            />
-          </ScrollView>
-        </View>
+              <SelectAudit
+                isVisible={isModalVisible}
+                serviceId={methods.watch('id')}
+                onClose={() => setModalVisible(false)}
+                title={methods.watch('title')}
+                description={methods.watch('description')}
+              />
+              <ExistingMaterials
+                serviceId={serviceID}
+                isVisible={isModalMaterialsVisible}
+                onClose={() => setIsModalMaterialsVisible(false)}
+              />
+              <GalleryScreen
+                isVisible={isModalImagesVisible}
+                onClose={() => setModalImagesVisible(false)}
+                serviceImages={serviceImages}
+                setServiceImages={setServiceImages}
+              />
+            </ScrollView>
+          </View>
         </KeyboardAwareScrollView>
       </FormProvider>
     </>
@@ -693,6 +730,7 @@ const styles = StyleSheet.create({
   },
   summary: {
     flexDirection: 'row',
+
     justifyContent: 'space-between',
     ...Platform.select({
       ios: {
@@ -703,9 +741,23 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  summaryPrice: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    ...Platform.select({
+      ios: {
+        paddingVertical: 10,
+        marginTop: 20,
+      },
+      android: {
+        paddingVertical: 10,
+        marginTop: 20,
+      },
+    }),
+  },
   priceSummary: {
     fontSize: 18,
-    marginTop: -10,
+    marginTop: 10,
     color: 'black',
     fontWeight: 'bold',
     fontFamily: 'Sukhumvit Set Bold',
@@ -723,6 +775,8 @@ const styles = StyleSheet.create({
   priceSum: {
     fontSize: 18,
     color: 'black',
+    marginTop: 15,
+    fontWeight: 'bold',
     fontFamily: 'Sukhumvit Set Bold',
   },
   priceHead: {
@@ -743,12 +797,13 @@ const styles = StyleSheet.create({
   },
   containerCounter: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#e9f4f9',
-    paddingVertical: 3,
-    paddingHorizontal: 10,
+    // backgroundColor: '#e9f4f9',
+
+    width: 150,
     borderRadius: 5,
+    borderWidth: 0.5,
   },
   selectButton: {
     // backgroundColor: '#0073BA',

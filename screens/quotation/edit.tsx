@@ -69,7 +69,6 @@ import Signature from 'react-native-signature-canvas';
 import {yupResolver} from '@hookform/resolvers/yup';
 import AddCustomer from '../../components/add/AddCustomer';
 import AddProductForm from '../../components/edit/products/addProduct';
-import axios, {AxiosResponse, AxiosError} from 'axios';
 import {useUser} from '../../providers/UserContext';
 import messaging from '../../firebase';
 import {Audit, CompanyUser, Quotation, Service} from '../../types/docType';
@@ -84,7 +83,6 @@ import {
   quotationsValidationSchema,
   customersValidationSchema,
 } from '../utils/validationSchema';
-import Addservices from '../../components/add/AddServices';
 import ExistingWorkers from '../../components/workers/existing';
 import ServiceContext from '../../providers/ServiceContext';
 
@@ -116,8 +114,6 @@ const EditQuotation = ({navigation, route}: Props) => {
   const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(
     null,
   );
-  const dataSignature = {};
-
   const quotationDefaultValues = {
     id: quotation.id,
     services: servicesParams,
@@ -205,20 +201,29 @@ const EditQuotation = ({navigation, route}: Props) => {
   };
 
   const handleAddProductForm = async () => {
-    navigation.navigate('AddProduct', {
-      quotationId,
-      onAddService: newProduct => append(newProduct),
-    });
+    if (companyUser?.user) {
+      // setAddServicesModal(!addServicesModal);
+      dispatch(stateAction.reset_audit());
+      navigation.navigate('AddProduct', {
+        onAddService: newProduct => append(newProduct),
+        quotationId: quotationId,
+        currentValue:null
+      });
+      // navigation.navigate('ExistingProduct', {id: companyUser.user?.id});
+    } else {
+      await firebase.auth().signOut();
+    }
   };
 
-  const handleEditService = (index: number) => {
+  const handleEditService = (index: number, currentValue:Service) => {
     setShowEditServiceModal(!showEditServiceModal);
     handleModalClose();
-    navigation.navigate('EditProductForm', {
-      index,
-      currentValue: quotationDefaultValues.services[index],
-      update,
+    navigation.navigate('AddProduct', {
+      onAddService: newProduct => update(index,newProduct),
+      currentValue,
+      quotationId: quotationId,
     });
+    // navigation.navigate('EditProductForm', {index, currentValue, update});
   };
 
   const handleButtonPress = async () => {
@@ -315,7 +320,7 @@ const EditQuotation = ({navigation, route}: Props) => {
             <View style={styles.subContainer}>
               {!isCustomerDisabled ? (
                 <CardClient
-                  handleEditClient={() => setEditCustomerModal(true)}
+                  handleEditClient={() => setAddCustomerModal(true)}
                 />
               ) : (
                 <AddClient handleAddClient={() => setAddCustomerModal(true)} />
@@ -338,7 +343,7 @@ const EditQuotation = ({navigation, route}: Props) => {
                     setVisibleModalIndex={() => setVisibleModalIndex(index)}
                     index={index}
                     handleRemoveService={() => handleRemoveService(index)}
-                    handleEditService={() => handleEditService(index)}
+                    handleEditService={() => handleEditService(index, field)}
                     serviceList={field}
                     key={field.id}
                   />
@@ -507,23 +512,7 @@ const EditQuotation = ({navigation, route}: Props) => {
             onBackdropPress={() => setAddCustomerModal(false)}>
             <AddCustomer onClose={() => setAddCustomerModal(false)} />
           </Modal>
-          <Modal
-            isVisible={editCustomerModal}
-            style={styles.modalFull}
-            onBackdropPress={() => setEditCustomerModal(false)}>
-            <EditCustomer onClose={() => setEditCustomerModal(false)} />
-          </Modal>
-
-          <Modal
-            isVisible={editServicesModal}
-            style={styles.modalServiceFull}
-            onBackdropPress={() => setEditServicesModal(false)}>
-            <EditProductForm
-              quotationId={quotationId}
-              onClose={() => setEditServicesModal(false)}
-              serviceIndex={serviceIndex}
-            />
-          </Modal>
+       
           <Modal
             isVisible={workerModal}
             onBackdropPress={() => setWorkerModal(false)}

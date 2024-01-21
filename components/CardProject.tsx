@@ -169,8 +169,7 @@ const styles = StyleSheet.create({
   subContainer: {
     backgroundColor: '#ffffff',
     padding: 50,
-    marginBottom: 20,
-
+    marginBottom: 0,
     height: 'auto',
     borderWidth: 1,
     borderColor: '#ccc',

@@ -5,7 +5,7 @@ import {
   KeyboardAvoidingView,
   StyleSheet,
   Alert,
-  TextInput,
+
   Platform,
   Text,
   View,
@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {defaultContractSchema} from '../utils/validationSchema';
+import {TextInput,Divider} from 'react-native-paper';
 
 import messaging from '@react-native-firebase/messaging';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
@@ -41,7 +42,6 @@ import {useUser} from '../../providers/UserContext';
 import SmallDivider from '../../components/styles/SmallDivider';
 import ContractFooter from '../../components/styles/ContractFooter';
 import CreateContractScreen from './createContractScreen';
-import Lottie from 'lottie-react-native';
 import EditInstallment from '../../components/editInstallment';
 import {ParamListBase} from '../../types/navigationType';
 import FooterBtn from '../../components/styles/FooterBtn';
@@ -341,15 +341,7 @@ const DefaultContract = ({navigation}: Props) => {
     defaultValue: string = '',
   ) => (
     <>
-      {errors[name] && (
-        <Text
-          style={{
-            alignSelf: 'flex-end',
-            marginTop: 10,
-          }}>
-          {textRequired}
-        </Text>
-      )}
+    
       <View
         style={{
           flexDirection: 'row',
@@ -358,8 +350,7 @@ const DefaultContract = ({navigation}: Props) => {
         }}>
         <Text style={styles.label}>{label}</Text>
 
-        <View style={styles.inputContainerForm}>
-          <Controller
+        <Controller
             control={control}
             rules={{required: 'This field is required'}}
             render={({
@@ -370,10 +361,12 @@ const DefaultContract = ({navigation}: Props) => {
                 <TextInput
                   keyboardType="number-pad"
                   textAlign="center"
+                  error={!!error}
+                  mode="outlined"
                   textAlignVertical="center"
-                  
                   defaultValue={defaultValue}
                   onBlur={onBlur}
+                  right={<TextInput.Affix text="วัน" />}
                   value={value}
                   onChangeText={val => {
                     const numericValue = Number(val);
@@ -381,27 +374,19 @@ const DefaultContract = ({navigation}: Props) => {
                       onChange(numericValue);
                     }
                   }}
-                  style={{
-                    width: 30,
-                    // height: 45,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  placeholderTextColor="#A6A6A6"
+                 
                 />
               </>
             )}
             name={name}
           />
 
-          <Text style={styles.inputSuffix}>วัน</Text>
-        </View>
       </View>
+      <Divider style={{marginTop:10}} />
 
-      <View style={styles.divider} />
     </>
   );
+
 
   if (isLoading) {
     return (

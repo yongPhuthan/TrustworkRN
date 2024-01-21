@@ -4,19 +4,22 @@ import {
   TouchableOpacity,
   Image,
   View,
-  TextInput,
   SafeAreaView,
   ActivityIndicator,
   StyleSheet,
   ScrollView,
-  Platform,
-  PermissionsAndroid,
+  Alert,
+  KeyboardAvoidingView,
 } from 'react-native';
-import {useForm, Controller} from 'react-hook-form';
+import {useForm, Controller,useWatch} from 'react-hook-form';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import {TextInput} from 'react-native-paper';
+import {yupResolver} from '@hookform/resolvers/yup';
+import {companyValidationSchema} from '../utils/validationSchema';
+import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
+
 import {useQueryClient, useMutation} from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {HOST_URL,PROJECT_NAME,PROJECT_FIREBASE} from '@env';
 
 import firebase from '../../firebase';
 import storage from '@react-native-firebase/storage';
@@ -29,103 +32,118 @@ import {
   ImageLibraryOptions,
   ImagePickerResponse,
 } from 'react-native-image-picker';
-
 import {Store} from '../../redux/store';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {CheckBox} from '@rneui/themed';
-import type { RouteProp } from '@react-navigation/native';
-import { CompanyUser } from '../../types/docType';
+import type {RouteProp} from '@react-navigation/native';
+import {CompanyUser} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
-
+import {Button} from 'react-native-paper';
+import {useUser} from '../../providers/UserContext';
 
 interface MyError {
   response: object;
   // add other properties if necessary
 }
-type UpdateCompanySellerArgs = {
-  email: string;
-  logo: string;
-
-  dataInputForm: CompanyUser;
-};
-type Company = {
-  id: string;
-};
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'EditSetting'>;
   route: RouteProp<ParamListBase, 'EditSetting'>;
 }
 
-const saveDataToAsyncStorage = async (key: string, value: any) => {
-  try {
-    await AsyncStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.log('Error saving data to AsyncStorage:', error);
-  }
-};
-
-const updateCompanySellerAPI = async ({
-  dataInputForm,
-}: UpdateCompanySellerArgs): Promise<void> => {
-  const user = auth().currentUser;
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
-  const idToken = await user.getIdToken();
-
-  console.log('email', JSON.stringify(dataInputForm));
- 
-  const url = __DEV__
-  ? `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/updateCompanySeller`
-  : `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/updateCompanySeller`;
-
-
-  const response = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-    body: JSON.stringify({data: dataInputForm}),
-  });
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-};
-
 const EditSetting = ({navigation, route}: Props) => {
   const userEmail = auth().currentUser?.email ?? '';
-  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+  const user = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
-  const { company}: any = route.params || {};
+  const {company}: any = route.params || {};
   const [isImageUpload, setIsImageUpload] = useState(false);
   const errorText = 'กรุณากรอกข้อมูล';
   const [logo, setLogo] = useState<string | undefined>(company.logo);
-//   const [company, setCompany] = useState(dataProps.company);
+  //   const [company, setCompany] = useState(dataProps.company);
   const {
     state: {client_name, isEmulator, client_tel, client_tax},
     dispatch,
   }: any = useContext(Store);
+  const defaultValues = {
+    bizName: company.bizName,
+    userName: company.userName,
+    userLastName: company.userLastName,
+    officeTel: company.officeTel,
+    address: company.address,
+    mobileTel: company.mobileTel,
+    companyNumber: company.TaxId,
+    userPosition: company.userPosition,
+    id: company.id,
+  };
   const {
     control,
     handleSubmit,
+    reset,
+    watch,
     setValue,
-    formState: {errors, isDirty, isValid},
-  } = useForm<CompanyUser>({
-    defaultValues: {
-      bizName: company.bizName,
-      userName: company.userName,
-      userLastName: company.userLastName,
-      officeTel: company.officeTel,
-      address: company.address,
-      mobileTel: company.mobileTel,
-      companyNumber: company.TaxId,
-      userPosition: company.userPosition,
-      id: company.id,
-    },
+    formState: {errors, isDirty, dirtyFields, isValid},
+  } = useForm<any>({
+    mode: 'onChange',
+    defaultValues,
+    resolver: yupResolver(companyValidationSchema),
   });
+  const watchedValues: any = useWatch({
+    defaultValue:defaultValues,
+    control,
+    
+    
+  })
+  const dirtyValues = Object.keys(dirtyFields).reduce((acc, key) => {
+    if (key in watchedValues) {
+      acc[key] = watchedValues[key as keyof CompanyUser];
+    }
+    return acc;
+  }, {} as CompanyUser);
+
+  const updateCompany = async (data: any) => {
+    if (!user || !user.email) {
+      throw new Error('User or user email is not available');
+
+    }
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/company/updateCompanySeller?id=${encodeURIComponent(
+          company.id,
+        )}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({data}),
+        },
+      );
+
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.indexOf('application/json') !== -1) {
+          const errorData = await response.json(); // Parse the error response only if it's JSON
+          throw new Error(errorData.message || 'Network response was not ok.');
+        } else {
+          throw new Error('Network response was not ok and not JSON.');
+        }
+      }
+
+      if (response.status === 200) {
+        return response.json();
+      } else {
+        const errorData = await response.json();
+        console.error('Response:', await response.text());
+        throw new Error(errorData.message || 'Network response was not ok.');
+      }
+    } catch (err) {
+      console.error('Error in updateContractAndQuotation:', err);
+      throw new Error(err);
+    }
+  };
+
   const handleLogoUpload = async () => {
     const options: ImageLibraryOptions = {
       mediaType: 'photo',
@@ -160,13 +178,30 @@ const EditSetting = ({navigation, route}: Props) => {
     }
   };
 
-  const {mutate} = useMutation(updateCompanySellerAPI, {
+  const {mutate, isLoading: isMuatationLoading} = useMutation(updateCompany, {
     onSuccess: data => {
-      navigation.goBack();
+      queryClient.invalidateQueries(['companySetting']);
+
+      Alert.alert(
+        'บันทึกข้อมูลสำเร็จ',
+        ``,
+        [
+            {
+              text: 'ปิดหน้าต่าง',
+              onPress: () => navigation.goBack(),
+            }
+          ],
+        {cancelable: false},
+      );
+    
     },
     onError: (error: MyError) => {
-      console.error('There was a problem calling the function:', error);
-      console.log(error.response);
+      Alert.alert(
+        'เกิดข้อผิดพลาด',
+        `Server-side user creation failed: ${error}`,
+        [{text: 'OK'}],
+        {cancelable: false},
+      );
     },
   });
 
@@ -186,26 +221,44 @@ const EditSetting = ({navigation, route}: Props) => {
     return downloadUrl;
   };
 
-  const onSubmit = async (data: CompanyUser) => {
-    setIsLoading(true)
-    await mutate({dataInputForm: data, isEmulator} as any, {
-
+  const onSubmit = async () => {
+    setIsLoading(true);
+    await mutate({dataInputForm: dirtyValues, isEmulator} as any, {
       onSuccess: async () => {
         queryClient.invalidateQueries(['companySetting']);
-        setIsLoading(false)
-
-        // await removeDataFromAsyncStorage('companyData');
-        // await saveDataToAsyncStorage('companyData', data);
-        
+        setIsLoading(false);
         navigation.goBack();
       },
     });
   };
 
+  const handleDonePress = async () => {
+    try {
+      mutate(dirtyValues);
+    } catch (error: Error | MyError | any) {
+      console.error('There was a problem calling the function:', error);
+      console.log(error.response);
+    }
+  };
 
+  React.useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button
+          loading={isMuatationLoading}
+          disabled={!isDirty || !isValid || isMuatationLoading}
+          mode="contained"
+          onPress={handleDonePress}
+          buttonColor={'#1b52a7'}>
+          {'บันทึก'}
+        </Button>
+      ),
+    });
+  }, [navigation, isDirty, isValid,dirtyValues]);
+  console.log('dirtyValues', dirtyValues);
   const renderPage = () => {
     return (
-      <View >
+      <View>
         {/* <Text style={styles.title}>หัวเอกสาร</Text> */}
         <TouchableOpacity
           style={{
@@ -221,7 +274,7 @@ const EditSetting = ({navigation, route}: Props) => {
           onPress={handleLogoUpload}>
           {isImageUpload ? (
             <ActivityIndicator size="small" color="gray" />
-          ) : logo ? (
+          ) : logo && logo !== 'NONE' ? (
             <Image
               source={{
                 uri: logo,
@@ -237,7 +290,7 @@ const EditSetting = ({navigation, route}: Props) => {
                 color="gray"
               />
               <Text style={{textAlign: 'center', color: 'gray'}}>
-                อัพโหลดโลโก้ธุรกิจ
+                อัพโหลดโลโก้
               </Text>
             </View>
           )}
@@ -246,137 +299,179 @@ const EditSetting = ({navigation, route}: Props) => {
           control={control}
           name="bizName"
           rules={{required: true}}
-          render={({field: {onChange, onBlur, value}}) => (
+          render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
             <TextInput
+              label="ชื่อบริษัท"
+              error={!!error}
               style={styles.input}
+              mode="outlined"
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
             />
           )}
         />
-        {errors.bizName && <Text>{errorText}</Text>}
 
         <View
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
-            marginTop: 10,
           }}>
-          <View style={{flex: 0.45}}>
+          <View style={{flex: 0.45, marginVertical: 5}}>
             <Controller
               control={control}
               name="userName"
               rules={{required: true}}
-              render={({field: {onChange, onBlur, value}}) => (
+              render={({
+                field: {onChange, onBlur, value},
+                fieldState: {error},
+              }) => (
                 <TextInput
+                  label="ชื่อจริง"
+                  error={!!error}
                   placeholder="ชื่อจริง"
                   multiline
                   textAlignVertical="top"
                   numberOfLines={1}
-                  style={styles.input}
+                  mode="outlined"
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
                 />
               )}
             />
-            {errors.userName && <Text>This is required.</Text>}
           </View>
-          <View style={{flex: 0.45}}>
+          <View style={{flex: 0.45, marginVertical: 5}}>
             <Controller
               control={control}
               name="userLastName"
               rules={{required: true}}
-              render={({field: {onChange, onBlur, value}}) => (
+              render={({
+                field: {onChange, onBlur, value},
+                fieldState: {error},
+              }) => (
                 <TextInput
-                  placeholder="นามสกุล"
+                  label="นามสกุล"
+                  // placeholder="นามสกุล"
                   multiline
+                  error={!!error}
                   textAlignVertical="top"
                   numberOfLines={1}
-                  style={styles.input}
+                  mode="outlined"
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
                 />
               )}
             />
-            {errors.userLastName && <Text>This is required.</Text>}
           </View>
         </View>
-        {company.bizType === 'business' && (
+        <Controller
+          control={control}
+          name="userPosition"
+          rules={{required: true}}
+          render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
+            <TextInput
+              label="คำแหน่ง"
+              error={!!error}
+              style={styles.input}
+              // placeholder="คำแหน่งในบริษัท"
+              multiline
+              textAlignVertical="top"
+              numberOfLines={1}
+              mode="outlined"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+            />
+          )}
+        />
+        {/* {company.bizType === 'business' && (
           <Controller
             control={control}
             name="userPosition"
             rules={{required: true}}
             render={({field: {onChange, onBlur, value}}) => (
               <TextInput
-                placeholder="คำแหน่งในบริษัท"
+              label="คำแหน่งในบริษัท"
+style={styles.input}
+                // placeholder="คำแหน่งในบริษัท"
                 multiline
                 textAlignVertical="top"
                 numberOfLines={1}
-                style={styles.input}
+                mode='outlined'
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
               />
             )}
           />
-        )}
+        )} */}
         <Controller
           control={control}
           name="address"
           rules={{required: true}}
-          render={({field: {onChange, onBlur, value}}) => (
+          render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
             <TextInput
-              placeholder="ที่อยู่"
+              label="ที่อยู่"
+              error={!!error}
+              style={styles.input}
+              // placeholder="ที่อยู่"
               keyboardType="name-phone-pad"
               multiline
               textAlignVertical="top"
               numberOfLines={4}
-              style={[styles.input, {height: 100}]} 
+              mode="outlined"
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
             />
           )}
         />
-        {errors.address && <Text>This is required.</Text>}
 
-        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            marginVertical: 5,
+          }}>
           <View style={{flex: 0.45}}>
             <Controller
               control={control}
               name="officeTel"
               render={({field: {onChange, onBlur, value}}) => (
                 <TextInput
-                  placeholder="เบอร์โทรศัพท์"
+                  label="เบอร์โทรศัพท์"
+                  // placeholder="เบอร์โทรศัพท์"
                   keyboardType="phone-pad"
-                  style={styles.input}
+                  mode="outlined"
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
                 />
               )}
             />
-            {errors.officeTel && <Text>This is required.</Text>}
           </View>
           <View style={{flex: 0.45}}>
             <Controller
               control={control}
               name="mobileTel"
-              render={({field: {onChange, onBlur, value}}) => (
+              render={({
+                field: {onChange, onBlur, value},
+                fieldState: {error},
+              }) => (
                 <TextInput
-                  placeholder="เบอร์โทรศัพท์"
+                  label="เบอร์มือถือ"
+                  error={!!error}
+                  // placeholder="เบอร์โทรศัพท์"
                   keyboardType="phone-pad"
-                  style={styles.input}
+                  mode="outlined"
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
                 />
               )}
             />
-            {errors.mobileTel && <Text>This is required.</Text>}
           </View>
         </View>
         <Controller
@@ -384,9 +479,11 @@ const EditSetting = ({navigation, route}: Props) => {
           name="companyNumber"
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
-              placeholder="เลขทะเบียนภาษี(ถ้ามี)"
-              keyboardType="number-pad"
               style={styles.input}
+              label="เลขทะเบียนภาษี(ถ้ามี)"
+              // placeholder="เลขทะเบียนภาษี(ถ้ามี)"
+              keyboardType="number-pad"
+              mode="outlined"
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
@@ -400,32 +497,25 @@ const EditSetting = ({navigation, route}: Props) => {
   const isButtonDisabled = !{isValid} || !{isDirty};
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <ScrollView style={styles.container}>{renderPage()}</ScrollView>
-      <View style={styles.containerBtn}>
-        <TouchableOpacity
-          style={[styles.previousButton, styles.outlinedButton]}
-          onPress={() => navigation.goBack()}>
-          <Text style={[styles.buttonText, styles.outlinedButtonText]}>
-            ย้อนกลับ
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          disabled={isButtonDisabled}
-          style={[
-            styles.submitedButton,
-            isButtonDisabled ? styles.disabledButton : styles.enabledButton,
-            {justifyContent: 'center', alignItems: 'center'},
-          ]}
-          onPress={handleSubmit(onSubmit)}>
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <Text style={styles.buttonText}>บันทึก</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    <>
+      <SafeAreaView style={{flex: 1}}>
+        <ScrollView style={styles.container}>{renderPage()}</ScrollView>
+        {/* <TouchableOpacity
+         disabled={!isDirty}
+         style={[
+           styles.submitedButton,
+           !isDirty ? styles.disabledButton : styles.enabledButton,
+           {justifyContent: 'center', alignItems: 'center'},
+         ]}
+         onPress={handleSubmit(onSubmit)}>
+         {isLoading ? (
+           <ActivityIndicator size="small" color="#ffffff" />
+         ) : (
+           <Text style={styles.buttonText}>บันทึก</Text>
+         )}
+       </TouchableOpacity> */}
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -444,14 +534,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
-    borderRadius: 5,
     marginVertical: 5,
-    borderWidth: 0.5,
-    
-    borderColor: 'black',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    marginBottom: 10,
   },
   button: {
     backgroundColor: '#0066C0',
@@ -459,7 +542,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
 
     width: 100,
-
   },
   buttonText: {
     color: '#FFFFFF',
@@ -473,7 +555,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     width: '50%',
     alignSelf: 'center',
-
 
     marginBottom: 10,
   },

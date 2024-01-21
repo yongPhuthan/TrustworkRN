@@ -26,7 +26,7 @@ const SignaturePage: React.FC<Props> = ({route, navigation}) => {
     dispatch,
   }: any = useContext(Store);
   const user = useUser();
-  const {text, data} = route.params;
+  const { data} = route.params;
   // const {updateContract, dataApi, error} = useUpdateContract();
   const queryClient = useQueryClient();
   const [isSignatureUpload, setIsSignatureUpload] = useState<boolean>(false);
@@ -74,9 +74,9 @@ const SignaturePage: React.FC<Props> = ({route, navigation}) => {
   const {mutate, isLoading} = useMutation(updateQuotation, {
     onSuccess: () => {
       queryClient.invalidateQueries(['dashboardData']);
-      const newId = data?.quotationId.slice(0, 8) as string;
+      const newId = data?.id.slice(0, 8) as string;
       console.log('SUCCESS');
-      navigation.navigate('DocViewScreen', {id: newId});
+      navigation.navigate('DocViewScreen', {id: data?.id});
     },
     onError: (error: any) => {
       console.error('There was a problem calling the function:', error);

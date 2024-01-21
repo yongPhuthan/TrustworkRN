@@ -2,9 +2,7 @@ import React, {useState, useContext, useEffect, useRef} from 'react';
 import {
   Text,
   View,
-  TextInput,
   TouchableOpacity,
-  Button,
   StyleSheet,
   ScrollView,
 } from 'react-native';
@@ -26,7 +24,8 @@ import {Store} from '../../redux/store';
 import * as stateAction from '../../redux/actions';
 import {CustomerForm, ServiceList, CompanyUser} from '../../types/docType';
 import SaveButton from '../ui/Button/SaveButton';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {TextInput, Button, Appbar} from 'react-native-paper';
 
 interface Props {
   onClose: Function;
@@ -45,128 +44,151 @@ const AddCustomer = ({onClose}: Props) => {
   } = context as any;
 
   const onSubmit = data => {
-   setValue('customer.id', uuidv4())
+    setValue('customer.id', uuidv4());
     onClose();
   };
 
   return (
-    
-    <View style={styles.subContainer}>
-            <KeyboardAwareScrollView
-      style={{ flex: 1 }}
-      resetScrollToCoords={{ x: 0, y: 0 }}
-      scrollEnabled={true}
-      extraHeight={200} // Adjust this value as needed
-      enableOnAndroid={true}
-    >
-    <View style={styles.header}>
-      <TouchableOpacity
-        style={styles.onCloseButton}
-        onPress={() => onClose()}>
-        <FontAwesomeIcon icon={faClose} size={24} color="gray" />
-      </TouchableOpacity>
-    </View>
-    <Text
-      style={{
-        alignSelf: 'center',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        marginTop: 20,
-      }}>
-      เพิ่มลูกค้า
-    </Text>
-    <Text style={styles.label}>ชื่อลูกค้า</Text>
-    <Controller
-      control={control}
-      name="customer.name"
-      rules={{required: true}}
-      render={({field: {onChange, onBlur, value}}) => (
-        <TextInput
-          style={styles.inputName}
-          onBlur={onBlur}
-          onChangeText={onChange}
-          value={value}
+    <>
+      <Appbar.Header
+        mode="center-aligned"
+        style={{
+          backgroundColor: 'white',
+          width: '100%',
+        }}>
+        <Appbar.Action icon={'close'} onPress={() => onClose()} />
+        <Appbar.Content
+          title="เพิ่มลูกค้า"
+          titleStyle={{fontSize: 20, fontWeight: 'bold'}}
         />
-      )}
-    />
-    {errors && (
+        <Button
+          // loading={postLoading}
+          disabled={!watch('customer.name') || !watch('customer.address')}
+          mode="contained"
+          buttonColor={'#1b52a7'}
+          onPress={onSubmit}>
+          {'บันทึก'}
+        </Button>
+      </Appbar.Header>
+      <View style={styles.subContainer}>
+        <View>
+          <Controller
+            control={control}
+            name="customer.name"
+            rules={{required: true}}
+            render={({
+              field: {onChange, onBlur, value},
+              fieldState: {error},
+            }) => (
+              <TextInput
+                label={'ชื่อลูกค้า'}
+                style={{
+                  marginTop: 10,
+                }}
+                error={!!error}
+                textContentType="name"
+                onBlur={onBlur}
+                mode="outlined"
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+          />
+          {/* {errors && (
       <Text style={styles.errorText}>
         {' '}
         {errors?.customer?.name?.message}
       </Text>
-    )}
+    )} */}
 
-    <Text style={styles.label}>ที่อยู่</Text>
-    <Controller
-      control={control}
-      name="customer.address"
-      rules={{required: true}}
-      render={({field: {onChange, onBlur, value}}) => (
-        <TextInput
-          keyboardType="name-phone-pad"
-          multiline
-          textAlignVertical="top"
-          numberOfLines={4}
-          style={styles.inputAddress}
-          onBlur={onBlur}
-          onChangeText={onChange}
-          value={value}
-        />
-      )}
-    />
-    {errors && (
+          <Controller
+            control={control}
+            name="customer.address"
+            rules={{required: true}}
+            render={({
+              field: {onChange, onBlur, value},
+              fieldState: {error},
+            }) => (
+              <TextInput
+                keyboardType="name-phone-pad"
+                multiline
+                label={'ที่อยู่'}
+                textAlignVertical="top"
+                style={{
+                  marginTop: 10,
+                }}
+                error={!!error}
+                numberOfLines={4}
+                mode="outlined"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                textContentType="fullStreetAddress"
+              />
+            )}
+          />
+          {/* {errors && (
       <Text style={styles.errorText}>
         {' '}
         {errors?.customer?.address?.message}
       </Text>
-    )}
+    )} */}
 
-    <Text style={styles.label}>เบอร์โทรศัพท์</Text>
-    <Controller
-      control={control}
-      name="customer.phone"
-      render={({field: {onChange, onBlur, value}}) => (
-        <TextInput
-          // placeholder="เบอร์โทรศัพท์"
-          keyboardType="phone-pad"
-          style={styles.inputName}
-          onBlur={onBlur}
-          onChangeText={onChange}
-          value={value}
-        />
-      )}
-    />
-
-    <Text style={styles.label}>เลขทะเบียนภาษี (ถ้ามี)</Text>
-    <Controller
-      control={control}
-      render={({field: {onChange, onBlur, value}}) => (
-        <TextInput
-          // placeholder="เลขทะเบียนภาษี(ถ้ามี)"
-          keyboardType="number-pad"
-          style={styles.inputName}
-          onBlur={onBlur}
-          onChangeText={onChange}
-          value={value}
-        />
-      )}
-      name="customer.companyId"
-    />
-    <TouchableOpacity
-      disabled={
-        !watch('customer.name') || !watch('customer.address')
-      }
-      onPress={onSubmit}
-      style={[
-        styles.button,
-        (!watch('customer.name') || !watch('customer.address')) &&
-          styles.buttonDisabled,
-      ]}>
-      <Text style={styles.buttonText}>{`บันทึก`}</Text>
-    </TouchableOpacity>
-    </KeyboardAwareScrollView>
-  </View>
+          <Controller
+            control={control}
+            name="customer.phone"
+            render={({
+              field: {onChange, onBlur, value},
+              fieldState: {error},
+            }) => (
+              <TextInput
+                // placeholder="เบอร์โทรศัพท์"
+                keyboardType="phone-pad"
+                style={{
+                  marginTop: 10,
+                }}
+                label={'เบอร์โทรศัพท์'}
+                mode="outlined"
+                textAlignVertical="top"
+                error={!!error}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                textContentType="telephoneNumber"
+                value={value}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            render={({field: {onChange, onBlur, value}}) => (
+              <TextInput
+                label={'เลขทะเบียนภาษี (ถ้ามี)'}
+                style={{
+                  marginTop: 10,
+                }}
+                keyboardType="number-pad"
+                mode="outlined"
+                textAlignVertical="top"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+            name="customer.companyId"
+          />
+          {/* <TouchableOpacity
+          disabled={!watch('customer.name') || !watch('customer.address')}
+          onPress={onSubmit}
+          style={[
+            styles.button,
+            (!watch('customer.name') || !watch('customer.address')) &&
+              styles.buttonDisabled,
+          ]}>
+          <Text style={styles.buttonText}>{`บันทึก`}</Text>
+        </TouchableOpacity> */}
+        </View>
+      </View>
+    </>
   );
 };
 

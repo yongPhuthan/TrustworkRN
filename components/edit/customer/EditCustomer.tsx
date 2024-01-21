@@ -2,14 +2,13 @@ import React, {useState, useContext, useEffect, useRef} from 'react';
 import {
   Text,
   View,
-  TextInput,
   TouchableOpacity,
-  Button,
   StyleSheet,
   ScrollView,
 } from 'react-native';
 import {useForm, Controller, useFormContext} from 'react-hook-form';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {TextInput, Button, Appbar} from 'react-native-paper';
 
 import {
   faCloudUpload,

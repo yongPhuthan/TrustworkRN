@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import {useUser} from '../../providers/UserContext';
 import {useQuery, useQueryClient, useMutation} from '@tanstack/react-query';
-import ImageResizer from '@bam.tech/react-native-image-resizer';
 
 import {Store} from '../../redux/store';
 import {faPlus, faCamera, faArrowLeft, faClose} from '@fortawesome/free-solid-svg-icons';
@@ -52,16 +51,7 @@ interface ImageModalProps {
 
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
-const resizeImageForUpload = async (uri, newWidth, newHeight) => {
-  const response = await ImageResizer.createResizedImage(
-    uri,
-    newWidth,
-    newHeight,
-    'JPEG',
-    100,
-  );
-  return response.uri;
-};
+
 const GalleryScreen = ({
   isVisible,
   onClose,

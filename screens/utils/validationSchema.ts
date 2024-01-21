@@ -7,7 +7,16 @@ export const customersValidationSchema = yup.object().shape({
   companyId: yup.string(),
   phone: yup.string(),
 });
-
+export const companyValidationSchema = yup.object().shape({
+  bizName: yup.string().required('ระบุชื่อธุรกิจ'),
+  userName: yup.string().required('ระบุชื่อเจ้าของ'),
+  userLastName:yup.string().required('ระบุนามสกุลเจ้าของ'),
+  officeTel: yup.string().required('ระบุเบอร์โทรออฟฟิศ'),
+  address: yup.string().required('ระบุที่อยู่ร้าน'),
+  mobileTel: yup.string().required('ระบุเบอร์มือถือ'),
+  userPosition: yup.string().required('ระบุตำแหน่ง'),
+  companyNumber: yup.string(),
+});
 
 const selectedAuditDataSchema = yup.object().shape({
   AuditData: yup.object().shape({
@@ -76,7 +85,7 @@ export const serviceValidationSchema = yup.object().shape({
   title: yup.string().required('ระบุชื่อบริการ'),
   description: yup.string(),
   unitPrice: yup.number().required('ระบุราคาต่อหน่วย'),
-  qty: yup.number().positive().integer().required(),
+  qty: yup.number().required(' required').positive().integer(),
   discountPercent: yup.number(),
   total: yup.number().required(),
   unit: yup.string().required(),

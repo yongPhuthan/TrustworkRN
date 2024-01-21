@@ -68,7 +68,6 @@ import Signature from 'react-native-signature-canvas';
 import {yupResolver} from '@hookform/resolvers/yup';
 import AddCustomer from '../../components/add/AddCustomer';
 import AddProductForm from '../../components/edit/products/addProduct';
-import axios, {AxiosResponse, AxiosError} from 'axios';
 import {useUser} from '../../providers/UserContext';
 import messaging from '../../firebase';
 import {Audit, CompanyUser, Service} from '../../types/docType';
@@ -81,7 +80,6 @@ import {
   quotationsValidationSchema,
   customersValidationSchema,
 } from '../utils/validationSchema';
-import Addservices from '../../components/add/AddServices';
 import ExistingWorkers from '../../components/workers/existing';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
@@ -116,7 +114,7 @@ const Quotation = ({navigation}: Props) => {
   const [workerPicker, setWorkerpicker] = useState(false);
 
   const [singatureModal, setSignatureModal] = useState(false);
-  const [signature, setSignature] = useState('');
+  const [signature, setSignature] = useState<string | null>(null);
   const [serviceIndex, setServiceIndex] = useState(0);
   const quotationId = uuidv4();
   const [fcmToken, setFtmToken] = useState('');
@@ -299,6 +297,10 @@ const Quotation = ({navigation}: Props) => {
       },
     },
   );
+  const companySignature = useWatch({
+    control: methods.control,
+    name: 'companyUser.signature',
+  });
   const handleValuesChange = (
     total: number,
     discountValue: number,
@@ -314,13 +316,18 @@ const Quotation = ({navigation}: Props) => {
   };
 
   const useSignature = () => {
-    if (companyUser?.signature) {
-      setPickerVisible(!pickerVisible);
-      setSignature(companyUser?.signature);
-    } else {
-      setSignatureModal(!singatureModal);
-      setPickerVisible(!pickerVisible);
-    }
+    // Toggle the state of the picker and accordingly set the modal visibility
+    setPickerVisible(prevPickerVisible => {
+      const newPickerVisible = !prevPickerVisible;
+      setSignatureModal(newPickerVisible);
+      if(!newPickerVisible){
+        methods.setValue('sellerSignature','', {shouldDirty:true})
+      }else{
+        methods.setValue('sellerSignature',signature, {shouldDirty:true})
+
+      }
+      return newPickerVisible;
+    });
   };
 
   const useWorkers = () => {
@@ -351,6 +358,7 @@ const Quotation = ({navigation}: Props) => {
       navigation.navigate('AddProduct', {
         onAddService: newProduct => append(newProduct),
         quotationId: quotationId,
+        currentValue: null,
       });
       // navigation.navigate('ExistingProduct', {id: companyUser.user?.id});
     } else {
@@ -358,10 +366,15 @@ const Quotation = ({navigation}: Props) => {
     }
   };
 
-  const handleEditService = (index: number, currentValue) => {
+  const handleEditService = (index: number, currentValue: Service) => {
     setShowEditServiceModal(!showEditServiceModal);
     handleModalClose();
-    navigation.navigate('EditProductForm', {index, currentValue, update});
+    navigation.navigate('AddProduct', {
+      onAddService: newProduct => update(index, newProduct),
+      currentValue,
+      quotationId: quotationId,
+    });
+    // navigation.navigate('EditProductForm', {index, currentValue, update});
   };
 
   const handleButtonPress = async () => {
@@ -372,7 +385,7 @@ const Quotation = ({navigation}: Props) => {
       } as any);
 
       setIsLoadingMutation(false);
-    } catch (error: Error | AxiosError | any) {
+    } catch (error: Error | any) {
       console.error('There was a problem calling the function:', error);
       console.log(error.response);
     }
@@ -404,13 +417,24 @@ const Quotation = ({navigation}: Props) => {
     remove(index);
   };
 
+  const onClose =()=>{
+    setPickerVisible(false)
+    setSignatureModal(false)
+    methods.setValue('sellerSignature','', {shouldDirty:true})
+  }
+
+
+  console.log('signature', signature);
+  console.log('signatureModal', singatureModal);
+  console.log('pickerVisible', pickerVisible);
+console.log('watchCompany', methods.watch('companyUser.signature'))
+console.log('sellerSignature', methods.watch('sellerSignature'))
+
   return (
     <>
       <Appbar.Header
         elevated
         mode="center-aligned"
-        
-        
         style={{
           backgroundColor: 'white',
         }}>
@@ -419,11 +443,13 @@ const Quotation = ({navigation}: Props) => {
             navigation.goBack();
           }}
         />
-        <Appbar.Content title="สร้างใบเสนอราคา" titleStyle={{ fontSize:18,
-          fontWeight:'bold'}} />
+        <Appbar.Content
+          title="สร้างใบเสนอราคา"
+          titleStyle={{fontSize: 18, fontWeight: 'bold'}}
+        />
         <Button
           // loading={postLoading}
-          disabled={!isDisabled}
+          disabled={isDisabled}
           mode="contained"
           buttonColor={'#1b72e8'}
           onPress={handleButtonPress}>
@@ -455,7 +481,7 @@ const Quotation = ({navigation}: Props) => {
             <View style={styles.subContainer}>
               {!isCustomerDisabled ? (
                 <CardClient
-                  handleEditClient={() => setEditCustomerModal(true)}
+                  handleEditClient={() => setAddCustomerModal(true)}
                 />
               ) : (
                 <AddClient handleAddClient={() => setAddCustomerModal(true)} />
@@ -608,8 +634,8 @@ const Quotation = ({navigation}: Props) => {
                   trackColor={{false: '#767577', true: '#81b0ff'}}
                   thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
                   ios_backgroundColor="#3e3e3e"
-                  onValueChange={() => useSignature()}
-                  value={signature ? true : false}
+                  onValueChange={useSignature}
+                  value={pickerVisible}
                   style={Platform.select({
                     ios: {
                       transform: [{scaleX: 0.7}, {scaleY: 0.7}],
@@ -619,26 +645,7 @@ const Quotation = ({navigation}: Props) => {
                   })}
                 />
               </View>
-              <Modal
-                isVisible={singatureModal}
-                style={styles.modal}
-                onBackdropPress={() => setSignatureModal(false)}>
-                <SafeAreaView style={styles.containerModal}>
-                  <View style={styles.header}>
-                    <TouchableOpacity
-                      style={styles.closeButton}
-                      onPress={() => setSignatureModal(false)}>
-                      <FontAwesomeIcon icon={faClose} size={24} color="gray" />
-                    </TouchableOpacity>
-                  </View>
-                  <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
-                  <SignatureComponent
-                    onClose={() => setSignatureModal(false)}
-                    setSignatureUrl={setSignature}
-                    onSignatureSuccess={handleSignatureSuccess}
-                  />
-                </SafeAreaView>
-              </Modal>
+            
             </View>
           </ScrollView>
           <Modal
@@ -647,23 +654,7 @@ const Quotation = ({navigation}: Props) => {
             onBackdropPress={() => setAddCustomerModal(false)}>
             <AddCustomer onClose={() => setAddCustomerModal(false)} />
           </Modal>
-          <Modal
-            isVisible={editCustomerModal}
-            style={styles.modalFull}
-            onBackdropPress={() => setEditCustomerModal(false)}>
-            <EditCustomer onClose={() => setEditCustomerModal(false)} />
-          </Modal>
 
-          <Modal
-            isVisible={editServicesModal}
-            style={styles.modalServiceFull}
-            onBackdropPress={() => setEditServicesModal(false)}>
-            <EditProductForm
-              quotationId={quotationId}
-              onClose={() => setEditServicesModal(false)}
-              serviceIndex={serviceIndex}
-            />
-          </Modal>
           <Modal
             isVisible={workerModal}
             onBackdropPress={() => setWorkerModal(false)}
@@ -684,7 +675,30 @@ const Quotation = ({navigation}: Props) => {
           />
         </View> */}
         </View>
+        <Modal
+                isVisible={singatureModal}
+                style={styles.modal}
+                onBackdropPress={onClose}>
+                <SafeAreaView style={styles.containerModal}>
+                  <View style={styles.header}>
+                    <TouchableOpacity
+                      style={styles.closeButton}
+                      onPress={onClose}>
+                      <FontAwesomeIcon icon={faClose} size={24} color="gray" />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
+                  <SignatureComponent
+                    onClose={   ()=> setSignatureModal(false)
+                    }
+                    setSignatureUrl={setSignature}
+                    onSignatureSuccess={handleSignatureSuccess}
+                  />
+                </SafeAreaView>
+              </Modal>
+
       </FormProvider>
+
     </>
   );
 };
@@ -814,7 +828,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    marginTop: 10,
+    marginTop: 20,
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
     paddingVertical: 5,

@@ -10,7 +10,7 @@ import {
   FlatList,
   Pressable,
 } from 'react-native';
-import {CheckBox} from '@rneui/themed';
+
 import {StackNavigationProp} from '@react-navigation/stack';
 import {
   faCloudUpload,
@@ -41,11 +41,12 @@ import {
   Controller,
   set,
 } from 'react-hook-form';
+import { Button, Text as TextPaper,Checkbox } from 'react-native-paper';
+
 interface ExistingModalProps {
   isVisible: boolean;
   onClose: () => void;
   serviceId: string;
-
 }
 
 const numColumns = 2;
@@ -74,7 +75,9 @@ const ExistingMaterials = ({
     state: {serviceList, selectedMaterials, code, serviceImages},
     dispatch,
   }: any = useContext(Store);
-  const servicListIndex = serviceList.findIndex(service => service.id === serviceId);
+  const servicListIndex = serviceList.findIndex(
+    service => service.id === serviceId,
+  );
 
   const fetchExistingMaterials = async () => {
     if (!user) {
@@ -111,14 +114,16 @@ const ExistingMaterials = ({
   );
   const handleSelectMaterial = (material: Material) => {
     const currentMaterials = getValues('materials') || [];
-    const materialIndex = currentMaterials.findIndex(materialData => materialData.materialData.id === material.id);
+    const materialIndex = currentMaterials.findIndex(
+      materialData => materialData.materialData.id === material.id,
+    );
     if (materialIndex !== -1) {
       const updatedMaterials = [...currentMaterials];
       updatedMaterials.splice(materialIndex, 1);
-      setValue('materials', updatedMaterials);
+      setValue('materials', updatedMaterials, {shouldDirty: true});
     } else {
-      const updatedMaterials = [...currentMaterials, { materialData: material }];
-      setValue('materials', updatedMaterials);
+      const updatedMaterials = [...currentMaterials, {materialData: material}];
+      setValue('materials', updatedMaterials, {shouldDirty: true});
     }
   };
 
@@ -129,7 +134,7 @@ const ExistingMaterials = ({
       </View>
     );
   }
-  if(isError) {
+  if (isError) {
     return (
       <View style={styles.loadingContainer}>
         <Text>เกิดข้อผิดพลาด Material</Text>
@@ -160,17 +165,20 @@ const ExistingMaterials = ({
               <TouchableOpacity
                 style={[
                   styles.card,
-                  (watch('materials') || []).some(m => m.id === item.id)
+                  (watch('materials') || []).some(m => m.materialData.id === item.id)
                     ? styles.cardChecked
                     : null,
                 ]}
                 onPress={() => handleSelectMaterial(item)}>
-                <CheckBox
-                  center
-                  checked={(watch('materials')|| []).some( material => material.materialData.id === item.id)}
+                <Checkbox
+             status={(watch('materials') || []).some(
+              material => material.materialData.id === item.id,
+            ) ? 'checked' : 'unchecked'}
+
+                  
                   onPress={() => handleSelectMaterial(item)}
-                  containerStyle={styles.checkboxContainer}
-                  checkedColor="#012b20"
+              
+                  color="#012b20"
                 />
                 <View style={styles.textContainer}>
                   <Text style={styles.productTitle}>{item.name}</Text>
@@ -200,11 +208,11 @@ const ExistingMaterials = ({
         />
 
         {watch('materials')?.length > 0 && (
-          <TouchableOpacity onPress={handleDonePress} style={styles.saveButton}>
-            <Text style={styles.saveText}>
-              {`บันทึก ${watch('materials')?.length} รายการ`}{' '}
-            </Text>
-          </TouchableOpacity>
+          <Button style={{
+            height:40
+          }} buttonColor='#1b52a7'  mode="contained" onPress={handleDonePress} >
+             {`บันทึก ${watch('materials')?.length} รายการ`}{' '}
+          </Button>
         )}
       </View>
 

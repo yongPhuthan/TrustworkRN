@@ -23,17 +23,13 @@ import {
   ScreenItem,
   ScreenName,
 } from '../types/navigationType';
-// import HomeScreen from '../screens/homeScreen';
 import Quotation from '../screens/quotation/create';
 import AddProductForm from '../screens/products/addProduct';
 import AddCustomer from '../screens/customer/addCustomer';
-import SelectAudit from '../screens/products/audits/selectAudits';
 import SelectContract from '../screens/contract/selectContract';
 import DocViewScreen from '../screens/quotation/webview';
 import DefaultContract from '../screens/contract/defaultContract';
 import ExistingProducts from '../screens/products/existingProducts';
-import EditProductForm from '../screens/products/editProduct';
-import EditCustomer from '../screens/customer/editCustomer';
 
 import AddExistProduct from '../screens/products/addExistProduct';
 import EditSetting from '../screens/setting/editSetting';
@@ -44,15 +40,10 @@ import ExistingSignature from '../screens/utils/existingSignature';
 import Installment from '../screens/utils/installment';
 import FirstAppScreen from '../screens/register/firstAppScreen';
 import LoginScreen from '../screens/register/loginScreen';
-import GalleryUploadScreen from '../screens/products/gallary/create';
-import ExistingCategories from '../screens/products/gallary/existing';
-import GalleryScreen from '../screens/products/imageGallery';
 import SettingsScreen from '../screens/setting/setting';
 import Dashboard from '../screens/quotation/dashboard';
-import ExistingMaterials from '../screens/products/materials/existing';
 import ExistingWorkers from '../screens/workers/existing';
 import AddNewWorker from '../screens/workers/addNew';
-import AddNewMaterial from '../screens/products/materials/addNew';
 import RegisterScreen from '../screens/register/registerScreen';
 import EditDefaultContract from '../screens/contract/edit/editDefaultContract';
 import CreateContractScreen from '../screens/contract/createContractScreen';
@@ -212,34 +203,7 @@ const Navigation = ({initialRouteName}) => {
             headerTintColor: 'black',
           }}
         />
-        <Stack.Screen
-          name="EditProductForm"
-          component={EditProductForm}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'แก้ไขรายการ-สินค้า',
-            headerBackTitleVisible: false,
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-        <Stack.Screen
-          name="EditCustomerForm"
-          component={EditCustomer}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'แก้ไขลูกค้า',
-            headerBackTitleVisible: false,
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
+        
         <Stack.Screen
           name="EditSetting"
           component={EditSetting}
@@ -282,48 +246,9 @@ const Navigation = ({initialRouteName}) => {
             headerTintColor: 'black',
           }}
         />
-        <Stack.Screen
-          name="ExistingCategories"
-          component={ExistingCategories}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'เพิ่มรายการ-สินค้า',
-            headerBackTitleVisible: false,
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-        <Stack.Screen
-          name="GalleryScreen"
-          component={GalleryScreen}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'อัลบั้มผลงาน',
-            headerBackTitleVisible: false,
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-        <Stack.Screen
-          name="ExistingMaterials"
-          component={ExistingMaterials}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'เลือกวัสดุ-อุปกรณ์ที่ใช้ในงาน',
-            headerBackTitleVisible: false,
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
+        
+       
+      
          <Stack.Screen
           name="ExistingContract"
           component={ExistingContract}
@@ -366,20 +291,7 @@ const Navigation = ({initialRouteName}) => {
             headerTintColor: 'black',
           }}
         />
-        <Stack.Screen
-          name="AddNewMaterial"
-          component={AddNewMaterial}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'เพิ่มวัสดุอุปกรณ์ใหม่',
-            headerBackTitleVisible: false,
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
+      
         <Stack.Screen
           name="AddCustomer"
           component={AddCustomer}
@@ -409,21 +321,7 @@ const Navigation = ({initialRouteName}) => {
             headerTintColor: 'black',
           }}
         />
-        <Stack.Screen
-          name="SelectAudit"
-          component={SelectAudit}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'เลือกมาตรฐานการทำงาน',
-            headerBackTitleVisible: false,
-
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
+     
         <Stack.Screen
           name="SelectContract"
           component={SelectContract}
@@ -527,21 +425,7 @@ const Navigation = ({initialRouteName}) => {
         }}
         component={CreateContractScreen} />
 
-        <Stack.Screen
-          name="GalleryUploadScreen"
-          component={GalleryUploadScreen}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'อัพโหลดอัลบั้ม',
-            headerBackTitleVisible: false,
-
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
+       
       </Stack.Navigator>
     </NavigationContainer>
   );

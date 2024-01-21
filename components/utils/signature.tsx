@@ -6,8 +6,18 @@ import React, {
   useEffect,
   useRef,
 } from 'react';
+import firebase from '../../firebase';
+import FastImage from 'react-native-fast-image';
+
 import Signature from 'react-native-signature-canvas';
-import {View, StyleSheet, ActivityIndicator} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  Image,
+  TouchableOpacity,
+  Text,
+} from 'react-native';
 import {useSignatureUpload} from '../../hooks/utils/image/useSignatureUpload';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useUpdateContract} from '../../hooks/contract/useUpdateContract';
@@ -23,9 +33,18 @@ import {
 import {Store} from '../../redux/store';
 import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
 import {useSlugify} from '../../hooks/utils/useSlugify';
-
+import {Avatar, Button, Card} from 'react-native-paper';
+import {useUser} from '../../providers/UserContext';
+import {
+  useForm,
+  FormProvider,
+  useFormContext,
+  Controller,
+  useWatch,
+  set,
+} from 'react-hook-form';
 interface SignaturePadProps {
-  setSignatureUrl: React.Dispatch<React.SetStateAction<string>>;
+  setSignatureUrl: React.Dispatch<React.SetStateAction<string | null>>;
   onSignatureSuccess?: () => void;
   onClose: () => void;
 }
@@ -33,16 +52,28 @@ interface SignaturePadProps {
 const SignatureComponent = ({
   onSignatureSuccess,
   setSignatureUrl,
+
   onClose,
 }: SignaturePadProps) => {
   const ref = useRef<any>();
-  const {isSignatureUpload, signatureUrl, handleSignatureUpload} =useSignatureUpload();
   const [isImageUpload, setIsImageUpload] = useState(false);
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<string>('');
   const {updateContract} = useUpdateContract();
+  const [createNewSignature, setCreateNewSignature] = useState<boolean>(false);
   const queryClient = useQueryClient();
   const slugify = useSlugify();
-  const uriToBlobFunction = useUriToBlob(); 
+
+  const user = useUser();
+  const [isSignatureUpload, setIsSignatureUpload] = useState<boolean>(false);
+  const context = useFormContext();
+  const {
+    register,
+    control,
+    getValues,
+    setValue,
+    watch,
+    formState: {errors},
+  } = context;
   const {
     state: {code},
     dispatch,
@@ -56,100 +87,149 @@ const SignatureComponent = ({
       console.error('Failed to upload the signature:', error);
     },
   });
+  const companySignature = useWatch({
+    control: control,
+    name: 'companyUser.signature',
+  });
 
+  const sellerSignature = useWatch({
+    control: control,
+    name: 'sellerSignature',
+  });
 
-  const uploadImageToCloudflare = async (base64Image: string) => {
-    if (!base64Image) {
-      console.log('No image provided');
+  const uploadFileToFirebase = async (imageUri: string) => {
+    setIsSignatureUpload(true);
+
+    if (!user) {
+      console.error('User is not authenticated');
+      setIsSignatureUpload(false);
       return;
     }
 
-    const name = 'sellerSignature';
-    const filename = slugify(name);
-
-    const blob = await (await fetch(base64Image)).blob();
-
-    const CLOUDFLARE_ENDPOINT = __DEV__
-      ? CLOUDFLARE_WORKER_DEV
-      : CLOUDFLARE_WORKER;
-
-    let contentType = '';
-    switch (blob.type.toLowerCase()) {
-      case 'image/png':
-        contentType = 'image/png';
-        break;
-      case 'image/jpeg':
-        contentType = 'image/jpeg';
-        break;
-      default:
-        console.log('Unsupported file type');
-        return;
+    if (!user.email) {
+      console.error('User email is not available');
+      setIsSignatureUpload(false);
+      return;
     }
 
-
+    const filename = `signature${code}.png`;
+    const storagePath = __DEV__
+      ? `Test/${code}/signature/${filename}`
+      : `${code}/signature/${filename}`;
     try {
-      const response = await fetch(`${CLOUDFLARE_ENDPOINT}${filename}`, {
-        method: 'POST',
-        headers: {
-          signature: 'true',
-        },
-        body: JSON.stringify({
-          fileName: name,
-          fileType: contentType,
-          code,
-        }),
+      const storageRef = firebase.storage().ref(storagePath);
+      const base64String = imageUri.split(',')[1];
+      console.log('base64String', base64String);
+
+      const snapshot = await storageRef.putString(base64String, 'base64', {
+        contentType: 'image/png',
       });
 
-      if (!response.ok) {
-        const text = await response.text();
-        console.error('Server responded with:', text);
-        throw new Error('Server error');
+      if (!snapshot.metadata) {
+        console.error('Snapshot metadata is undefined');
+        return;
       }
 
-      const {presignedUrl} = await response.json();
+      console.log('Uploaded a base64 string!', snapshot);
 
-      const uploadToR2Response = await fetch(presignedUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': contentType,
-        },
-        body: blob,
-      });
+      // Construct the download URL manually
+      const bucket = snapshot.metadata.bucket;
+      const path = encodeURIComponent(snapshot.metadata.fullPath);
+      const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${path}?alt=media`;
 
-      if (!uploadToR2Response.ok) {
-        console.error('Failed to upload file to R2');
-      }
-      console.log('Upload to R2 success');
-      return `${CLOUDFLARE_R2_PUBLIC_URL}${filename}`;
+      console.log('File uploaded successfully. URL:', publicUrl);
+      return publicUrl;
     } catch (error) {
-      console.error('There was a problem with the fetch operation:', error);
+      console.error('Error uploading file to Firebase:', error);
+    } finally {
+      setIsSignatureUpload(false);
     }
   };
 
-  const handleSave = useCallback(async (signature) => {
-    if (!signature) {
-      return;
-    }
-    setIsImageUpload(true);
-    const imageUrl = await uploadImageToCloudflare(signature);
-    console.log('imageUrl', imageUrl);
-    if (!imageUrl) return;
-    setIsImageUpload(false);
-    setSignatureUrl(imageUrl);
-    onClose();
-  }, [code]);
+  const handleUploadNewSignatureAndSave = useCallback(
+    async signature => {
+      if (!signature) {
+        return;
+      }
+      setIsImageUpload(true);
+      const imageUrl = await uploadFileToFirebase(signature);
+      if (!imageUrl) return;
+      setIsImageUpload(false);
+      setValue('companyUser.signature', imageUrl, {shouldDirty: true});
+      setValue('sellerSignature', imageUrl, {shouldDirty: true});
+      setCreateNewSignature(false);
 
+      onClose();
+    },
+    [code],
+  );
+
+  const handleSave = (signatureUrl: string) => {
+    setValue('sellerSignature', signatureUrl, {shouldDirty: true});
+    setCreateNewSignature(false);
+    onClose();
+  };
+
+  useEffect(() => {
+    if (companySignature === 'none' || null || '') {
+      setCreateNewSignature(true);
+    }
+  }, [companySignature, setValue, sellerSignature]);
+
+  useEffect(() => {
+    if (companySignature) {
+      Image.prefetch(companySignature)
+        .then(() => console.log('Image prefetched!'))
+        .catch(error => console.error('Error prefetching image:', error));
+    }
+  }, [companySignature]);
 
   return (
     <>
       {isSignatureUpload ? (
-        <ActivityIndicator />
+        <ActivityIndicator style={styles.loadingContainer} size="large" />
+      ) : !createNewSignature ? (
+        <>
+          <View style={styles.containerExist}>
+            <View style={styles.textContainer}>
+              <View style={styles.underline} />
+            
+              {companySignature && (
+                <FastImage
+                  style={styles.image}
+                  source={{
+                    uri: companySignature,
+                    priority: FastImage.priority.normal,
+                    cache: FastImage.cacheControl.web,
+                  }}
+                />
+              )}
+
+              <TouchableOpacity
+                onPress={() => handleSave(companySignature)}
+                style={styles.btn}>
+                <Text style={styles.label}>ใช้ลายเซ็นเดิม</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={styles.orContainer}>
+            <Text style={styles.orText}>หรือ</Text>
+
+            <TouchableOpacity
+              onPress={
+                () => setCreateNewSignature(true)
+                // setValue('companyUser.signature', '', {shouldDirty: true})
+              }>
+              <Text style={styles.textLink}>เปลี่ยนลายเซ็นใหม่</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       ) : (
         <View style={styles.container}>
           <Signature
-           penColor='#0000FF'
+            penColor="#0000FF"
             ref={ref}
-            onOK={img => handleSave(img)}
+            onOK={img => handleUploadNewSignatureAndSave(img)}
             onEmpty={() => console.log('Empty')}
             descriptionText="เซ็นเอกสารด้านบน"
           />
@@ -160,9 +240,72 @@ const SignatureComponent = ({
 };
 
 const styles = StyleSheet.create({
+  containerExist: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    borderRadius: 8,
+    margin: 15,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 2,
+  },
   container: {
     flex: 1,
     padding: 20,
+  },
+  underline: {
+    height: 1,
+    flex: 1,
+    backgroundColor: 'grey',
+  },
+  orText: {
+    marginHorizontal: 10,
+    fontSize: 16,
+  },
+  image: {
+    width: 230,
+    height: 250,
+  },
+  textContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    marginTop: 40,
+    backgroundColor: '#0073BA',
+  },
+  textLink: {
+    color: '#0073BA',
+    // textDecorationLine: 'underline',
+
+    fontSize: 16,
+  },
+  label: {
+    fontSize: 16,
+    color: 'white',
+  },
+  orContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+    marginHorizontal: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

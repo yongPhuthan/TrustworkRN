@@ -49,7 +49,6 @@ const commonScreenOptions = {
         <PaperDrawer.Section >
           <PaperDrawer.Item
             label="ใบเสนอราคา"
-            
             icon="file-document"
             active={props.state.index === 0}
             onPress={() => props.navigation.navigate('Dashboard')}
@@ -57,7 +56,7 @@ const commonScreenOptions = {
             theme={{ colors: { text: props.state.index === 0 ? 'white' : inactiveTintColor } }}
           />
           <PaperDrawer.Item
-            label="สัญญา"
+            label="ทำสัญญา"
             icon="file-document"
        
             active={props.state.index === 1}
@@ -66,7 +65,7 @@ const commonScreenOptions = {
         </PaperDrawer.Section>
         <PaperDrawer.Section style={{ marginTop: 'auto' }} showDivider={false}>
           <PaperDrawer.Item
-            label="Settings"
+            label="ตั้งค่า"
             icon="cog"
             active={props.state.index === 2}
             onPress={() => props.navigation.navigate('SettingsScreen')}

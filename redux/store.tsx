@@ -1,6 +1,6 @@
 import React, {createContext, useReducer} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {SelectedAuditData, AuditData} from '../docType';
+import {SelectedAuditData, AuditData} from '../types/docType';
 import * as contrains from './constrains';
 import {Service} from '../types/docType';
 export type StateType = {
@@ -244,26 +244,6 @@ function reducer(state: StateType, action: ActionType): StateType {
       return {...state, selectedMaterials: []};
 
 
-      // case contrains.REMOVE_AUDITS_IN_SERVICE_LIST:
-
-      const removedAuditDataInServiceList = state.serviceList.map(service => {
-        if (service.id === serviceId) {
-          // Filter out the auditData that needs to be removed
-          const newAudits = service.audits
-            ? service.audits.filter(audit => audit.id !== auditData.id)
-            : [];
-          return {
-            ...service,
-            audits: newAudits,
-          };
-        }
-        return service;
-      }) as any;
-
-      return {
-        ...state,
-        serviceList: removedAuditDataInServiceList,
-      };
     case contrains.EXISTING_ARRAY_MATERIALS:
       return {
         ...state,

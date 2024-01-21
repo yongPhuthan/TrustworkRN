@@ -16,7 +16,7 @@ import {HOST_URL, BACK_END_SERVER_URL, PROJECT_FIREBASE} from '@env';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Header as HeaderRNE, HeaderProps, Icon, FAB} from '@rneui/themed';
+import {Header as HeaderRNE, HeaderProps, Icon} from '@rneui/themed';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faBell,
@@ -27,7 +27,6 @@ import {
   faBars,
 } from '@fortawesome/free-solid-svg-icons';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import Lottie from 'lottie-react-native';
 import messaging from '@react-native-firebase/messaging';
 import {User, Quotation, CompanyUser} from '../../types/docType';
 import * as stateAction from '../../redux/actions';
@@ -43,16 +42,16 @@ import {
   checkNotifications,
   requestNotifications,
 } from 'react-native-permissions';
-import { Drawer } from 'react-native-paper';
+import {  Menu, Button,Portal, List, PaperProvider,FAB, Divider } from 'react-native-paper';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(true);
   const [activeMenu, setActiveMenu] = React.useState('');
-
   const user = useUser();
   const {width, height} = Dimensions.get('window');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const queryClient = useQueryClient();
+  const [visible, setVisible] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null) as any;
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -64,7 +63,8 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     dispatch,
   }: any = useContext(Store);
 
-
+  const openMenu = () => setVisible(true);
+  const closeMenu = () => setVisible(false);
   const requestNotificationPermission = async () => {
     try {
       const {status} = await requestNotifications(['alert', 'badge', 'sound']);
@@ -398,6 +398,13 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               }}>
               <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
             </Pressable>
+            <View
+              style={{
+                width: '100%',
+                alignSelf: 'center',
+                borderBottomWidth: 0.5,
+                borderBottomColor: '#cccccc',
+              }}></View>
             <Pressable
               onPress={() => {
                 handleModal(item, index);
@@ -415,7 +422,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               style={{
                 width: '100%',
                 alignSelf: 'center',
-                borderBottomWidth: 1,
+                borderBottomWidth: 0.5,
                 borderBottomColor: '#cccccc',
               }}></View>
             <Pressable
@@ -425,6 +432,13 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               }}>
               <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
             </Pressable>
+            <View
+              style={{
+                width: '100%',
+                alignSelf: 'center',
+                borderBottomWidth: 0.5,
+                borderBottomColor: '#cccccc',
+              }}></View>
             <Pressable
               onPress={() => {
                 setShowModal(false);
@@ -439,7 +453,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               style={{
                 width: '100%',
                 alignSelf: 'center',
-                borderBottomWidth: 1,
+                borderBottomWidth: 0.5,
                 borderBottomColor: '#cccccc',
               }}></View>
             <Pressable
@@ -453,7 +467,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               style={{
                 width: '100%',
                 alignSelf: 'center',
-                borderBottomWidth: 1,
+                borderBottomWidth: 0.5,
                 borderBottomColor: '#cccccc',
               }}></View>
           </Modal>
@@ -616,11 +630,13 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       )}
 
       <FAB
-        icon={<FontAwesomeIcon icon={faPlus} size={20} color="white" />}
+        icon='plus'
+        color='white'
+        
         // color="#012b20"
-        color="#1b72e8"
         style={{
           backgroundColor: '#1b52a7',
+          
           position: 'absolute',
           right: 16,
           bottom: 25,
@@ -705,7 +721,7 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     paddingBottom: 10,
     paddingTop: 10,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     fontFamily: 'Sukhumvit set',
   },
   deleteButtonText: {

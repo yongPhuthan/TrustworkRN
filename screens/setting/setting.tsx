@@ -19,7 +19,6 @@ import {
   PROJECT_FIREBASE,
   BACK_END_SERVER_URL,
 } from '@env';
-import Lottie from 'lottie-react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faFile,
@@ -35,6 +34,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import firebase from '../../firebase';
+import { Divider } from 'react-native-paper';
 
 import {
   launchCamera,
@@ -64,22 +64,22 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
 
   const toggleLogoutModal = () => {
     Alert.alert(
-      "Logout", // หัวข้อ
-      "ยืนยันออกจากระบบ ?", // ข้อความ
+      'Logout', // หัวข้อ
+      'ยืนยันออกจากระบบ ?', // ข้อความ
       [
-        { 
-          text: "ยกเลิก", 
-          onPress: () => console.log("Cancel Pressed"), 
-          style: "cancel"
+        {
+          text: 'ยกเลิก',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
         },
-        { 
-          text: "ออกจากระบบ", 
-          onPress: handleLogout 
-        }
-      ]
+        {
+          text: 'ออกจากระบบ',
+          onPress: handleLogout,
+        },
+      ],
     );
   };
-  
+
   const businessDetails = [
     {id: 2, title: 'Business Address', value: company?.address || ''},
   ];
@@ -165,7 +165,6 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
   if (!isAuthenticated) {
     return null;
   }
-
   return (
     <>
       {company && (
@@ -299,19 +298,62 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
                   </Text>
                   <FontAwesomeIcon
                     icon={faChevronRight}
-                    size={24}
+                    size={18}
                     color="#aaa"
                   />
                 </View>
               </View>
             </TouchableOpacity>
-            <View
-              style={{
-                width: '90%',
-                alignSelf: 'center',
-                borderBottomWidth: 0.3,
-                borderBottomColor: '#cccccc',
-              }}></View>
+            <Divider />
+            <TouchableOpacity
+              style={{paddingVertical: 15, paddingHorizontal: 24}}
+              onPress={() => navigation.navigate('EditSetting', {company})}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  
+                }}>
+                <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
+                  แก้ไขข้อมูลธุรกิจ
+                </Text>
+                <FontAwesomeIcon icon={faChevronRight} size={18} color="#aaa" />
+              </View>
+            </TouchableOpacity>
+            <Divider />
+            <TouchableOpacity
+              style={{paddingVertical: 15, paddingHorizontal: 24}}
+              onPress={() => navigation.navigate('ExistingContract')}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
+                  แก้ไขสัญญา
+                </Text>
+                <FontAwesomeIcon icon={faChevronRight} size={18} color="#aaa" />
+              </View>
+            </TouchableOpacity>
+            <Divider />
+            {/* <TouchableOpacity
+              style={{paddingVertical: 15, paddingHorizontal: 24}}
+              onPress={() => navigation.navigate('ExistingSignature',{company} )}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
+                  ลายเซ็น
+                </Text>
+                <FontAwesomeIcon icon={faChevronRight} size={18} color="#aaa" />
+              </View>
+            </TouchableOpacity> */}
+            {/* <Divider />
             <TouchableOpacity
               style={{paddingVertical: 15, paddingHorizontal: 24}}
               onPress={() => navigation.navigate('EditSetting', {company})}>
@@ -322,18 +364,12 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
                   justifyContent: 'space-between',
                 }}>
                 <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
-                  แก้ไขข้อมูลธุรกิจ
+                  บัญชีธนาคาร
                 </Text>
-                <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
+                <FontAwesomeIcon icon={faChevronRight} size={18} color="#aaa" />
               </View>
             </TouchableOpacity>
-            <View
-              style={{
-                width: '90%',
-                alignSelf: 'center',
-                borderBottomWidth: 0.3,
-                borderBottomColor: '#cccccc',
-              }}></View>
+            <Divider /> */}
             <TouchableOpacity
               style={{paddingVertical: 15, paddingHorizontal: 24}}
               onPress={() => toggleLogoutModal()}>
@@ -346,7 +382,7 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
                 <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
                   Logout
                 </Text>
-                <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
+                <FontAwesomeIcon icon={faChevronRight} size={18} color="#aaa" />
               </View>
             </TouchableOpacity>
             <View
@@ -359,8 +395,6 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
           </View>
         </ScrollView>
       )}
-
-
     </>
   );
 };

@@ -4,11 +4,15 @@ import {
   Text,
   View,
   TouchableOpacity,
+  Image,
   ScrollView,
+  FlatList,
   ActivityIndicator,
   Dimensions,
   SafeAreaView,
 } from 'react-native';
+import {CheckBox} from '@rneui/themed';
+
 import {
   faCloudUpload,
   faEdit,
@@ -26,8 +30,12 @@ import * as stateAction from '../../redux/actions';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import {useQuery} from '@tanstack/react-query';
-import Lottie from 'lottie-react-native';
-import {Audit, ServiceList, EditProductList} from '../../types/docType';
+import {
+  Audit,
+  ServiceList,
+  EditProductList,
+  AuditData,
+} from '../../types/docType';
 import {
   useForm,
   FormProvider,
@@ -39,6 +47,13 @@ import {
 import {ParamListBase} from '../../types/navigationType';
 import Modal from 'react-native-modal';
 import {useUser} from '../../providers/UserContext';
+import {
+  Button,
+  Text as TextPaper,
+  Appbar,
+  Checkbox,
+  Banner,
+} from 'react-native-paper';
 
 interface AuditModalProps {
   isVisible: boolean;
@@ -104,9 +119,6 @@ const SelectAudit = ({
       },
     },
   );
-  const servicListIndex = serviceList.findIndex(
-    service => service.id === serviceId,
-  );
 
   const handleSelectAudit = (audit: Audit) => {
     const currentAudits = getValues('audits') || [];
@@ -116,10 +128,10 @@ const SelectAudit = ({
     if (auditIndex !== -1) {
       const updatedAudits = [...currentAudits];
       updatedAudits.splice(auditIndex, 1);
-      setValue('audits', updatedAudits);
+      setValue('audits', updatedAudits, {shouldDirty: true});
     } else {
       const updatedAudits = [...currentAudits, {AuditData: audit}];
-      setValue('audits', updatedAudits);
+      setValue('audits', updatedAudits, {shouldDirty: true});
     }
   };
 
@@ -158,7 +170,22 @@ const SelectAudit = ({
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
+      <Appbar.Header
+          mode="center-aligned"
+          elevated
+          style={{
+            backgroundColor: 'white',
+            width: '100%',
+          }}>
+          <Appbar.Action icon={'close'} onPress={() => onClose()} />
+          <Appbar.Content
+            title={`มาตรฐานงานติดตั้ง ${title || ''}`}
+            titleStyle={{fontSize: 16}}
+          />
+        </Appbar.Header>
+
+
+        {/* <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <FontAwesomeIcon icon={faClose} size={24} color="gray" />
           </TouchableOpacity>
@@ -173,51 +200,90 @@ const SelectAudit = ({
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.description}>{description}</Text>
-        </View>
-
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.contentContainer}>
-            {showCards ? (
-              <View style={styles.cardsContainer}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setHeaderText('บานเฟี้ยม');
-                    setShowCards(false);
-                  }}
-                  style={styles.card}>
-                  <View style={styles.cardContent}>
-                    <Text style={styles.title}>Window</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.auditListContainer}>
-                {audits?.map((audit: any, index: number) => (
-                  <CardAudit
-                    key={index}
-                    title={audit.auditShowTitle}
-                    content={audit.content}
-                    description={audit.description}
-                    number={audit.number}
-                    defaultChecked={(getValues('audits') || []).some(
-                      auditData => auditData.AuditData.id === audit.id,
+        </View> */}
+        <FlatList
+          style={{padding: 10}}
+          data={audits}
+          renderItem={({item, index}: any) => (
+            <>
+              <View
+                style={[
+                  styles.card,
+                  (watch('audits') || []).some(m => m.AuditData.id === item.id)
+                    ? styles.cardChecked
+                    : null,
+                ]}
+                // onPress={() => handleSelectAudit(item)}
+                
+                >
+                {/* <CheckBox
+                    center
+                    checked={(watch('audits') || []).some(
+                      audit => audit.AuditData.id === item.id,
                     )}
-                    imageUri={audit.auditEffectImage}
-                    onPress={() => handleSelectAudit(audit)}
+                    onPress={() => handleSelectAudit(item)}
+                    containerStyle={styles.checkboxContainer}
+                    checkedColor="#012b20"
+                  /> */}
+
+                <View
+                  style={{
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+
+                  }}>
+                  <Checkbox.Item
+                    label={item.auditShowTitle}
+                    onPress={() => handleSelectAudit(item)}
+                    color="#012b20"
+                    style={{
+                      flexDirection: 'row-reverse',
+                    }}
+                    status={
+                      (watch('audits') || []).some(
+                        audit => audit.AuditData.id === item.id,
+                      )
+                        ? 'checked'
+                        : 'unchecked'
+                    }
+
                   />
-                ))}
+                  <Image
+                    source={{uri: item.auditEffectImage}}
+                    style={styles.productImage}
+                  />
+
+                  <Text style={styles.description}>{item.content}</Text>
+                </View>
               </View>
-            )}
-          </View>
-        </ScrollView>
+            </>
+          )}
+          ListEmptyComponent={
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                height: height * 0.5,
+
+                alignItems: 'center',
+              }}></View>
+          }
+          keyExtractor={item => item.id}
+        />
 
         {watch('audits').length > 0 && (
           <View style={styles.containerBtn}>
-            <TouchableOpacity onPress={handleDonePress} style={styles.button}>
-              <Text style={styles.buttonText}>{`บันทึก ${
-                watch('audits').length
-              } มาตรฐาน`}</Text>
-            </TouchableOpacity>
+            <Button
+              style={{
+                width: '90%',
+                height: 40,
+              }}
+              buttonColor="#1b52a7"
+              mode="contained"
+              onPress={handleDonePress}>
+              {`บันทึก ${watch('audits')?.length} รายการ`}{' '}
+            </Button>
           </View>
         )}
       </SafeAreaView>
@@ -231,6 +297,7 @@ const {width, height} = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+
     backgroundColor: '#F7F7F7',
     width,
   },
@@ -252,22 +319,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Sukhumvit set',
   },
   titleContainer: {
-    flexDirection: 'column',
-    paddingHorizontal: 20,
-    justifyContent: 'center',
-    alignContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
+    padding: 16,
+
+    alignItems: 'center', // Center content horizontally
+    justifyContent: 'center', // Center content vertically
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#323232',
+    fontSize: 16,
+    textAlign: 'left',
   },
   description: {
     fontSize: 16,
-    color: '#323232',
-    marginTop: 5,
+    marginTop: 10,
+    textAlign: 'left',
+    color: 'black',
   },
   auditListContainer: {
     flexDirection: 'column',
@@ -311,25 +376,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 15,
-    elevation: 3,
-    shadowColor: 'black',
-    shadowOffset: {width: 1, height: 1},
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    width: '48%',
-  },
-  cardContent: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  cardsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 40,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+    marginVertical: 8,
+    borderWidth: 1, // Add border to the card
+    borderColor: 'transparent', // Default border color
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
+    height: 'auto',
+  },
+  cardChecked: {
+    borderColor: '#012b20', // Color when checked
+  },
+  checkboxContainer: {
+    padding: 0,
+    margin: 0,
+    marginRight: 10,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   cardAuditView: {
     height: 200,
@@ -344,7 +419,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   scrollView: {
-    flex: 1,
+    paddingHorizontal: 10,
   },
   loadingContainer: {
     flex: 1,
@@ -366,5 +441,22 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     paddingVertical: 10,
+  },
+
+  textContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingRight: 10,
+  },
+  productTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  productImage: {
+    width: 125, // Adjust the size according to your design
+    height: 125, // Adjust the size according to your design
+    borderRadius: 4, // If you want rounded corners
+    alignItems: 'center',
   },
 });

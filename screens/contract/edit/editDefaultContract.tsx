@@ -4,7 +4,6 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   StyleSheet,
-  TextInput,
   Platform,
   Text,
   View,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import {ProgressBar, Appbar, Button} from 'react-native-paper';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {TextInput,Divider} from 'react-native-paper';
 
 import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
@@ -264,16 +264,7 @@ const EditDefaultContract = ({navigation, route}: Props) => {
       setIsLoadingMutation(false);
     }
   };
-  const areAllFieldsValid = defaultValues => {
-    return Object.values(defaultValues).every(
-      value => value !== 0 && value !== '',
-    );
-  };
-  // const allFieldValues = watch();
-  // const allFieldsValid = useMemo(() => {
-  //   return areAllFieldsValid(allFieldValues);
-  // }, [allFieldValues]);
-  
+
 
   function safeToString(value) {
     return value !== undefined && value !== null ? value.toString() : '';
@@ -286,15 +277,7 @@ const EditDefaultContract = ({navigation, route}: Props) => {
     defaultValue: string = '',
   ) => (
     <>
-      {errors[name] && (
-        <Text
-          style={{
-            alignSelf: 'flex-end',
-            marginTop: 10,
-          }}>
-          {textRequired}
-        </Text>
-      )}
+    
       <View
         style={{
           flexDirection: 'row',
@@ -303,8 +286,7 @@ const EditDefaultContract = ({navigation, route}: Props) => {
         }}>
         <Text style={styles.label}>{label}</Text>
 
-        <View style={styles.inputContainerForm}>
-          <Controller
+        <Controller
             control={control}
             rules={{required: 'This field is required'}}
             render={({
@@ -315,10 +297,12 @@ const EditDefaultContract = ({navigation, route}: Props) => {
                 <TextInput
                   keyboardType="number-pad"
                   textAlign="center"
+                  error={!!error}
+                  mode="outlined"
                   textAlignVertical="center"
-                  
                   defaultValue={defaultValue}
                   onBlur={onBlur}
+                  right={<TextInput.Affix text="วัน" />}
                   value={value}
                   onChangeText={val => {
                     const numericValue = Number(val);
@@ -326,27 +310,19 @@ const EditDefaultContract = ({navigation, route}: Props) => {
                       onChange(numericValue);
                     }
                   }}
-                  style={{
-                    width: 30,
-                    // height: 45,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  placeholderTextColor="#A6A6A6"
+                 
                 />
               </>
             )}
             name={name}
           />
 
-          <Text style={styles.inputSuffix}>วัน</Text>
-        </View>
       </View>
+      <Divider style={{marginTop:10}} />
 
-      <View style={styles.divider} />
     </>
   );
+
   return (
     <>
       <Appbar.Header  style={{
