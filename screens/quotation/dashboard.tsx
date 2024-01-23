@@ -33,7 +33,7 @@ import * as stateAction from '../../redux/actions';
 import {DashboardScreenProps} from '../../types/navigationType';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useUser} from '../../providers/UserContext';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import {NavigationContainer, useNavigation} from '@react-navigation/native';
 
 import {
   check,
@@ -42,7 +42,15 @@ import {
   checkNotifications,
   requestNotifications,
 } from 'react-native-permissions';
-import {  Menu, Button,Portal, List, PaperProvider,FAB, Divider } from 'react-native-paper';
+import {
+  Menu,
+  Button,
+  Portal,
+  List,
+  PaperProvider,
+  FAB,
+  Divider,
+} from 'react-native-paper';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(true);
@@ -59,9 +67,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     Quotation[] | null
   >(null);
 
-  const {
-    dispatch,
-  }: any = useContext(Store);
+  const {dispatch}: any = useContext(Store);
 
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
@@ -85,15 +91,9 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     ALL: 'ทั้งหมด',
     PENDING: 'รออนุมัติ',
     APPROVED: 'อนุมัติแล้ว',
-    CONTRACT: 'สัญญา',
   };
 
-  const [filters, setFilters] = useState([
-    'ALL',
-    'PENDING',
-    'APPROVED',
-    'CONTRACT',
-  ]);
+  const [filters, setFilters] = useState(['ALL', 'PENDING', 'APPROVED']);
 
   const handleShowModalClose = () => {
     setShowModal(false);
@@ -282,7 +282,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     }
   }, [user]);
 
-  if (isQuery ) {
+  if (isQuery) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator />
@@ -290,7 +290,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     );
   }
 
-  if (error ) {
+  if (error) {
     return (
       <View style={styles.loadingContainer}>
         <Text>Error fetching dashboard data</Text>
@@ -299,7 +299,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         </TouchableOpacity>
       </View>
     );
-
   }
 
   const handleModal = (item, index) => {
@@ -341,7 +340,11 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     dispatch(stateAction.get_companyID(data[0].id));
     setIsLoadingAction(false);
 
-    navigation.navigate('EditQuotation', {quotation, company: data[0],services});
+    navigation.navigate('EditQuotation', {
+      quotation,
+      company: data[0],
+      services,
+    });
   };
   const FilterButton = ({filter, isActive, onPress}) => {
     const displayText = filterLabels[filter] || filter;
@@ -387,37 +390,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             <Text style={styles.title}>
               ลูกค้า {selectedItem?.customer?.name}
             </Text>
-            <Pressable
-              onPress={() => {
-                setShowModal(false);
-                editQuotation(
-                  selectedItem.services,
-                  selectedItem.customer,
-                  selectedItem,
-                );
-              }}>
-              <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
-            </Pressable>
-            <View
-              style={{
-                width: '100%',
-                alignSelf: 'center',
-                borderBottomWidth: 0.5,
-                borderBottomColor: '#cccccc',
-              }}></View>
-            <Pressable
-              onPress={() => {
-                handleModal(item, index);
-                // navigation.navigate('Installment', {
-                //   data: {
-                //     total: Number(data.allTotal),
-                //     quotationId: data.id,
-                //     sellerId: data.sellerId,
-                //   },
-                // });
-              }}>
-              <Text style={styles.closeButtonText}>ทำสัญญา</Text>
-            </Pressable>
             <View
               style={{
                 width: '100%',
@@ -430,7 +402,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                 setShowModal(false);
                 navigation.navigate('DocViewScreen', {id: item.id});
               }}>
-              <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
+              <Text style={styles.ModalButtonText}>ดูตัวอย่าง</Text>
             </Pressable>
             <View
               style={{
@@ -439,37 +411,45 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                 borderBottomWidth: 0.5,
                 borderBottomColor: '#cccccc',
               }}></View>
-            <Pressable
-              onPress={() => {
-                setShowModal(false);
+            {selectedItem?.status === 'PENDING' && (
+              <>
+                <Pressable
+                  onPress={() => {
+                    setShowModal(false);
+                    editQuotation(
+                      selectedItem.services,
+                      selectedItem.customer,
+                      selectedItem,
+                    );
+                  }}>
+                  <Text style={styles.ModalButtonText}>แก้ไขเอกสาร</Text>
+                </Pressable>
+                <View
+                  style={{
+                    width: '100%',
+                    alignSelf: 'center',
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: '#cccccc',
+                  }}></View>
+                <Pressable
+                  onPress={() =>
+                    confirmRemoveQuotation(
+                      item.id,
+                      selectedItem?.customer?.name,
+                    )
+                  }>
+                  <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
+                </Pressable>
 
-                navigation.navigate('SelectWorks', {
-                  quotationId: item.id,
-                });
-              }}>
-              <Text style={styles.closeButtonText}>ส่งงาน</Text>
-            </Pressable>
-            <View
-              style={{
-                width: '100%',
-                alignSelf: 'center',
-                borderBottomWidth: 0.5,
-                borderBottomColor: '#cccccc',
-              }}></View>
-            <Pressable
-              onPress={() =>
-                confirmRemoveQuotation(item.id, selectedItem?.customer?.name)
-              }>
-              <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
-            </Pressable>
-
-            <View
-              style={{
-                width: '100%',
-                alignSelf: 'center',
-                borderBottomWidth: 0.5,
-                borderBottomColor: '#cccccc',
-              }}></View>
+                <View
+                  style={{
+                    width: '100%',
+                    alignSelf: 'center',
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: '#cccccc',
+                  }}></View>
+              </>
+            )}
           </Modal>
         ) : (
           <Modal
@@ -480,77 +460,66 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             // onBackdropPress={handleModalClose}
           >
             <Text style={styles.title}>ลูกค้า {item.customer?.name}</Text>
-            <TouchableOpacity
-              onPress={() => {
-                setShowModal(false);
-                editQuotation(
-                  selectedItem?.services,
-                  selectedItem?.customer,
-                  selectedItem,
-                );
-              }}>
-              <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
-            </TouchableOpacity>
             <View
               style={{
                 width: '100%',
                 alignSelf: 'center',
-                borderBottomWidth: 1,
+                borderBottomWidth: 0.5,
                 borderBottomColor: '#cccccc',
               }}></View>
-            <TouchableOpacity
-              onPress={() => {
-                setShowModal(false);
-                navigation.navigate('WebViewScreen', {id: item.id});
-              }}>
-              <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
-            </TouchableOpacity>
             <Pressable
               onPress={() => {
                 setShowModal(false);
-                handleYesResponse(index);
-                // handleModal(item, index);
-                // navigation.navigate('Installment', {
-                //   data: {
-                //     total: Number(data.allTotal),
-                //     quotationId: data.id,
-                //     sellerId: data.sellerId,
-                //   },
-                // });
+                navigation.navigate('DocViewScreen', {id: item.id});
               }}>
-              <Text style={styles.closeButtonText}>ทำสัญญา</Text>
+              <Text style={styles.ModalButtonText}>ดูตัวอย่าง</Text>
             </Pressable>
-            <Pressable
-              onPress={() => {
-                setShowModal(false);
+            <View
+              style={{
+                width: '100%',
+                alignSelf: 'center',
+                borderBottomWidth: 0.5,
+                borderBottomColor: '#cccccc',
+              }}></View>
+            {selectedItem?.status === 'PENDING' && (
+              <>
+                <Pressable
+                  onPress={() => {
+                    setShowModal(false);
+                    editQuotation(
+                      selectedItem.services,
+                      selectedItem.customer,
+                      selectedItem,
+                    );
+                  }}>
+                  <Text style={styles.ModalButtonText}>แก้ไขเอกสาร</Text>
+                </Pressable>
+                <View
+                  style={{
+                    width: '100%',
+                    alignSelf: 'center',
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: '#cccccc',
+                  }}></View>
+                <Pressable
+                  onPress={() =>
+                    confirmRemoveQuotation(
+                      item.id,
+                      selectedItem?.customer?.name,
+                    )
+                  }>
+                  <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
+                </Pressable>
 
-                navigation.navigate('SelectWorks', {
-                  quotationId: item.id,
-                });
-              }}>
-              <Text style={styles.closeButtonText}>ส่งงาน</Text>
-            </Pressable>
-            <View
-              style={{
-                width: '100%',
-                alignSelf: 'center',
-                borderBottomWidth: 1,
-                borderBottomColor: '#cccccc',
-              }}></View>
-            <Pressable
-              onPress={() =>
-                confirmRemoveQuotation(item.id, selectedItem?.customer?.name)
-              }>
-              <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
-            </Pressable>
-
-            <View
-              style={{
-                width: '100%',
-                alignSelf: 'center',
-                borderBottomWidth: 1,
-                borderBottomColor: '#cccccc',
-              }}></View>
+                <View
+                  style={{
+                    width: '100%',
+                    alignSelf: 'center',
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: '#cccccc',
+                  }}></View>
+              </>
+            )}
           </Modal>
         ))}
     </>
@@ -599,6 +568,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         />
       </View>
       {companyData && (
+
         <View
           style={{
             flex: 1,
@@ -630,13 +600,12 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       )}
 
       <FAB
-        icon='plus'
-        color='white'
-        
+        icon="plus"
+        color="white"
         // color="#012b20"
         style={{
           backgroundColor: '#1b52a7',
-          
+
           position: 'absolute',
           right: 16,
           bottom: 25,
@@ -715,19 +684,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  closeButtonText: {
+  ModalButtonText: {
     fontSize: 20,
     borderBottomWidth: 1,
     borderColor: 'white',
     paddingBottom: 10,
     paddingTop: 10,
+    fontWeight: 'bold',
+
     // fontWeight: 'bold',
     fontFamily: 'Sukhumvit set',
   },
   deleteButtonText: {
     fontSize: 18,
     borderBottomWidth: 1,
-    fontWeight: 'bold',
     textDecorationColor: 'red',
     color: 'red',
     borderColor: 'white',

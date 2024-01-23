@@ -35,8 +35,7 @@ import AddExistProduct from '../screens/products/addExistProduct';
 import EditSetting from '../screens/setting/editSetting';
 import EditQuotation from '../screens/quotation/edit';
 import ContractOption from '../screens/contract/contractOptions';
-import SignatureScreen from '../screens/utils/signature';
-import ExistingSignature from '../screens/utils/existingSignature';
+
 import Installment from '../screens/utils/installment';
 import FirstAppScreen from '../screens/register/firstAppScreen';
 import LoginScreen from '../screens/register/loginScreen';
@@ -51,6 +50,9 @@ import Selectworks from '../screens/submit/selectworks';
 import SendWorks from '../screens/submit/sendWorks';
 import DashboardDrawer from './dashboardDrawer';
 import ExistingContract from '../screens/contract/existingContract';
+import DashboardContract from '../screens/contract/dashboard';
+import TopUpScreen from '../screens/utils/topup';
+import BootSplash from "react-native-bootsplash";
 
 
 const Theme = {
@@ -92,7 +94,9 @@ const Navigation = ({initialRouteName}) => {
   }
 
   return (
-    <NavigationContainer theme={Theme}>
+    <NavigationContainer  onReady={() => {
+      BootSplash.hide();
+    }} theme={Theme}>
       <Stack.Navigator
         initialRouteName={initialRouteName}
         screenOptions={{
@@ -132,13 +136,14 @@ const Navigation = ({initialRouteName}) => {
             headerTintColor: 'black',
           }}
         />
-        <Stack.Screen
-          name="Signature"
-          component={SignatureScreen}
+       
+         <Stack.Screen
+          name="SelectWorks" 
+          component={Selectworks}
           options={{
             ...commonScreenOptions,
             headerShown: true,
-            title: 'เพิ่มลายเซ็นเอกสาร',
+            title: 'แจ้งส่งงานลูกค้า',
             headerBackTitleVisible: false,
             headerStyle: {
               backgroundColor: '#ffffff',
@@ -147,12 +152,12 @@ const Navigation = ({initialRouteName}) => {
           }}
         />
          <Stack.Screen
-          name="SelectWorks" 
-          component={Selectworks}
+          name="TopUpScreen" 
+          component={TopUpScreen}
           options={{
             ...commonScreenOptions,
             headerShown: true,
-            title: 'แจ้งส่งงานลูกค้า',
+            title: 'เติมเครดิต',
             headerBackTitleVisible: false,
             headerStyle: {
               backgroundColor: '#ffffff',
@@ -306,21 +311,7 @@ const Navigation = ({initialRouteName}) => {
             headerTintColor: 'black',
           }}
         />
-        <Stack.Screen
-          name="ExistingSignature"
-          component={ExistingSignature}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'เซ็นเอกสาร',
-            headerBackTitleVisible: false,
-
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
+       
      
         <Stack.Screen
           name="SelectContract"
@@ -342,7 +333,7 @@ const Navigation = ({initialRouteName}) => {
           component={EditQuotation}
           options={{
             ...commonScreenOptions,
-            headerShown: true,
+            headerShown: false,
             title: 'แก้ไขเอกสาร',
             headerBackTitleVisible: false,
 
@@ -403,6 +394,21 @@ const Navigation = ({initialRouteName}) => {
             ...commonScreenOptions,
             headerShown: true,
             title: 'รายละเอียดสัญญา',
+            headerBackTitleVisible: false,
+
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+         <Stack.Screen
+          name="DashboardContract"
+          component={DashboardContract}
+          options={{
+            ...commonScreenOptions,
+            headerShown: true,
+            title: 'รายการสัญญา',
             headerBackTitleVisible: false,
 
             headerStyle: {

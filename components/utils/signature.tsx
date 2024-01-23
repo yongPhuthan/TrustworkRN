@@ -13,6 +13,7 @@ import Signature from 'react-native-signature-canvas';
 import {
   View,
   StyleSheet,
+  Alert,
   ActivityIndicator,
   Image,
   TouchableOpacity,
@@ -29,6 +30,7 @@ import {
   CLOUDFLARE_R2_BUCKET_BASE_URL,
   CLOUDFLARE_DIRECT_UPLOAD_URL,
   CLOUDFLARE_R2_PUBLIC_URL,
+  BACK_END_SERVER_URL,
 } from '@env';
 import {Store} from '../../redux/store';
 import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
@@ -78,13 +80,58 @@ const SignatureComponent = ({
     state: {code},
     dispatch,
   }: any = useContext(Store);
-  const {mutate, isLoading} = useMutation(updateContract, {
-    onSuccess: () => {
-      queryClient.invalidateQueries(['contractDashboardData']);
-      if (onSignatureSuccess) onSignatureSuccess();
-    },
-    onError: error => {
-      console.error('Failed to upload the signature:', error);
+
+  const updateCompanySignature = async (data: any) => {
+    if (!user || !user.email) {
+      throw new Error('User or user email is not available');
+    }
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch(
+        `${BACK_END_SERVER_URL}/api/company/updateCompanySignature?code=${encodeURIComponent(
+          code,
+        )}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({data}),
+        },
+      );
+
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.indexOf('application/json') !== -1) {
+          const errorData = await response.json(); // Parse the error response only if it's JSON
+          throw new Error(errorData.message || 'Network response was not ok.');
+        } else {
+          throw new Error('Network response was not ok and not JSON.');
+        }
+      }
+
+      if (response.status === 200) {
+        return response.json();
+      } else {
+        const errorData = await response.json();
+        console.error('Response:', await response.text());
+        throw new Error(errorData.message || 'Network response was not ok.');
+      }
+    } catch (err) {
+      console.error('Error in updateContractAndQuotation:', err);
+      throw new Error(err);
+    }
+  };
+
+  const { mutate, isLoading } = useMutation(updateCompanySignature, {
+    onError: (error : any) => {
+      Alert.alert(
+        'Update Error',
+        `Server-side user creation failed: ${error.message}`,
+        [{ text: 'OK' }],
+        { cancelable: false }
+      );
     },
   });
   const companySignature = useWatch({
@@ -151,17 +198,32 @@ const SignatureComponent = ({
       if (!signature) {
         return;
       }
-      setIsImageUpload(true);
-      const imageUrl = await uploadFileToFirebase(signature);
-      if (!imageUrl) return;
-      setIsImageUpload(false);
-      setValue('companyUser.signature', imageUrl, {shouldDirty: true});
-      setValue('sellerSignature', imageUrl, {shouldDirty: true});
-      setCreateNewSignature(false);
-
-      onClose();
+  
+      try {
+        setIsImageUpload(true);
+        const imageUrl = await uploadFileToFirebase(signature);
+  
+        if (!imageUrl) {
+          throw new Error("Image upload failed");
+        }
+  
+        await mutate(imageUrl);
+        setValue('companyUser.signature', imageUrl, { shouldDirty: true });
+        setValue('sellerSignature', imageUrl, { shouldDirty: true });
+        setCreateNewSignature(false);
+      } catch (error) {
+        Alert.alert(
+          'Upload Error',
+          `An error occurred during the upload: ${error.message}`,
+          [{ text: 'OK' }],
+          { cancelable: false }
+        );
+      } finally {
+        setIsImageUpload(false);
+        onClose();
+      }
     },
-    [code],
+    [mutate, setValue, setCreateNewSignature, onClose]
   );
 
   const handleSave = (signatureUrl: string) => {
@@ -186,14 +248,14 @@ const SignatureComponent = ({
 
   return (
     <>
-      {isSignatureUpload ? (
+      {isSignatureUpload || isLoading ? (
         <ActivityIndicator style={styles.loadingContainer} size="large" />
       ) : !createNewSignature ? (
         <>
           <View style={styles.containerExist}>
             <View style={styles.textContainer}>
               <View style={styles.underline} />
-            
+
               {companySignature && (
                 <FastImage
                   style={styles.image}

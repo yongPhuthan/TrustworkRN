@@ -31,6 +31,7 @@ import {
   faSign,
   faFileCirclePlus,
   faSignature,
+  faCreditCard,
 } from '@fortawesome/free-solid-svg-icons';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import firebase from '../../firebase';
@@ -261,9 +262,11 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
           {/* Account */}
           <View style={{backgroundColor: '#fff', marginTop: 10}}>
             <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('TopUpScreen');
-              }}
+              // onPress={() => {
+              //   navigation.navigate('TopUpScreen', {
+              //     balance: credit,
+              //   });
+              // }}
               style={{paddingVertical: 16, paddingHorizontal: 24}}>
               <View
                 style={{
@@ -272,7 +275,7 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
                   justifyContent: 'space-between',
                 }}>
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <FontAwesomeIcon icon={faCoins} size={24} color="#F5A623" />
+                  <FontAwesomeIcon icon={faCreditCard} size={24} color="#1b72e8" />
 
                   <Text
                     style={{
@@ -289,18 +292,18 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
                     style={{
                       fontSize: 14,
                       fontWeight: '800',
-                      color: '#ed8022',
+                      color: '#1b72e8',
                       marginRight: 8,
                     }}>
                     {Number(credit)
                       .toFixed(2)
                       .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
                   </Text>
-                  <FontAwesomeIcon
+                  {/* <FontAwesomeIcon
                     icon={faChevronRight}
                     size={18}
                     color="#aaa"
-                  />
+                  /> */}
                 </View>
               </View>
             </TouchableOpacity>

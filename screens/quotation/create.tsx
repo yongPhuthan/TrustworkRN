@@ -118,7 +118,6 @@ const Quotation = ({navigation}: Props) => {
   const [serviceIndex, setServiceIndex] = useState(0);
   const quotationId = uuidv4();
   const [fcmToken, setFtmToken] = useState('');
-
   const [showEditServiceModal, setShowEditServiceModal] = useState(false);
   const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(
     null,
@@ -297,10 +296,7 @@ const Quotation = ({navigation}: Props) => {
       },
     },
   );
-  const companySignature = useWatch({
-    control: methods.control,
-    name: 'companyUser.signature',
-  });
+
   const handleValuesChange = (
     total: number,
     discountValue: number,
@@ -422,13 +418,6 @@ const Quotation = ({navigation}: Props) => {
     setSignatureModal(false)
     methods.setValue('sellerSignature','', {shouldDirty:true})
   }
-
-
-  console.log('signature', signature);
-  console.log('signatureModal', singatureModal);
-  console.log('pickerVisible', pickerVisible);
-console.log('watchCompany', methods.watch('companyUser.signature'))
-console.log('sellerSignature', methods.watch('sellerSignature'))
 
   return (
     <>

@@ -34,7 +34,7 @@ export type ParamListBase = {
     currentValue:Service | null
   };
   ExistingContract: undefined;
-  TopUpScreen: undefined;
+  TopUpScreen: {balance:number};
   LayoutScreen: undefined;
   CreateContractScreen: {id: string};
   HomeScreen: undefined;
@@ -50,6 +50,8 @@ export type ParamListBase = {
     quotationId: string;  
   };
   DashboardQuotation: undefined;
+  DashboardContract: undefined;
+
   SelectContract: {id: string};
   EditProductForm: {
     index: number;
