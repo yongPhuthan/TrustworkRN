@@ -35,7 +35,7 @@ const FirstAppScreen = ({ navigation }) => {
     return (
         <View style={{ flex: 1,justifyContent: 'center', // Aligns children vertically in the center
         alignItems: 'center', flexDirection:'column',  }}>
-            <Text style={styles.logo}>Trusthwork</Text>
+            <Text style={styles.logo}>Trustwork</Text>
                 <Image
                     style={styles.image}
                     source={require('../../assets/images/Buildingpermit-bro.png')}

@@ -149,11 +149,6 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>RNBootSplash.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
 		<key>RNCAsyncStorage.xcscheme</key>
 		<dict>
 			<key>isShown</key>
@@ -490,11 +485,6 @@
 			<false/>
 		</dict>
 		<key>react-native-netinfo.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>react-native-payments.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>

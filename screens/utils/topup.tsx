@@ -2,7 +2,6 @@ import React, {useState} from 'react';
 import {View, StyleSheet, Alert, TouchableOpacity, Platform} from 'react-native';
 import {Button, Text, Card, Avatar} from 'react-native-paper';
 import {IconButton, MD3Colors} from 'react-native-paper';
-import { ApplePay } from '@react-native-community/apple-pay'; // Make sure to use the correct package
 import {PaymentRequest} from '@rnw-community/react-native-payments';
 
 import ApplePayButton from '../../components/ui/Button/ApplePayButton';
@@ -40,8 +39,8 @@ const initiateApplePay = async (amount: number) => {
         handleApplePaySuccess(applePayResponse);
       } else if (Platform.OS === 'android') {
         // Initiate Google Pay
-        const googlePayResponse = await initiateGooglePay(amount);
-        handleGooglePaySuccess(googlePayResponse);
+        // const googlePayResponse = await initiateGooglePay(amount);
+        // handleGooglePaySuccess(googlePayResponse);
       }
     } catch (error) {
       handlePaymentError(error);
@@ -56,6 +55,7 @@ const initiateApplePay = async (amount: number) => {
 
   const handleApplePaySuccess = (paymentResponse: any) => {
     // Handle successful Apple Pay
+    
   };
 
   const handleGooglePaySuccess = (paymentResponse: any) => {

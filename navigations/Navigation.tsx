@@ -52,7 +52,7 @@ import DashboardDrawer from './dashboardDrawer';
 import ExistingContract from '../screens/contract/existingContract';
 import DashboardContract from '../screens/contract/dashboard';
 import TopUpScreen from '../screens/utils/topup';
-import BootSplash from "react-native-bootsplash";
+// import BootSplash from "react-native-bootsplash";
 
 
 const Theme = {
@@ -94,9 +94,10 @@ const Navigation = ({initialRouteName}) => {
   }
 
   return (
-    <NavigationContainer  onReady={() => {
+    <NavigationContainer theme={Theme}>
+     {/* <NavigationContainer  onReady={() => {
       BootSplash.hide();
-    }} theme={Theme}>
+     }} theme={Theme}> */}
       <Stack.Navigator
         initialRouteName={initialRouteName}
         screenOptions={{

@@ -2,7 +2,6 @@
 import React, {useState} from 'react';
 import {
   View,
-  TextInput,
   ActivityIndicator,
   SafeAreaView,
   Text,
@@ -18,39 +17,45 @@ import {ParamListBase} from '../../types/navigationType';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useEffect} from 'react';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-
+import {TextInput, List} from 'react-native-paper';
+import {useForm, FormProvider, Controller, useWatch} from 'react-hook-form';
+import * as yup from 'yup';
+import {yupResolver} from '@hookform/resolvers/yup';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {
-  faArrowLeft,
+import {faArrowLeft} from '@fortawesome/free-solid-svg-icons';
+import {Button} from 'react-native-paper';
 
-} from '@fortawesome/free-solid-svg-icons';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'LoginScreen'>;
 }
+const schema = yup.object().shape({
+  email: yup
+    .string()
+    .email('รูปแบบอีเมลล์ไม่ถูกต้อง')
+    .required('กรุณากรอกอีเมลล์'),
+  password: yup.string().required('กรุณากรอกรหัสผ่าน'),
+});
 const LoginScreen = ({navigation}: Props) => {
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    // Set up a background task or a timer to refresh the token every hour
-    const interval = setInterval(async () => {
-      const user = auth().currentUser;
-      if (user) {
-        const newToken = await user.getIdToken(true);
-        await AsyncStorage.setItem('userToken', newToken);
-      }
-    }, 3600000);
-
-    return () => clearInterval(interval);
-  }, []);
-  const isEmailValid = email => {
-    const emailRegex = /\S+@\S+\.\S+/;
-    return emailRegex.test(email);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
   };
 
-  const isFormValid = isEmailValid(email) && password.length > 0;
-
+  const {
+    handleSubmit,
+    control,
+    formState: {isValid, isDirty, errors},
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+    resolver: yupResolver(schema),
+  });
+  const email = useWatch({control, name: 'email'});
+  const password = useWatch({control, name: 'password'});
   const handleLogin = async () => {
     setIsLoading(true);
 
@@ -81,49 +86,80 @@ const LoginScreen = ({navigation}: Props) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{marginTop: 10, paddingHorizontal: 10}}>
       {/* Back Arrow Button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}>
         <FontAwesomeIcon icon={faArrowLeft} size={26} color="#5C5F62" />
       </TouchableOpacity>
+      <View
+        style={{marginTop: 40, paddingHorizontal: 20, alignContent: 'center'}}>
+        <Text style={styles.title}>Trustwork</Text>
+        <Text style={styles.subtitle}>เข้าสู่ระบบ</Text>
 
-      <Text style={styles.title}>Trusthwork</Text>
-      <TextInput
-        placeholder="อีเมล"
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        placeholder="รหัสผ่าน"
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <Pressable
-        disabled={!isFormValid || isLoading}
-        style={[
-          styles.button,
-          (!isFormValid || isLoading) && styles.buttonDisabled,
-        ]}
-        onPress={handleLogin}>
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#FFF" />
-        ) : (
-          <Text
-            style={[
-              styles.buttonText,
-              (!isFormValid || isLoading) && styles.buttonTextDisabled,
-            ]}>
-            เข้าสู่ระบบ
-          </Text>
-        )}
-      </Pressable>
+        <Controller
+          name="email"
+          control={control}
+          render={({field: {onBlur, onChange, value}, fieldState: {error}}) => (
+            <View style={{marginBottom: 20}}>
+              <TextInput
+                onChangeText={onChange}
+                onBlur={onBlur}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={value}
+                error={!!error}
+                label={'อีเมล'}
+                mode="outlined"
+              />
+            </View>
+          )}
+        />
+        <Controller
+          name="password"
+          control={control}
+          render={({field: {onBlur, onChange, value}, fieldState: {error}}) => (
+            <View style={{marginBottom: 20}}>
+              <TextInput
+                onChangeText={onChange}
+                onBlur={onBlur}
+                value={value}
+                error={!!error}
+                secureTextEntry={!passwordVisible}
+                autoCapitalize="none"
+                keyboardType="default"
+                label={'รหัสผ่าน'}
+                mode="outlined"
+                right={
+                  <TextInput.Icon
+                    icon={passwordVisible ? 'eye-off' : 'eye'}
+                    onPress={togglePasswordVisibility}
+                  />
+                }
+              />
+              {error && <Text style={styles.errorText}>{error.message}</Text>}
+            </View>
+          )}
+        />
+
+<Button
+          mode="contained"
+          style={[
+            styles.pressable,
+            styles.getStartedButton,
+            !isValid && styles.disabledButton,
+          ]}
+          onPress={handleLogin}
+          disabled={!isValid}>
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Text style={styles.pressableText}>เข้าสู่ระบบ</Text>
+          )}
+        </Button>
+       
+      </View>
     </SafeAreaView>
   );
 };
@@ -151,7 +187,17 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: 'black',
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 18,
+    color: 'black',
+    fontWeight: 'bold',
     marginBottom: 32,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: 'red',
   },
   input: {
     width: '90%',
@@ -161,6 +207,28 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginBottom: 12,
     backgroundColor: '#f9f9f9',
+  },
+  pressable: {
+    width: '100%',
+    borderRadius: 4,
+    marginVertical: 20,
+  },
+  getStartedButton: {
+    backgroundColor: '#012b20',
+  },
+
+  pressableText: {
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  pressableTextLogin: {
+    color: '#5C5F62',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   button: {
     width: '90%',
