@@ -14,6 +14,7 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		D14D17139048B705B816106C /* Pods_Trustwork_TrustworkTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A60D4EC04D8EA3C1D7DD5B8C /* Pods_Trustwork_TrustworkTests.framework */; };
 		F208AE242A8F5CF200C19159 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F208AE232A8F5CF200C19159 /* GoogleService-Info.plist */; };
+		F2A9D2742B62C1A000E4959C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F2A9D2732B62C19F00E4959C /* Images.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +45,7 @@
 		DEE6241ABC0FDE01DBD75A23 /* Pods-Trustwork-TrustworkTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trustwork-TrustworkTests.debug.xcconfig"; path = "Target Support Files/Pods-Trustwork-TrustworkTests/Pods-Trustwork-TrustworkTests.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F208AE232A8F5CF200C19159 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		F2A9D2732B62C19F00E4959C /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Trustwork/Images.xcassets; sourceTree = "<group>"; };
 		F2B282BB2B3D471900BB5880 /* Trustwork.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Trustwork.entitlements; path = Trustwork/Trustwork.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -87,6 +89,7 @@
 		13B07FAE1A68108700A75B9A /* Trustwork */ = {
 			isa = PBXGroup;
 			children = (
+				F2A9D2732B62C19F00E4959C /* Images.xcassets */,
 				F2B282BB2B3D471900BB5880 /* Trustwork.entitlements */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
@@ -245,6 +248,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F2A9D2742B62C1A000E4959C /* Images.xcassets in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				F208AE242A8F5CF200C19159 /* GoogleService-Info.plist in Resources */,
 			);
@@ -504,11 +508,13 @@
 				CODE_SIGN_ENTITLEMENTS = Trustwork/Trustwork.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 92GKXCZ693;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Trustwork/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Trustwork;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -539,10 +545,12 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 92GKXCZ693;
 				INFOPLIST_FILE = Trustwork/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Trustwork;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
