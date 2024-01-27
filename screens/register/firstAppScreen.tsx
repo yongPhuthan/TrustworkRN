@@ -35,13 +35,13 @@ const FirstAppScreen = ({ navigation }) => {
     return (
         <View style={{ flex: 1,justifyContent: 'center', // Aligns children vertically in the center
         alignItems: 'center', flexDirection:'column',  }}>
-            <Text style={styles.logo}>Trustwork</Text>
+            <Text style={styles.logo}>TRUSTH</Text>
                 <Image
                     style={styles.image}
                     source={require('../../assets/images/Buildingpermit-bro.png')}
                 />
                 <Text style={styles.heading}>ระบบเสนอราคาเพื่อปิดการขาย</Text>
-                <Text style={styles.heading}>สำหรับผู้รับเหมามืออาชีพ</Text>
+                <Text style={styles.heading}>สำหรับช่าง-ผู้รับเหมาช่วง</Text>
     
             <View style={{
                

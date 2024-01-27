@@ -37,7 +37,7 @@ function CustomDrawerContent(props) {
           alignItems: 'flex-start',
         }}>
         <Text style={{fontSize: 20, fontWeight: 'bold', color: '#1b72e8'}}>
-          Trusthwork
+        TRUSTH
         </Text>
       </View>
       <Divider style={{marginBottom: 20}} />

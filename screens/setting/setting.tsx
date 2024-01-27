@@ -268,7 +268,7 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
               //   });
               // }}
               style={{paddingVertical: 16, paddingHorizontal: 24}}>
-              <View
+              {/* <View
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -299,13 +299,13 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
                       .toFixed(2)
                       .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
                   </Text>
-                  {/* <FontAwesomeIcon
+                  <FontAwesomeIcon
                     icon={faChevronRight}
                     size={18}
                     color="#aaa"
-                  /> */}
+                  />
                 </View>
-              </View>
+              </View> */}
             </TouchableOpacity>
             <Divider />
             <TouchableOpacity

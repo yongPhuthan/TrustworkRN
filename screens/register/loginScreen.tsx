@@ -95,7 +95,7 @@ const LoginScreen = ({navigation}: Props) => {
       </TouchableOpacity>
       <View
         style={{marginTop: 40, paddingHorizontal: 20, alignContent: 'center'}}>
-        <Text style={styles.title}>Trustwork</Text>
+        <Text style={styles.title}>TRUSTH</Text>
         <Text style={styles.subtitle}>เข้าสู่ระบบ</Text>
 
         <Controller
