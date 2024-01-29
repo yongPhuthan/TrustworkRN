@@ -11,7 +11,7 @@ import {
   FlatList,
   Pressable,
 } from 'react-native';
-import {CheckBox} from '@rneui/themed';
+import {Checkbox} from 'react-native-paper';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {
   faCloudUpload,
@@ -184,12 +184,11 @@ console.log(data)
                     : null,
                 ]}
                 onPress={() => handleSelectWorker(item)}>
-                <CheckBox
-                  center
-                  checked={currentWorkers.some( worker => worker.id === item.id)}
+                <Checkbox.Android
+                  
+                  status={currentWorkers.some( worker => worker.id === item.id) ? 'checked' : 'unchecked'}
                   onPress={() => handleSelectWorker(item)}
-                  containerStyle={styles.checkboxContainer}
-                  checkedColor="#012b20"
+                  style={styles.checkboxContainer}
                 />
                 <View style={styles.textContainer}>
                   <Text style={styles.productTitle}>{item.name}</Text>

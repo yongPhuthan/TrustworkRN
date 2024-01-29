@@ -2,7 +2,7 @@ import React, {useState, useCallback, useContext} from 'react';
 import {
   View,
   Text,
-  TextInput,
+
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
@@ -12,7 +12,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {CheckBox} from '@rneui/themed';
+import {Checkbox,TextInput} from 'react-native-paper';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faCamera, faClose} from '@fortawesome/free-solid-svg-icons';
 import {ParamListBase, ProductItem} from '../../types/navigationType';
@@ -261,6 +261,7 @@ const AddNewWorker = ({isVisible, onClose}: ExistingModalProps) => {
       </View>
       <Controller
         control={control}
+        
         name="image"
         rules={{required: 'Image is required'}} // Add required rule here
         render={({field: {onChange, value}}) => (
@@ -276,55 +277,66 @@ const AddNewWorker = ({isVisible, onClose}: ExistingModalProps) => {
         )}
       />
 
-      <Text style={styles.label}>ชื่อ-นามสกุล </Text>
-      {errors.name && <Text>**</Text>}
+
       <Controller
         control={control}
         name="name"
         rules={{required: true}}
-        render={({field: {onChange, onBlur, value}}) => (
+        render={({field: {onChange, onBlur, value},fieldState:{error}}) => (
           <TextInput
-            placeholder="ชื่อจริง นามสกุล ช่าง"
+          mode='outlined'
+          label={'ชื่อ-นามสกุลช่าง'}
+          error={!!error}
+            style={{marginBottom: 20}}
             onBlur={onBlur}
             onChangeText={onChange}
             value={value}
-            style={styles.input}
           />
         )}
       />
 
       {/* Description Input */}
-      <Text style={styles.label}>เป็นช่างอะไร</Text>
-      {errors.mainSkill && <Text>**</Text>}
+  
       <Controller
         control={control}
         name="mainSkill"
         rules={{required: true}}
-        render={({field: {onChange, onBlur, value}}) => (
+        render={({field: {onChange, onBlur, value},fieldState:{error}}) => (
           <TextInput
-            placeholder="เช่น ช่างอลูมิเนียม"
+          mode='outlined'
+          label={'เป็นช่างอะไร ?'}
+          error={!!error}
+            placeholder="เช่น ช่างอลูมิเนียม..."
             onBlur={onBlur}
             onChangeText={onChange}
             value={value}
-            style={styles.input}
+            // style={styles.input}
           />
         )}
       />
+                  <Text style={{marginTop:30, fontSize:16,alignItems: 'center'}}>สถาณะ</Text>
+
       <Controller
         control={control}
         name="workerStatus"
         render={({field: {onChange, value}}) => (
           <View style={styles.checkBoxContainer}>
-            <CheckBox
-              title="ช่างหลักประจำทีม"
-              checked={value === WorkerStatus.MAINWORKER}
+            <View style={{flexDirection:'row',alignItems: 'center'}}>
+            <Checkbox.Android
+              status={value === WorkerStatus.MAINWORKER ? 'checked' : 'unchecked'}
               onPress={() => onChange(WorkerStatus.MAINWORKER)}
             />
-            <CheckBox
-              title="ช่างทั่วไป"
-              checked={value === WorkerStatus.OUTSOURCE}
+            <Text style={{fontSize:16}}>ช่างหลักประจำทีม</Text>
+            </View>
+            <View style={{flexDirection:'row',alignItems: 'center'}}>
+
+            <Checkbox.Android
+            
+              status={value === WorkerStatus.OUTSOURCE ? 'checked' : 'unchecked'}
               onPress={() => onChange(WorkerStatus.OUTSOURCE)}
             />
+            <Text style={{fontSize:16}}>ช่างทั่วไป</Text>
+            </View>
           </View>
         )}
       />
@@ -404,6 +416,9 @@ const styles = StyleSheet.create({
   checkBoxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginTop: 10,
+    marginBottom: 20,
   },
 });
 

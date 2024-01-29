@@ -49,9 +49,9 @@ import {
   faClose,
   faClosedCaptioning,
 } from '@fortawesome/free-solid-svg-icons';
+import {Divider,} from 'react-native-paper';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import SaveButton from '../../components/ui/Button/SaveButton';
-import {Divider} from '@rneui/base';
 import {useImageUpload} from '../../hooks/utils/image/useUploadToFirebase';
 type Props = {
   navigation: StackNavigationProp<ParamListBase>;

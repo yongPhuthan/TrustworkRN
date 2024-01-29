@@ -2,7 +2,6 @@ import React, {useState} from 'react';
 import {View, StyleSheet, Alert, TouchableOpacity, Platform} from 'react-native';
 import {Button, Text, Card, Avatar} from 'react-native-paper';
 import {IconButton, MD3Colors} from 'react-native-paper';
-import {PaymentRequest} from '@rnw-community/react-native-payments';
 
 import ApplePayButton from '../../components/ui/Button/ApplePayButton';
 import GooglePayButton from '../../components/ui/Button/GooglePayButton';

@@ -1,7 +1,13 @@
 import React, {useState, useContext, useEffect} from 'react';
 import {View, Text, Image, StyleSheet} from 'react-native';
-import {CheckBox} from '@rneui/themed';
-import { faCheck, faPlus, faSquare, faSquareCheck, faSquareFull } from '@fortawesome/free-solid-svg-icons';
+import {Checkbox} from 'react-native-paper';
+import {
+  faCheck,
+  faPlus,
+  faSquare,
+  faSquareCheck,
+  faSquareFull,
+} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {Store} from '../redux/store';
 type CardProps = {
@@ -37,41 +43,36 @@ const CardAudit = ({
   }, [defaultChecked]);
   const UncheckedIcon = () => {
     return (
-      <View style={{
-        borderWidth: 1, 
-        borderColor: '#808080', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        width: 22, 
-        height: 22, 
-        borderRadius: 3 // Optional: if you want rounded corners
-      }}>
+      <View
+        style={{
+          borderWidth: 1,
+          borderColor: '#808080',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: 22,
+          height: 22,
+          borderRadius: 3, // Optional: if you want rounded corners
+        }}>
         <FontAwesomeIcon icon={faSquare} size={20} color="white" />
       </View>
     );
   };
-  
+
   return (
     <View style={[styles.container, checked && styles.selected]}>
-      
       <View style={styles.titleContainer}>
-        <CheckBox
-        checkedIcon={<FontAwesomeIcon icon={faSquareCheck} size={20} color="black" />}
-        uncheckedIcon={<UncheckedIcon />}
-
-          checked={checked}
+        <Checkbox.Android
+          status={checked ? 'checked' : 'unchecked'}
           onPress={handleCheckbox}
-          checkedColor="#012b20"
         />
         <Text style={styles.title}>{title}</Text>
       </View>
       <View style={styles.underline} />
       <Text style={styles.description}>{content}</Text>
-  
+
       <Image style={styles.image} source={{uri: imageUri}} />
     </View>
   );
-  
 };
 export default CardAudit;
 const styles = StyleSheet.create({
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderWidth: 1,
     borderColor: 'transparent',
-    padding: 10, 
+    padding: 10,
   },
   selected: {
     borderColor: '#012b20',
@@ -97,12 +98,12 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10, 
+    marginBottom: 10,
   },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    flex: 1, 
+    flex: 1,
     marginLeft: 10, // Add space between checkbox and title
   },
   description: {
@@ -120,4 +121,3 @@ const styles = StyleSheet.create({
     resizeMode: 'contain', // Ensure the image fits within the dimensions
   },
 });
-

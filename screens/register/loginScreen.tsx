@@ -15,13 +15,11 @@ import {HOST_URL, BACK_END_SERVER_URL, PROJECT_FIREBASE} from '@env';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {ParamListBase} from '../../types/navigationType';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useEffect} from 'react';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {TextInput, List} from 'react-native-paper';
 import {useForm, FormProvider, Controller, useWatch} from 'react-hook-form';
 import * as yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {faArrowLeft} from '@fortawesome/free-solid-svg-icons';
 import {Button} from 'react-native-paper';
 

@@ -11,7 +11,6 @@ import {
   Pressable,
   ScrollView,
 } from 'react-native';
-import {CheckBox} from '@rneui/themed';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {
   faCloudUpload,
@@ -36,7 +35,7 @@ import {useUser} from '../../providers/UserContext';
 import {Store} from '../../redux/store';
 import {useForm, Controller, set} from 'react-hook-form';
 
-import {Divider} from '@rneui/base';
+import {Divider,CheckBox} from 'react-native-paper';
 type Props = {
   navigation: StackNavigationProp<ParamListBase>;
   route: RouteProp<ParamListBase, 'SelectWorks'>;

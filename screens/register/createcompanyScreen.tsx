@@ -25,10 +25,7 @@ import {
 
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import React, {useState, useEffect, useCallback} from 'react';
-import {
-  MultipleSelectList,
-  SelectList,
-} from 'react-native-dropdown-select-list';
+
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faCloudUpload, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
 import {
@@ -46,13 +43,7 @@ import {v4 as uuidv4} from 'uuid';
 import {useForm, FormProvider, Controller, useWatch} from 'react-hook-form';
 
 import {
-  HOST_URL,
-  CLOUDFLARE_WORKER_DEV,
-  PROJECT_FIREBASE,
-  CLOUDFLARE_WORKER,
-  CLOUDFLARE_R2_BUCKET_BASE_URL,
-  FIREBASE_STORAGE_PUBLIC_URL,
-  CLOUDFLARE_R2_PUBLIC_URL,
+
   BACK_END_SERVER_URL,
 } from '@env';
 import {ParamListBase} from '../../types/navigationType';
