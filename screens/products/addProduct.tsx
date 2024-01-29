@@ -22,7 +22,6 @@ import {
   Pressable,
 } from 'react-native';
 
-import {Header as HeaderRNE, HeaderProps} from '@rneui/themed';
 import {
   useForm,
   FormProvider,
@@ -176,7 +175,8 @@ const AddProductForm = ({navigation, route}: Props) => {
         />
         <Appbar.Content
           title="เพิ่มสินค้า-บริการ"
-          titleStyle={{fontSize: 20}}
+          titleStyle={{fontSize: 20,      fontFamily: 'Sukhumvit Set Bold',
+        }}
         />
         <Button
           // loading={postLoading}

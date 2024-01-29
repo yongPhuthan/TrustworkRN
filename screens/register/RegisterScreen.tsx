@@ -245,7 +245,7 @@ const RegisterScreen = ({navigation}: Props) => {
           throw new Error('Failed to create user on the server');
         }
 
-        const responseData = await response.json();
+        await response.json();
         navigation.navigate('CreateCompanyScreen');
 
         setUserLoading(false);

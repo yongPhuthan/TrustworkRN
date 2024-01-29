@@ -17,9 +17,10 @@ function withAuthCheck<T>(WrappedComponent: ComponentType<T>) {
         const unsubscribe = auth().onAuthStateChanged(currentUser => {
           console.log('Auth State Changed: ', currentUser);
           if(currentUser){
-            console.log('currentUser:333 ', currentUser);
             setUser(currentUser);
             setLoading(false);
+            // setInitialRouteName(currentUser ? 'CreateCompanyScreen' : 'FirstAppScreen');
+
             setInitialRouteName(currentUser ? 'DashboardQuotation' : 'FirstAppScreen');
           }
           else{

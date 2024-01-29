@@ -178,7 +178,7 @@ const EditDefaultContract = ({navigation, route}: Props) => {
   const {data, isLoading, isError} = useQuery({
     queryKey: ['ContractByQuotationId', quotationId],
     queryFn: fetchContractByQuotation,
-    enabled: !!user,
+    // enabled: !!user,
     onSuccess: data => {
       if (data) {
         setContract(data.contract as any);

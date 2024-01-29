@@ -259,7 +259,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   } = useQuery({
     queryKey: ['dashboardData'],
     queryFn: fetchDashboardData,
-    enabled: !!user,
+    // enabled: !!user,
     onSuccess: data => {
       setCompanyData(data[0]);
       setQuotationData(data[1]);

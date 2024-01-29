@@ -6,19 +6,24 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
-  
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Button,
   ActivityIndicator,
   Dimensions,
-  TextInput,
 } from 'react-native';
+import {
+  TextInput,
+  List,
+  Text as TextPaper,
+  Checkbox,
+  Appbar,
+  ProgressBar,
+  RadioButton,
+  Button,
+} from 'react-native-paper';
 
-import {CheckBox} from '@rneui/themed';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import CryptoJS from 'crypto-js';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import React, {useState, useEffect, useCallback} from 'react';
 import {
   MultipleSelectList,
@@ -38,6 +43,7 @@ import {useMutation, useQuery} from '@tanstack/react-query';
 import storage from '@react-native-firebase/storage';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {v4 as uuidv4} from 'uuid';
+import {useForm, FormProvider, Controller, useWatch} from 'react-hook-form';
 
 import {
   HOST_URL,
@@ -52,15 +58,29 @@ import {
 import {ParamListBase} from '../../types/navigationType';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {useUser} from '../../providers/UserContext';
-
+import {companyValidationSchema} from '../utils/validationSchema';
+import * as yup from 'yup';
+import {yupResolver} from '@hookform/resolvers/yup';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'RegisterScreen'>;
 }
 interface ImageResponse extends ImagePickerResponse {
   assets?: Asset[];
 }
-const screenWidth = Dimensions.get('window').width;
 
+interface Category {
+  key: string;
+  value: string;
+}
+
+
+const screenWidth = Dimensions.get('window').width;
+const checkboxStyle = {
+  borderRadius: 5, // Rounded corners
+  borderWidth: 1, // Border width
+  borderColor: 'grey', // Border color
+  backgroundColor: 'white', // Background color
+};
 const createCompanySeller = async ({data, token}) => {
   if (!token) {
     throw new Error('Auth token is not provided.');
@@ -91,49 +111,110 @@ const createCompanySeller = async ({data, token}) => {
 };
 
 
-
 const CreateCompanyScreen = ({navigation}: Props) => {
-  const [bizName, setBizName] = useState('');
-  const [companyName, setCompanyName] = useState<string>('');
-  const [officeTel, setOfficeTel] = useState<string>('');
-  const [mobileTel, setMobileTel] = useState<string>('');
+
   const [page, setPage] = useState<number>(1);
-  const [taxID, setTaxID] = useState<string>('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [registrationCode, setRegistrationCode] = useState('');
-  const [logo, setLogo] = useState<string>('');
-  const [bizType, setBizType] = useState('individual');
-  const [selectedCategories, setSelectedCategories] = useState<object[]>([]);
   const [isImageUpload, setIsImageUpload] = useState(false);
-  const [userPosition, setUserPosition] = useState<string>('');
-  const [address, setAddress] = useState<string>('');
-  const [userLastName, setUserLastName] = useState<string>('');
-  const [userName, setUserName] = useState<string>('');
+
   const [categories, setCategories] = useState([]);
-  const [responseLog, setResponseLog] = useState<string | null>(null);
   const [code, setCode] = useState<string | null>(null);
-  const windowWidth = Dimensions.get('window').width;
   const [userLoading, setUserLoading] = useState(false);
   const user = useUser();
-  const [error, setError] =
-    useState<FirebaseAuthTypes.NativeFirebaseAuthError | null>(null);
-  const isNextDisabledPage1 =
-    !bizName || !userName || !userLastName || !selectedCategories.length;
-  const isNextDisabledPage2 = !address || !mobileTel;
 
+  const {
+    handleSubmit,
+    setValue,
+    control,
+    formState: {isValid, isDirty, errors},
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      bizName: '',
+      userName: '',
+      userLastName: '',
+      userPosition: '',
+      category: '',
+      address: '',
+      officeTel: '',
+      mobileTel: '',
+      bizType: '',
+      logo: '',
+      companyNumber: '',
+    },
+    resolver: yupResolver(companyValidationSchema),
+  });
+  const logo = useWatch({
+    control,
+    name: 'logo',
+  });
+  const bizName = useWatch({
+    control,
+    name: 'bizName',
+  });
+  const userName = useWatch({
+    control,
 
+    name: 'userName',
+  });
+  const userLastName = useWatch({
+    control,
 
+    name: 'userLastName',
+  });
+
+  const bizType = useWatch({
+    control,
+
+    name: 'bizType',
+  });
+  const companyNumber = useWatch({
+    control,
+
+    name: 'companyNumber',
+  });
+  const category = useWatch({
+    control,
+    name: 'category'});
+
+const userPosition = useWatch({
+    control,
+
+    name: 'userPosition',
+  });
+  const address = useWatch({
+    control,
+
+    name: 'address',
+  });
+  const mobileTel = useWatch({
+    control,
+
+    name: 'mobileTel',
+  });
+  const officeTel = useWatch({
+    control,
+
+    name: 'officeTel',
+  });
+  const isNextDisabledPage1 = !bizName || !userName || !userLastName || !userPosition || !bizType;
+
+  // !bizName || !userName || !userLastName || !selectedCategories.length;
+  const isNextDisabledPage2 = !address || !mobileTel
   useEffect(() => {
     setCode(Math.floor(100000 + Math.random() * 900000).toString());
     const API_URL = `${BACK_END_SERVER_URL}/api/company/getCategories`;
 
     fetch(API_URL)
-    .then(response => response.json())
-    .then(data => setCategories(data.map(category => ({ key: category.id.toString(), value: category.name }))))
-    .catch(error => console.error('Error fetching categories:', error));
-
+      .then(response => response.json())
+      .then(data =>
+        setCategories(
+          data.map(category => ({
+            key: category.id.toString(),
+            value: category.name,
+          })),
+        ),
+      )
+      .catch(error => console.error('Error fetching categories:', error));
   }, []);
   const handleNextPage = () => {
     setPage(page + 1);
@@ -174,6 +255,7 @@ const CreateCompanyScreen = ({navigation}: Props) => {
         const source = response.assets[0].uri;
         if (source) {
           uploadImageToServer(source);
+          setValue('logo', source);
         }
       } else {
         // Handle the case where assets are undefined
@@ -237,7 +319,7 @@ const CreateCompanyScreen = ({navigation}: Props) => {
         storagePath,
       )}?alt=media`;
 
-      setLogo(accessUrl);
+      setValue('logo',accessUrl);
     } catch (error) {
       console.error('Error uploading image:', error);
     } finally {
@@ -245,77 +327,101 @@ const CreateCompanyScreen = ({navigation}: Props) => {
     }
   };
 
-  const handleFunction = async () => {
+  const handleSave = async () => {
     const data = {
       bizName,
       userName,
       userLastName,
       code,
       userPosition,
-      categoryId: Number(selectedCategories),
+      categoryId: Number(category),
       address,
       officeTel,
       mobileTel,
       email: user?.email,
       bizType,
-      logo: logo ? logo : 'NONE',
-      companyNumber: taxID,
+      logo: logo ? logo : '',
+      companyNumber,
     };
-    console.log(data);
     mutate({data, token: user?.uid});
   };
-  console.log('categories',categories)
-
+  console.log('category', category)
   const renderPage = () => {
     switch (page) {
       case 1:
         return (
           <ScrollView style={{marginTop: 10, paddingHorizontal: 10}}>
-            <Text style={styles.title}> ลงทะเบียนธุรกิจ</Text>
-            <TouchableOpacity
-              style={{
-                alignItems: 'center',
-                marginBottom: 20,
-                borderColor: 'gray',
-                borderWidth: 1,
-                borderRadius: 10,
-                borderStyle: 'dotted',
-                marginHorizontal: 100,
-                padding: 10,
-              }}
-              onPress={selectImage}>
-              {isImageUpload ? (
-                <ActivityIndicator size="small" color="gray" />
-              ) : logo ? (
-                <Image
-                  source={{uri: logo}}
-                  style={{width: 100, aspectRatio: 1, resizeMode: 'contain'}}
-                  onError={e =>
-                    console.log('Failed to load image:', e.nativeEvent.error)
-                  }
-                />
-              ) : (
-                <View>
-                  <FontAwesomeIcon
-                    icon={faCloudUpload}
-                    style={{marginVertical: 5, marginHorizontal: 50}}
-                    size={32}
-                    color="gray"
+            <Controller
+              control={control}
+              name="logo"
+              render={({field: {onChange, value}}) => (
+                <TouchableOpacity
+                  style={{
+                    alignItems: 'center',
+                    marginBottom: 20,
+                    borderColor: 'gray',
+                    borderWidth: 1,
+                    borderRadius: 10,
+                    borderStyle: 'dotted',
+                    marginHorizontal: 100,
+                    padding: 10,
+                  }}
+                  onPress={selectImage}>
+                  {isImageUpload ? (
+                    <ActivityIndicator size="small" color="gray" />
+                  ) : value ? (
+                    <Image
+                      source={{uri: value}}
+                      style={{
+                        width: 100,
+                        aspectRatio: 1,
+                        resizeMode: 'contain',
+                      }}
+                      onError={e =>
+                        console.log(
+                          'Failed to load image:',
+                          e.nativeEvent.error,
+                        )
+                      }
+                    />
+                  ) : (
+                    <View>
+                      <FontAwesomeIcon
+                        icon={faCloudUpload}
+                        size={32}
+                        color="gray"
+                        style={{marginVertical: 5, marginHorizontal: 50}}
+                      />
+                      <Text style={{textAlign: 'center', color: 'gray'}}>
+                        อัพโหลดโลโก้
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="bizName"
+              render={({
+                field: {onChange, value, onBlur},
+                fieldState: {error},
+              }) => (
+                <View style={{marginBottom: 20}}>
+                  <TextInput
+                    mode="outlined"
+                    onBlur={onBlur}
+                    error={!!error}
+                    label="ชื่อธุรกิจ - ชื่อบริษัท"
+                    value={value}
+                    onChangeText={onChange}
                   />
-                  <Text style={{textAlign: 'center', color: 'gray'}}>
-                    อัพโหลดโลโก้
-                  </Text>
+                  {error && (
+                    <Text style={styles.errorText}>{error.message}</Text>
+                  )}
                 </View>
               )}
-            </TouchableOpacity>
-
-            <Text>ชื่อธุรกิจ - บริษัท</Text>
-
-            <TextInput
-              placeholder="ชื่อธุรกิจ - ชื่อบริษัท"
-              style={styles.input}
-              value={bizName}
-              onChangeText={setBizName}
             />
 
             <View
@@ -324,125 +430,251 @@ const CreateCompanyScreen = ({navigation}: Props) => {
                 justifyContent: 'space-between',
               }}>
               <View style={{flex: 0.45}}>
-                <Text>ชื่อจริง</Text>
-                <TextInput
-                  placeholder="ชื่อจริง"
-                  style={styles.input}
-                  value={userName}
-                  onChangeText={setUserName}
+                <Controller
+                  control={control}
+                  name="userName"
+                  render={({
+                    field: {onChange, value, onBlur},
+                    fieldState: {error},
+                  }) => (
+                    <View style={{marginBottom: 20}}>
+                      <TextInput
+                        mode="outlined"
+                        onBlur={onBlur}
+                        error={!!error}
+                        label="ชื่อจริง"
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                      {error && (
+                        <Text style={styles.errorText}>{error.message}</Text>
+                      )}
+                    </View>
+                  )}
                 />
               </View>
               <View style={{flex: 0.45}}>
-                <Text>นามสกุล</Text>
-                <TextInput
-                  placeholder="นามสกุล"
-                  style={styles.input}
-                  value={userLastName}
-                  onChangeText={setUserLastName}
+                <Controller
+                  control={control}
+                  name="userLastName"
+                  render={({
+                    field: {onChange, value, onBlur},
+                    fieldState: {error},
+                  }) => (
+                    <View style={{marginBottom: 20}}>
+                      <TextInput
+                        mode="outlined"
+                        onBlur={onBlur}
+                        error={!!error}
+                        label="นามสกุล"
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                      {error && (
+                        <Text style={styles.errorText}>{error.message}</Text>
+                      )}
+                    </View>
+                  )}
                 />
               </View>
             </View>
-            <View
-              style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-              <CheckBox
-                title="บุคคลธรรมดา"
-                checkedIcon="dot-circle-o"
-                uncheckedIcon="circle-o"
-                checked={bizType === 'individual'}
-                onPress={() => setBizType('individual')}
-              />
+            <Controller
+              control={control}
+              name="userPosition"
+              render={({
+                field: {onChange, value, onBlur},
+                fieldState: {error},
+              }) => (
+                <View style={{marginBottom: 20}}>
+                  <TextInput
+                    mode="outlined"
+                    onBlur={onBlur}
+                    error={!!error}
+                    label="ตำแหน่ง"
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                  {error && (
+                    <Text style={styles.errorText}>{error.message}</Text>
+                  )}
+                </View>
+              )}
+            />
+            <Text style={{marginBottom: 10, fontSize: 14}}>
+              เลือกประเภทธุรกิจ
+            </Text>
 
-              <CheckBox
-                title="บริษัท-หจก"
-                checkedIcon="dot-circle-o"
-                uncheckedIcon="circle-o"
-                checked={bizType === 'business'}
-                onPress={() => setBizType('business')}
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                marginBottom: 10,
+                gap: 10,
+              }}>
+              <Controller
+                control={control}
+                name="bizType"
+                render={({field: {value}}) => (
+                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <Checkbox.Android
+                      style={{...checkboxStyle, flexDirection: 'row-reverse'}}
+                      uncheckedColor="grey"
+                      status={value === 'individual' ? 'checked' : 'unchecked'}
+                      onPress={() => setValue('bizType', 'individual')}
+                    />
+                    <Text>บุคคลธรรมดา</Text>
+                  </View>
+                )}
+              />
+              <Controller
+                control={control}
+                name="bizType"
+                render={({field: {value}}) => (
+                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <Checkbox.Android
+                      // label="บริษัท-หจก"
+                      style={{...checkboxStyle, flexDirection: 'row-reverse'}}
+                      uncheckedColor="grey"
+                      status={value === 'business' ? 'checked' : 'unchecked'}
+                      onPress={() => setValue('bizType', 'business')}
+                    />
+                    <Text>บริษัท-หจก</Text>
+                  </View>
+                )}
               />
             </View>
-            <TextInput
-              placeholder="ตำแหน่ง"
-              style={styles.input}
-              value={userPosition}
-              onChangeText={setUserPosition}
-            />
-            <SelectList
-              setSelected={(val: object[]) => setSelectedCategories(val)}
-              data={categories}
-              save="key"
-              placeholder={'เลือกหมวดหมู่ธุรกิจ'}
-            />
+
             <View
               style={{
                 flexDirection: 'row',
                 justifyContent: 'flex-end',
-                marginTop: 10,
+                marginTop: 30,
               }}>
-              <TouchableOpacity
+              <Button
+                mode="contained"
+                shouldRasterizeIOS
+                contentStyle={{flexDirection: 'row-reverse'}}
+                icon={'arrow-right'}
+                style={{width: 120}}
+                buttonColor="#1b72e8"
                 disabled={isNextDisabledPage1}
-                onPress={handleNextPage}
-                style={[
-                  styles.button,
-                  {
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: isNextDisabledPage1
-                      ? '#D3D3D3'
-                      : '#005751',
-                  },
-                ]}>
-                <Text style={styles.buttonText}>ไปต่อ</Text>
-              </TouchableOpacity>
+                onPress={handleNextPage}>
+                <Text>ไปต่อ</Text>
+              </Button>
             </View>
           </ScrollView>
         );
       case 2:
         return (
-          <ScrollView style={{marginTop: 10, paddingHorizontal: 10}}>
-            {/* Add your input fields... */}
-            <Text style={styles.title}> ลงทะเบียนธุรกิจ</Text>
-            <Text>ที่อยู่ร้าน</Text>
-            <TextInput
-              placeholder="ที่อยู่ร้าน"
-              style={[styles.input, { height: 100, textAlignVertical: 'top' }]} 
-              numberOfLines={3}
-              value={address}
-              onChangeText={setAddress}
+          <View style={{marginTop: 10, paddingHorizontal: 10}}>
+            <Controller
+              control={control}
+              name="address"
+              render={({
+                field: {onChange, value, onBlur},
+                fieldState: {error},
+              }) => (
+                <View style={{marginBottom: 20}}>
+                  <TextInput
+                    mode="outlined"
+                    onBlur={onBlur}
+                    error={!!error}
+                    style={
+                      Platform.OS === 'ios'
+                        ? {height: 80, textAlignVertical: 'top'}
+                        : {}
+                    }
+                    numberOfLines={3}
+                    multiline={true}
+                    textAlignVertical="top"
+                    label="ที่อยู่ร้าน"
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                  {error && (
+                    <Text style={styles.errorText}>{error.message}</Text>
+                  )}
+                </View>
+              )}
             />
             <View
-              style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-              <Text>เบอร์โทรบริษัท</Text>
-              <Text style={{marginRight: 80}}>เบอร์มือถือ</Text>
-            </View>
-
-            <View
-              style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+              }}>
               <View style={{flex: 0.45}}>
-                <TextInput
-                  keyboardType="number-pad"
-                  placeholder="02-000-0000"
-                  style={styles.input}
-                  value={officeTel}
-                  onChangeText={setOfficeTel}
+                <Controller
+                  control={control}
+                  name="officeTel"
+                  render={({
+                    field: {onChange, value, onBlur},
+                    fieldState: {error},
+                  }) => (
+                    <View style={{marginBottom: 20}}>
+                      <TextInput
+                        mode="outlined"
+                        onBlur={onBlur}
+                        error={!!error}
+                        label="เบอร์โทรบริษัท"
+                        keyboardType="number-pad"
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                      {error && (
+                        <Text style={styles.errorText}>{error.message}</Text>
+                      )}
+                    </View>
+                  )}
                 />
               </View>
               <View style={{flex: 0.45}}>
-                <TextInput
-                  placeholder="090-000-0000"
-                  keyboardType="number-pad"
-                  style={styles.input}
-                  value={mobileTel}
-                  onChangeText={setMobileTel}
+                <Controller
+                  control={control}
+                  name="mobileTel"
+                  render={({
+                    field: {onChange, value, onBlur},
+                    fieldState: {error},
+                  }) => (
+                    <View style={{marginBottom: 20}}>
+                      <TextInput
+                        mode="outlined"
+                        onBlur={onBlur}
+                        error={!!error}
+                        label="เบอร์มือถือ"
+                        keyboardType="number-pad"
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                      {error && (
+                        <Text style={styles.errorText}>{error.message}</Text>
+                      )}
+                    </View>
+                  )}
                 />
               </View>
             </View>
-            <Text>เลขภาษี(ถ้ามี)</Text>
-            <TextInput
-              placeholder="xxx-xxx-xxx-xxx"
-              keyboardType="number-pad"
-              style={styles.input}
-              value={taxID}
-              onChangeText={setTaxID}
+            <Controller
+              control={control}
+              name="companyNumber"
+              render={({
+                field: {onChange, value, onBlur},
+                fieldState: {error},
+              }) => (
+                <View style={{marginBottom: 20}}>
+                  <TextInput
+                    mode="outlined"
+                    onBlur={onBlur}
+                    error={!!error}
+                    keyboardType="number-pad"
+                    label="เลขภาษี(ถ้ามี)"
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                  {error && (
+                    <Text style={styles.errorText}>{error.message}</Text>
+                  )}
+                </View>
+              )}
             />
             <View
               style={{
@@ -450,63 +682,104 @@ const CreateCompanyScreen = ({navigation}: Props) => {
                 justifyContent: 'space-between',
                 marginTop: 50,
               }}>
-              <TouchableOpacity
-                onPress={handlePrevPage}
-                style={[
-                  styles.button,
-                  {
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'white',
-                  },
-                ]}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <FontAwesomeIcon icon={faArrowLeft} color="#005751" />
-                  <Text style={{color: '#005751', marginLeft: 10}}>
-                    ย้อนกลับ
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              <Button onPress={handlePrevPage} icon={'arrow-left'} mode="text">
+                <Text>ย้อนกลับ</Text>
+              </Button>
 
-              <TouchableOpacity
-                onPress={handleFunction}
+              <Button
+                contentStyle={{flexDirection: 'row-reverse'}}
+                onPress={handleNextPage}
                 disabled={isNextDisabledPage2}
-                style={[
-                  styles.button,
-                  {
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: isNextDisabledPage2
-                      ? '#D3D3D3'
-                      : '#005751',
-                  },
-                ]}>
-                {isLoading || userLoading ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <Text style={styles.buttonText}>บันทึก</Text>
-                )}
-              </TouchableOpacity>
+                buttonColor="#1b72e8"
+                mode="contained"
+                icon={'arrow-right'}
+                style={{width: 120}}
+                loading={isLoading || userLoading}>
+                ไปต่อ
+              </Button>
             </View>
-          </ScrollView>
+          </View>
         );
+      case 3:
+        return (
+          <View style={{ paddingHorizontal: 10}}>
+            <Text style={{marginBottom: 10, fontSize: 16, fontWeight:'bold'}}>
+เลือกหมวดหมู่ธุรกิจของคุณ
+            </Text>
+            <View>
+      {categories.map((category:Category, index:number) => (
+        <Controller
+          control={control}
+          name="category"
+          key={index}
+          render={({ field: { onChange, value } }) => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+              <Checkbox.Android
+                status={value === category.key ? 'checked' : 'unchecked'}
+                onPress={() => {
+                  onChange(category.key);
+                  setValue('category', category.key, { shouldDirty: true });
+                }}
+              />
+              <Text style={{ fontSize: 16 }}>{category.value}</Text>
+            </View>
+          )}
+        />
+      ))}
+    </View>
+           
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginTop: 50,
+              }}>
+              <Button onPress={handlePrevPage} icon={'arrow-left'} mode="text">
+                <Text>ย้อนกลับ</Text>
+              </Button>
+
+              <Button
+                onPress={handleSave}
+                disabled={!category}
+                buttonColor="#1b72e8"
+                mode="contained"
+                style={{width: 120}}
+                loading={isLoading || userLoading}>
+                บันทึก
+              </Button>
+            </View>
+          </View>
+        );
+
       default:
         return null;
     }
   };
-console.log('categoryId',selectedCategories)
+  const progress = page / 3;
+
   return (
-    <KeyboardAwareScrollView
-      style={{ flex: 1 }}
-      resetScrollToCoords={{ x: 0, y: 0 }}
-      scrollEnabled={true}
-      extraHeight={200} // Adjust this value as needed
-      enableOnAndroid={true}
-    >
-      <View style={{ marginTop: 40, paddingHorizontal: 20 }}>
-        {renderPage()}
-      </View>
-    </KeyboardAwareScrollView>
+    <>
+      <Appbar.Header
+        elevated
+        mode="center-aligned"
+        style={{
+          backgroundColor: 'white',
+        }}>
+        <Appbar.Content title="ลงทะเบียนธุรกิจ" titleStyle={{fontSize: 18}} />
+      </Appbar.Header>
+      <ProgressBar progress={progress} color={'#1b52a7'} />
+
+      <KeyboardAwareScrollView
+        style={{flex: 1}}
+        resetScrollToCoords={{x: 0, y: 0}}
+        scrollEnabled={true}
+        extraHeight={200} // Adjust this value as needed
+        enableOnAndroid={true}>
+        <View style={{marginTop: 40, paddingHorizontal: 20}}>
+          {renderPage()}
+        </View>
+      </KeyboardAwareScrollView>
+    </>
   );
 };
 

@@ -93,23 +93,16 @@ const Quotation = ({navigation}: Props) => {
 
   const [total, setTotal] = useState(0);
   const [companyUser, setCompanyUser] = useState<CompanyUser>();
-  const [discountValue, setDiscountValue] = useState(0);
-  const [summaryAfterDiscount, setSumAfterDiscount] = useState(0);
-  const [vat7Amount, setVat7Amount] = useState(0);
+
   const [addCustomerModal, setAddCustomerModal] = useState(false);
-  const [editCustomerModal, setEditCustomerModal] = useState(false);
-  const [vat5Amount, setVat5Amount] = useState(0);
+
   const thaiDateFormatter = useThaiDateFormatter();
-  const [addServicesModal, setAddServicesModal] = useState(false);
   const user = useUser();
-  const [vat3Amount, setVat3Amount] = useState(0);
   // const {fetchCompanyUser} = useFetchCompanyUser();
 
-  const [editServicesModal, setEditServicesModal] = useState(false);
   const [workerModal, setWorkerModal] = useState(false);
   // const [customerName, setCustomerName] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('');
-  const [docNumber, setDocnumber] = useState('');
+
   const [pickerVisible, setPickerVisible] = useState(false);
   const [workerPicker, setWorkerpicker] = useState(false);
 
@@ -286,9 +279,12 @@ const Quotation = ({navigation}: Props) => {
   const isDisabled = !customer.name || services.length === 0;
 
   const {data, isLoading, isError} = useQuery(
-    ['companyUser', email],
-    () => fetchCompanyUser().then(res => res),
+    // ['companyUser', email],
+    
     {
+      queryKey: ['companyUser', email],
+      queryFn: fetchCompanyUser,
+
       onSuccess: data => {
         setCompanyUser(data);
         methods.setValue('companyUser', data.user);
@@ -297,19 +293,6 @@ const Quotation = ({navigation}: Props) => {
     },
   );
 
-  const handleValuesChange = (
-    total: number,
-    discountValue: number,
-    sumAfterDiscount: number,
-    vat7Amount: number,
-    vat3Amount: number,
-  ) => {
-    setTotal(total);
-    setDiscountValue(discountValue);
-    setSumAfterDiscount(sumAfterDiscount);
-    setVat7Amount(vat7Amount);
-    setVat3Amount(vat3Amount);
-  };
 
   const useSignature = () => {
     // Toggle the state of the picker and accordingly set the modal visibility
@@ -434,13 +417,15 @@ const Quotation = ({navigation}: Props) => {
         />
         <Appbar.Content
           title="สร้างใบเสนอราคา"
-          titleStyle={{fontSize: 18, fontWeight: 'bold'}}
+          titleStyle={{fontSize: 18, fontWeight: 'bold',      fontFamily: 'Sukhumvit Set Bold',
+        }}
         />
         <Button
           // loading={postLoading}
           disabled={isDisabled}
           mode="contained"
           buttonColor={'#1b72e8'}
+
           onPress={handleButtonPress}>
           {'ไปต่อ'}
         </Button>

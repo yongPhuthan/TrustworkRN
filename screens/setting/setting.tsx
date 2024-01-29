@@ -35,7 +35,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import firebase from '../../firebase';
-import { Divider } from 'react-native-paper';
+import {Divider} from 'react-native-paper';
 
 import {
   launchCamera,
@@ -132,6 +132,8 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
     },
   });
   if (isLoading) {
+    // firebase.auth().signOut();
+
     return <ActivityIndicator />;
   }
   if (error) {
@@ -316,7 +318,6 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  
                 }}>
                 <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
                   แก้ไขข้อมูลธุรกิจ

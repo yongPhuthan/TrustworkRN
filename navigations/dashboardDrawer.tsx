@@ -36,7 +36,7 @@ function CustomDrawerContent(props) {
           backgroundColor: '#ffffff',
           alignItems: 'flex-start',
         }}>
-        <Text style={{fontSize: 20, fontWeight: 'bold', color: '#1b72e8'}}>
+        <Text style={{fontSize: 18, fontWeight: 'bold', color: '#012b20'}}>
         TRUSTH
         </Text>
       </View>
@@ -80,6 +80,8 @@ function CustomDrawerContent(props) {
 function DashboardDrawer() {
   return (
     <Drawer.Navigator
+      initialRouteName="Dashboard"
+      
       drawerContent={props => <CustomDrawerContent {...props} />}>
       <Drawer.Screen
         name="Dashboard"
@@ -106,7 +108,7 @@ function DashboardDrawer() {
         options={{
           ...commonScreenOptions,
           headerShown: false,
-          title: 'สัญญาใจ',
+          title: 'สัญญา',
         }}
       />
       {/* ... other screens ... */}

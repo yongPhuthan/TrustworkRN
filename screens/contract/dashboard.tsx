@@ -203,7 +203,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
   } = useQuery({
     queryKey: ['contractDashboard'],
     queryFn: fetchContractDashboard,
-    enabled: !!user,
+    // enabled: !!user,
     onSuccess: data => {
       setCompanyData(data[0]);
       setQuotationData(data[1]);
