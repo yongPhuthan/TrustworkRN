@@ -364,7 +364,7 @@ const Navigation = ({initialRouteName}) => {
           component={EditDefaultContract}
           options={{
             ...commonScreenOptions,
-            headerShown: true,
+            headerShown: false,
             title: 'แก้ไขรายละเอียดสัญญา',
             headerBackTitleVisible: false,
             headerStyle: {

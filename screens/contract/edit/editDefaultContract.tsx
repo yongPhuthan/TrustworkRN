@@ -173,7 +173,7 @@ const EditDefaultContract = ({navigation, route}: Props) => {
   } = useForm({
     mode: 'onChange',
     defaultValues,
-    resolver: yupResolver(defaultContractSchema),
+    // resolver: yupResolver(defaultContractSchema),
   });
   const {data, isLoading, isError} = useQuery({
     queryKey: ['ContractByQuotationId', quotationId],
@@ -184,7 +184,7 @@ const EditDefaultContract = ({navigation, route}: Props) => {
         setContract(data.contract as any);
 
         const defaultValues = {
-          warantyTimeWork: Number(data.warantyTimeWork),
+          warantyTimeWork: (data.warantyTimeWork),
           workCheckEnd: Number(data.workCheckEnd),
           workCheckDay: Number(data.workCheckDay),
           installingDay: Number(data.installingDay),
@@ -299,11 +299,12 @@ console.log('dataProps',dataProps);
                   textAlign="center"
                   error={!!error}
                   mode="outlined"
+               
                   textAlignVertical="center"
-                  defaultValue={defaultValue}
+                  defaultValue={(defaultValue)}
                   onBlur={onBlur}
-                  right={<TextInput.Affix text="วัน" />}
-                  value={value}
+                  right={<TextInput.Affix text={'วัน'} />}
+                  value={value? String(value):Number(defaultValue) as any}
                   onChangeText={val => {
                     const numericValue = Number(val);
                     if (!isNaN(numericValue)) {
@@ -339,7 +340,7 @@ console.log('dataProps',dataProps);
         }} />
         <Button
           loading={isMuatationLoading}
-          disabled={!isValid || isMuatationLoading }
+          // disabled={!isValid  }
           mode="contained"
           buttonColor={'#1b72e8'}
           onPress={handleDonePress}

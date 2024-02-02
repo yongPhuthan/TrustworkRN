@@ -13,6 +13,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Alert,
   Image,
   FlatList,
   ActivityIndicator,
@@ -167,7 +168,24 @@ const AddProductForm = ({navigation, route}: Props) => {
         }}>
         <Appbar.BackAction
           onPress={() => {
-            navigation.goBack();
+            Alert.alert(
+              "ปิดหน้าต่าง",
+              "ยืนยันไม่บันทึกข้อมูลและปิดหน้าต่าง",
+              [
+                // The "No" button
+                // Does nothing but dismiss the dialog when pressed
+                {
+                  text: "อยู่ต่อ",
+                  style: "cancel",
+                },
+                // The "Yes" button
+                {
+                  text: "ปิดหน้าต่าง",
+                  onPress: () => navigation.goBack(),
+                },
+              ],
+              { cancelable: false }
+            );
           }}
         />
         <Appbar.Content

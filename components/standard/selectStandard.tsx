@@ -155,13 +155,12 @@ const SelectStandard = ({
   }
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
-      <SafeAreaView style={styles.container}>
-        <Appbar.Header
+         <Appbar.Header
           mode="center-aligned"
           elevated
           style={{
             backgroundColor: 'white',
-            width: '100%',
+            width: Dimensions.get('window').width,
           }}>
           <Appbar.Action icon={'close'} onPress={() => onClose()} />
           <Appbar.Content
@@ -169,6 +168,8 @@ const SelectStandard = ({
             titleStyle={{fontSize: 16}}
           />
         </Appbar.Header>
+      <SafeAreaView style={styles.container}>
+     
 
         {/* <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>

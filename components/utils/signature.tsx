@@ -139,6 +139,11 @@ const SignatureComponent = ({
     name: 'companyUser.signature',
   });
 
+  const companyUser= useWatch({
+    control: control,
+    name: 'companyUser',
+  });
+
   const sellerSignature = useWatch({
     control: control,
     name: 'sellerSignature',
@@ -233,7 +238,7 @@ const SignatureComponent = ({
   };
 
   useEffect(() => {
-    if (companySignature === 'none' || null || '') {
+    if (companySignature === 'none' || null || '' || !companySignature) {
       setCreateNewSignature(true);
     }
   }, [companySignature, setValue, sellerSignature]);
@@ -245,7 +250,6 @@ const SignatureComponent = ({
         .catch(error => console.error('Error prefetching image:', error));
     }
   }, [companySignature]);
-
   return (
     <>
       {isSignatureUpload || isLoading ? (
@@ -256,7 +260,7 @@ const SignatureComponent = ({
             <View style={styles.textContainer}>
               <View style={styles.underline} />
 
-              {companySignature && (
+              {companySignature  && (
                 <FastImage
                   style={styles.image}
                   source={{

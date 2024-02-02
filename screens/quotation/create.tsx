@@ -394,7 +394,7 @@ const Quotation = ({navigation}: Props) => {
     remove(index);
   };
 
-  const onClose = () => {
+  const onCloseSignature = () => {
     setPickerVisible(false);
     setSignatureModal(false);
     methods.setValue('sellerSignature', '', {shouldDirty: true});
@@ -651,14 +651,27 @@ const Quotation = ({navigation}: Props) => {
         <Modal
           isVisible={singatureModal}
           style={styles.modal}
-          onBackdropPress={onClose}>
+          onBackdropPress={onCloseSignature}>
+              <Appbar.Header
+        mode="center-aligned"
+        style={{
+          backgroundColor: 'white',
+          width: Dimensions.get('window').width,
+        }}>
+        <Appbar.Action icon={'close'} onPress={onCloseSignature} />
+        <Appbar.Content
+          title="ลายเซ็นผู้เสนอราคา"
+          titleStyle={{fontSize: 18, fontWeight: 'bold'}}
+        />
+        
+      </Appbar.Header>
           <SafeAreaView style={styles.containerModal}>
-            <View style={styles.header}>
+            {/* <View style={styles.header}>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <FontAwesomeIcon icon={faClose} size={24} color="gray" />
               </TouchableOpacity>
-            </View>
-            <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
+            </View> */}
+            {/* <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text> */}
             <SignatureComponent
               onClose={() => setSignatureModal(false)}
               setSignatureUrl={setSignature}
