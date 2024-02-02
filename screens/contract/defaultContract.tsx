@@ -1,11 +1,9 @@
 import React, {useState, useContext, useCallback, useRef} from 'react';
 import {
-  
   SafeAreaView,
   KeyboardAvoidingView,
   StyleSheet,
   Alert,
-
   Platform,
   Text,
   View,
@@ -15,7 +13,7 @@ import {
 } from 'react-native';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {defaultContractSchema} from '../utils/validationSchema';
-import {TextInput,Divider} from 'react-native-paper';
+import {TextInput, Divider} from 'react-native-paper';
 
 import messaging from '@react-native-firebase/messaging';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
@@ -66,7 +64,6 @@ const DefaultContract = ({navigation}: Props) => {
   const [customer, setCustomer] = useState<Customer>();
   const {data: dataProps}: any = route?.params;
   const quotation = dataProps;
-  const textRequired = '* จำเป็น';
   const queryClient = useQueryClient();
   async function fetchContractByEmail() {
     if (!user || !user.email) {
@@ -147,7 +144,6 @@ const DefaultContract = ({navigation}: Props) => {
       }
     } catch (err) {
       throw new Error(err);
-
     }
   };
 
@@ -248,7 +244,6 @@ const DefaultContract = ({navigation}: Props) => {
     mode: 'onChange',
     defaultValues,
     resolver: yupResolver(defaultContractSchema),
-
   });
   const {data, isLoading, isError} = useQuery({
     queryKey: ['ContractByEmail'],
@@ -276,7 +271,7 @@ const DefaultContract = ({navigation}: Props) => {
     },
   });
 
-  const mutationFunction = async (apiData) => {
+  const mutationFunction = async apiData => {
     if (!contract) {
       return createContractAndQuotation(apiData);
     } else if (isDirty) {
@@ -285,22 +280,26 @@ const DefaultContract = ({navigation}: Props) => {
       return createQuotation(apiData);
     }
   };
-  const { mutate: dynamicMutation, isLoading:isMutationLoading } = useMutation(mutationFunction, {
-    onSuccess: data => {
-      queryClient.invalidateQueries(['dashboardData']);
-      // const newId = quotation.id.slice(0, 8);
-      navigation.navigate('DocViewScreen', {id});
+  const {mutate: dynamicMutation, isLoading: isMutationLoading} = useMutation(
+    mutationFunction,
+    {
+      onSuccess: data => {
+        queryClient.invalidateQueries(['dashboardData']);
+        console.log('data', data);
+        // const newId = quotation.id.slice(0, 8);
+        navigation.navigate('DocViewScreen', {id:data.id});
+      },
+      onError: (error: MyError) => {
+        Alert.alert(
+          'เกิดข้อผิดพลาด',
+          `Server-side user creation failed:, ${error}`,
+          [{text: 'OK'}],
+
+          {cancelable: false},
+        );
+      },
     },
-    onError: (error: MyError) => {
-      Alert.alert(
-        'เกิดข้อผิดพลาด',
-        `Server-side user creation failed:, ${error}`, 
-        [{text: 'OK', }],
-      
-        {cancelable: false},
-      );
-    },
-  });
+  );
 
   const watchedValues: any = watch();
   const dirtyValues = Object.keys(dirtyFields).reduce((acc, key) => {
@@ -312,24 +311,19 @@ const DefaultContract = ({navigation}: Props) => {
 
   const handleDonePress = async () => {
     setIsLoadingMutation(true);
-  
+
     try {
       const apiData = {
         data: quotation,
         contract: isDirty ? dirtyValues : defaultContractValues,
       };
-  
+
       dynamicMutation(apiData);
       setIsLoadingMutation(false);
     } catch (error: Error | MyError | any) {
       setIsLoadingMutation(false);
     }
   };
-  
-
-
-
-
 
   function safeToString(value) {
     return value !== undefined && value !== null ? value.toString() : '';
@@ -341,7 +335,6 @@ const DefaultContract = ({navigation}: Props) => {
     defaultValue: string = '',
   ) => (
     <>
-    
       <View
         style={{
           flexDirection: 'row',
@@ -351,42 +344,35 @@ const DefaultContract = ({navigation}: Props) => {
         <Text style={styles.label}>{label}</Text>
 
         <Controller
-            control={control}
-            rules={{required: 'This field is required'}}
-            render={({
-              field: {onChange, onBlur, value},
-              fieldState: {error},
-            }) => (
-              <>
-                <TextInput
-                  keyboardType="number-pad"
-                  textAlign="center"
-                  error={!!error}
-                  mode="outlined"
-                  textAlignVertical="center"
-                  defaultValue={defaultValue}
-                  onBlur={onBlur}
-                  right={<TextInput.Affix text="วัน" />}
-                  value={value}
-                  onChangeText={val => {
-                    const numericValue = Number(val);
-                    if (!isNaN(numericValue)) {
-                      onChange(numericValue);
-                    }
-                  }}
-                 
-                />
-              </>
-            )}
-            name={name}
-          />
-
+          control={control}
+          rules={{required: 'This field is required'}}
+          render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
+            <>
+              <TextInput
+                keyboardType="number-pad"
+                textAlign="center"
+                error={!!error}
+                mode="outlined"
+                textAlignVertical="center"
+                defaultValue={defaultValue}
+                onBlur={onBlur}
+                right={<TextInput.Affix text="วัน" />}
+                value={value}
+                onChangeText={val => {
+                  const numericValue = Number(val);
+                  if (!isNaN(numericValue)) {
+                    onChange(numericValue);
+                  }
+                }}
+              />
+            </>
+          )}
+          name={name}
+        />
       </View>
-      <Divider style={{marginTop:10}} />
-
+      <Divider style={{marginTop: 10}} />
     </>
   );
-
 
   if (isLoading) {
     return (
@@ -404,21 +390,27 @@ const DefaultContract = ({navigation}: Props) => {
   }
   return (
     <>
-      <Appbar.Header  style={{
+      <Appbar.Header
+        style={{
           backgroundColor: 'white',
-        }} elevated mode='center-aligned'>
+        }}
+        elevated
+        mode="center-aligned">
         <Appbar.BackAction
           onPress={() => {
             navigation.goBack();
           }}
         />
-        <Appbar.Content title="ข้อเสนอสัญญา" titleStyle={{
-          fontSize:18,
-          fontWeight:'bold'
-        }} />
+        <Appbar.Content
+          title="ข้อเสนอสัญญา"
+          titleStyle={{
+            fontSize: 18,
+            fontWeight: 'bold',
+          }}
+        />
         <Button
           loading={isMutationLoading}
-          disabled={!isValid || isMutationLoading }
+          disabled={!isValid || isMutationLoading}
           mode="contained"
           buttonColor={'#1b72e8'}
           onPress={handleDonePress}
@@ -429,93 +421,89 @@ const DefaultContract = ({navigation}: Props) => {
       <ProgressBar progress={1} color={'#1b52a7'} />
 
       <KeyboardAwareScrollView>
-      {contract ? (
-        <SafeAreaView style={{flex: 1}}>
-          <KeyboardAvoidingView
-            style={{flex: 1}}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+        {contract ? (
+          <SafeAreaView style={{flex: 1}}>
+            <KeyboardAvoidingView
+              style={{flex: 1}}
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+              <View style={styles.containerForm}>
+                <View style={styles.formInput}>
+                  {renderTextInput(
+                    'productWarantyYear',
+                    'รับประกันวัสดุอุปกรณ์กี่ปี',
+                    safeToString(contract.productWarantyYear),
+                  )}
+                  {renderTextInput(
+                    'skillWarantyYear',
+                    'รับประกันงานติดตั้งกี่ปี',
+                    safeToString(contract.skillWarantyYear),
+                  )}
+                  {renderTextInput(
+                    'installingDay',
+                    'Installing Day',
+                    safeToString(contract.installingDay),
+                  )}
+                  {renderTextInput(
+                    'workAfterGetDeposit',
+                    'Work After Get Deposit',
+                    safeToString(contract.workAfterGetDeposit),
+                  )}
+                  {renderTextInput(
+                    'prepareDay',
+                    'Prepare Days',
+                    safeToString(contract.prepareDay),
+                  )}
+                  {renderTextInput(
+                    'finishedDay',
+                    'Finished Days',
+                    safeToString(contract.finishedDay),
+                  )}
+                  {renderTextInput(
+                    'workCheckDay',
+                    'Work Check Day',
+                    safeToString(contract.workCheckDay),
+                  )}
+                  {renderTextInput(
+                    'workCheckEnd',
+                    'Work Check End',
+                    safeToString(contract.workCheckEnd),
+                  )}
+                  {renderTextInput(
+                    'adjustPerDay',
+                    'Adjust Per Days',
+                    safeToString(contract.adjustPerDay),
+                  )}
+                </View>
+              </View>
+            </KeyboardAvoidingView>
+          </SafeAreaView>
+        ) : (
+          <SafeAreaView style={{flex: 1}}>
             <View style={styles.containerForm}>
               <View style={styles.formInput}>
-                {renderTextInput(
-                  'productWarantyYear',
-                  'รับประกันวัสดุอุปกรณ์กี่ปี',
-                  safeToString(contract.productWarantyYear),
-                )}
+                <SmallDivider />
+
+                {renderTextInput('productWarantyYear', 'productWarantyYear')}
                 {renderTextInput(
                   'skillWarantyYear',
                   'รับประกันงานติดตั้งกี่ปี',
-                  safeToString(contract.skillWarantyYear),
                 )}
-                {renderTextInput(
-                  'installingDay',
-                  'Installing Day',
-                  safeToString(contract.installingDay),
-                )}
+                {renderTextInput('installingDay', 'Installing Day')}
                 {renderTextInput(
                   'workAfterGetDeposit',
                   'Work After Get Deposit',
-                  safeToString(contract.workAfterGetDeposit),
                 )}
-                {renderTextInput(
-                  'prepareDay',
-                  'Prepare Days',
-                  safeToString(contract.prepareDay),
-                )}
-                {renderTextInput(
-                  'finishedDay',
-                  'Finished Days',
-                  safeToString(contract.finishedDay),
-                )}
-                {renderTextInput(
-                  'workCheckDay',
-                  'Work Check Day',
-                  safeToString(contract.workCheckDay),
-                )}
-                {renderTextInput(
-                  'workCheckEnd',
-                  'Work Check End',
-                  safeToString(contract.workCheckEnd),
-                )}
-                {renderTextInput(
-                  'adjustPerDay',
-                  'Adjust Per Days',
-                  safeToString(contract.adjustPerDay),
-                )}
+                {renderTextInput('prepareDay', 'Prepare Days')}
+                {renderTextInput('finishedDay', 'Finished Days')}
+                {renderTextInput('workCheckDay', 'Work Check Day')}
+                {renderTextInput('workCheckEnd', 'Work Check End')}
+                {renderTextInput('adjustPerDay', 'Adjust Per Days')}
               </View>
             </View>
-          </KeyboardAvoidingView>
-        
-        </SafeAreaView>
-      ) : (
-        <SafeAreaView style={{flex: 1}}>
-        <View style={styles.containerForm}>
-          <View style={styles.formInput}>
-            <SmallDivider />
-
-            {renderTextInput('productWarantyYear', 'productWarantyYear')}
-            {renderTextInput(
-              'skillWarantyYear',
-              'รับประกันงานติดตั้งกี่ปี',
-            )}
-            {renderTextInput('installingDay', 'Installing Day')}
-            {renderTextInput(
-              'workAfterGetDeposit',
-              'Work After Get Deposit',
-            )}
-            {renderTextInput('prepareDay', 'Prepare Days')}
-            {renderTextInput('finishedDay', 'Finished Days')}
-            {renderTextInput('workCheckDay', 'Work Check Day')}
-            {renderTextInput('workCheckEnd', 'Work Check End')}
-            {renderTextInput('adjustPerDay', 'Adjust Per Days')}
-          </View>
-        </View>
-
-     
-      </SafeAreaView>
-      )}
+          </SafeAreaView>
+        )}
       </KeyboardAwareScrollView>
-     
     </>
   );
 };

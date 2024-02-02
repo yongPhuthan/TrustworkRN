@@ -1,6 +1,6 @@
 import React from 'react';
 import Dashboard from '../screens/quotation/dashboard';
-import {TouchableOpacity, View, Text} from 'react-native';
+import {TouchableOpacity, View, Text,KeyboardAvoidingView,SafeAreaView} from 'react-native';
 import 'react-native-gesture-handler';
 import {Divider, Drawer as PaperDrawer} from 'react-native-paper';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -15,6 +15,7 @@ const Drawer = createDrawerNavigator<ParamListBase>();
 const commonScreenOptions = {
   headerTitleStyle: {
     fontFamily: 'Sukhumvit Set Bold',
+    fontSize: 18,
   },
   headerStyle: {
     backgroundColor: '#ffffff',
@@ -27,7 +28,8 @@ function CustomDrawerContent(props) {
   const borderRadius = 3; // Adjust as needed
 
   return (
-    <View style={{flex: 1}}>
+    
+    <SafeAreaView style={{flex: 1}}>
       <View
         style={{
           paddingTop: 20,
@@ -44,6 +46,8 @@ function CustomDrawerContent(props) {
       <PaperDrawer.Section>
         <PaperDrawer.Item
           label="ใบเสนอราคา"
+          
+          
           icon="file-document"
           active={props.state.index === 0}
           onPress={() => props.navigation.navigate('Dashboard')}
@@ -73,7 +77,7 @@ function CustomDrawerContent(props) {
           onPress={() => props.navigation.navigate('SettingsScreen')}
         />
       </PaperDrawer.Section>
-    </View>
+    </SafeAreaView>
   );
 }
 

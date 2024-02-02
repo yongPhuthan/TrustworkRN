@@ -16,7 +16,6 @@ import {HOST_URL, BACK_END_SERVER_URL, PROJECT_FIREBASE} from '@env';
 import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Header as HeaderRNE, HeaderProps, Icon} from '@rneui/themed';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faBell,

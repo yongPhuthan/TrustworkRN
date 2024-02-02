@@ -270,7 +270,7 @@ const EditDefaultContract = ({navigation, route}: Props) => {
     return value !== undefined && value !== null ? value.toString() : '';
   }
 
-
+console.log('dataProps',dataProps);
   const renderTextInput = (
     name: any,
     label: string,

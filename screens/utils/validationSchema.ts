@@ -11,13 +11,13 @@ export const companyValidationSchema = yup.object().shape({
   bizName: yup.string().required('ระบุชื่อธุรกิจ'),
   logo: yup.string(),
   userName: yup.string().required('ระบุชื่อจริง'),
-  category: yup.string().required('ระบุหมวดหมู่ธุรกิจ'),
+  categoryId: yup.string().required('ระบุหมวดหมู่ธุรกิจ'),
   userLastName:yup.string().required('ระบุนามสกุล'),
   officeTel: yup.string().required('ระบุเบอร์โทรออฟฟิศ'),
   address: yup.string().required('ระบุที่อยู่ร้าน'),
   mobileTel: yup.string().required('ระบุเบอร์มือถือ'),
   userPosition: yup.string().required('ระบุตำแหน่ง'),
-  companyNumber: yup.string(),
+  companyTax: yup.string(),
   bizType: yup.string().required('ระบุประเภทธุรกิจ'),  
 });
 

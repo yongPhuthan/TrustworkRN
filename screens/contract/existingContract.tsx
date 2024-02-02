@@ -11,7 +11,6 @@ import {
 
   TouchableOpacity,
 } from 'react-native';
-import Decimal from 'decimal.js';
 
 import messaging from '@react-native-firebase/messaging';
 import {Snackbar, Appbar, Button} from 'react-native-paper';
@@ -38,7 +37,6 @@ import {useUser} from '../../providers/UserContext';
 import SmallDivider from '../../components/styles/SmallDivider';
 import ContractFooter from '../../components/styles/ContractFooter';
 import CreateContractScreen from './createContractScreen';
-import Lottie from 'lottie-react-native';
 import EditInstallment from '../../components/editInstallment';
 import {ParamListBase} from '../../types/navigationType';
 import FooterBtn from '../../components/styles/FooterBtn';

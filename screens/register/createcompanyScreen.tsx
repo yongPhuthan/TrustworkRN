@@ -124,13 +124,13 @@ const CreateCompanyScreen = ({navigation}: Props) => {
       userName: '',
       userLastName: '',
       userPosition: '',
-      category: '',
+      categoryId: '',
       address: '',
       officeTel: '',
       mobileTel: '',
       bizType: '',
       logo: '',
-      companyNumber: '',
+      companyTax: '',
     },
     resolver: yupResolver(companyValidationSchema),
   });
@@ -158,14 +158,14 @@ const CreateCompanyScreen = ({navigation}: Props) => {
 
     name: 'bizType',
   });
-  const companyNumber = useWatch({
+  const companyTax = useWatch({
     control,
 
-    name: 'companyNumber',
+    name: 'companyTax',
   });
-  const category = useWatch({
+  const categoryId = useWatch({
     control,
-    name: 'category'});
+    name: 'categoryId'});
 
 const userPosition = useWatch({
     control,
@@ -323,20 +323,22 @@ const userPosition = useWatch({
       bizName,
       userName,
       userLastName,
+      platform: Platform.OS,
       code,
       userPosition,
-      categoryId: Number(category),
+      categoryId,
       address,
       officeTel,
       mobileTel,
       email: user?.email,
       bizType,
       logo: logo ? logo : '',
-      companyNumber,
+      companyTax,
     };
     mutate({data, token: user?.uid});
   };
-  console.log('category', category)
+  console.log('Platform.OS', Platform.OS)
+  console.log('categories', categoryId)
   const renderPage = () => {
     switch (page) {
       case 1:
@@ -646,7 +648,7 @@ const userPosition = useWatch({
             </View>
             <Controller
               control={control}
-              name="companyNumber"
+              name="companyTax"
               render={({
                 field: {onChange, value, onBlur},
                 fieldState: {error},
@@ -701,7 +703,7 @@ const userPosition = useWatch({
       {categories.map((category:Category, index:number) => (
         <Controller
           control={control}
-          name="category"
+          name="categoryId"
           key={index}
           render={({ field: { onChange, value } }) => (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
@@ -709,7 +711,7 @@ const userPosition = useWatch({
                 status={value === category.key ? 'checked' : 'unchecked'}
                 onPress={() => {
                   onChange(category.key);
-                  setValue('category', category.key, { shouldDirty: true });
+                  setValue('categoryId', category.key, { shouldDirty: true });
                 }}
               />
               <Text style={{ fontSize: 16 }}>{category.value}</Text>
@@ -731,7 +733,7 @@ const userPosition = useWatch({
 
               <Button
                 onPress={handleSave}
-                disabled={!category}
+                disabled={!categoryId}
                 buttonColor="#1b72e8"
                 mode="contained"
                 style={{width: 120}}

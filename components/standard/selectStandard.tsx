@@ -11,30 +11,15 @@ import {
   Dimensions,
   SafeAreaView,
 } from 'react-native';
-import {CheckBox} from '@rneui/themed';
-
-import {
-  faCloudUpload,
-  faEdit,
-  faPlus,
-  faImages,
-  faClose,
-} from '@fortawesome/free-solid-svg-icons';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import CardAudit from '../../components/CardAudit';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp} from '@react-navigation/native';
-import {useRoute} from '@react-navigation/native';
 import {Store} from '../../redux/store';
-import * as stateAction from '../../redux/actions';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+
 import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
 import {useQuery} from '@tanstack/react-query';
 import {
   Audit,
   ServiceList,
   EditProductList,
-  AuditData,
+  Standard,
 } from '../../types/docType';
 import {
   useForm,
@@ -44,7 +29,6 @@ import {
   set,
 } from 'react-hook-form';
 
-import {ParamListBase} from '../../types/navigationType';
 import Modal from 'react-native-modal';
 import {useUser} from '../../providers/UserContext';
 import {
@@ -63,7 +47,7 @@ interface AuditModalProps {
   serviceId: string;
 }
 
-const SelectAudit = ({
+const SelectStandard = ({
   isVisible,
   onClose,
   serviceId,
@@ -73,7 +57,7 @@ const SelectAudit = ({
   const [showCards, setShowCards] = useState(true);
   const [headerText, setHeaderText] = useState('');
   const user = useUser();
-  const [audits, setAudits] = useState<Audit[] | null>(null);
+  const [standardDatas, setStandardDatas] = useState<Audit[] | null>(null);
   const context = useFormContext();
   const {
     register,
@@ -87,12 +71,12 @@ const SelectAudit = ({
     state: {selectedAudit, companyID, serviceList},
     dispatch,
   }: any = useContext(Store);
-  const fetchAudits = async () => {
+  const fetchStandards = async () => {
     if (!user) {
       throw new Error('User not authenticated');
     } else {
       const idToken = await user.getIdToken(true);
-      let url = `${BACK_END_SERVER_URL}/api/services/queryAudits?id=${encodeURIComponent(
+      let url = `${BACK_END_SERVER_URL}/api/services/queryStandards?id=${encodeURIComponent(
         companyID,
       )}`;
       const response = await fetch(url, {
@@ -103,7 +87,6 @@ const SelectAudit = ({
         },
       });
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -111,47 +94,50 @@ const SelectAudit = ({
     }
   };
   const {data, isLoading, isError} = useQuery(
-    ['queryAudits', companyID],
-    () => fetchAudits().then(res => res),
+    ['queryStandards', companyID],
+    () => fetchStandards().then(res => res),
     {
       onSuccess: data => {
-        setAudits(data);
+        setStandardDatas(data);
       },
     },
   );
 
-  const handleSelectAudit = (audit: Audit) => {
-    const currentAudits = getValues('audits') || [];
-    const auditIndex = currentAudits.findIndex(
-      auditData => auditData.AuditData.id === audit.id,
+  const handleSelectStandard = (standard: Standard) => {
+    const currentStandards = getValues('standards') || [];
+    const standardIndex = currentStandards.findIndex(
+      standardData => standardData.id === standard.id,
     );
-    if (auditIndex !== -1) {
-      const updatedAudits = [...currentAudits];
-      updatedAudits.splice(auditIndex, 1);
-      setValue('audits', updatedAudits, {shouldDirty: true});
+    if (standardIndex !== -1) {
+      const updatedStandards = [...currentStandards];
+      updatedStandards.splice(standardIndex, 1);
+      setValue('standards', updatedStandards, {shouldDirty: true});
     } else {
-      const updatedAudits = [...currentAudits, {AuditData: audit}];
-      setValue('audits', updatedAudits, {shouldDirty: true});
+      const updatedStandards = [...currentStandards, { 
+        id: standard.id,
+        standardShowTitle: standard.standardShowTitle,
+      }];
+      setValue('standards', updatedStandards, {shouldDirty: true});
     }
   };
 
   const handleDonePress = () => {
-    if (watch('audits')?.length > 0) {
+    if (watch('standards')?.length > 0) {
       onClose();
     }
   };
 
-  const auditsWithChecked =
-    audits?.map(audit => ({
-      ...audit,
-      defaultChecked: audits.some(a => a?.image === audit?.image),
+  const stardardsWithChecked =
+    standardDatas?.map(standard => ({
+      ...standard,
+      defaultChecked: standardDatas.some(a => a?.image === standard?.image),
     })) || [];
 
   useEffect(() => {
-    if (auditsWithChecked) {
+    if (stardardsWithChecked) {
       setShowCards(false);
     }
-  }, [selectedAudit]);
+  }, []);
 
   if (isLoading) {
     return (
@@ -170,7 +156,7 @@ const SelectAudit = ({
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       <SafeAreaView style={styles.container}>
-      <Appbar.Header
+        <Appbar.Header
           mode="center-aligned"
           elevated
           style={{
@@ -183,7 +169,6 @@ const SelectAudit = ({
             titleStyle={{fontSize: 16}}
           />
         </Appbar.Header>
-
 
         {/* <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -203,19 +188,18 @@ const SelectAudit = ({
         </View> */}
         <FlatList
           style={{padding: 10}}
-          data={audits}
+          data={standardDatas}
           renderItem={({item, index}: any) => (
             <>
               <View
                 style={[
                   styles.card,
-                  (watch('audits') || []).some(m => m.AuditData.id === item.id)
+                  (watch('standards') || []).some(m => m.id === item.id)
                     ? styles.cardChecked
                     : null,
                 ]}
                 // onPress={() => handleSelectAudit(item)}
-                
-                >
+              >
                 {/* <CheckBox
                     center
                     checked={(watch('audits') || []).some(
@@ -231,26 +215,24 @@ const SelectAudit = ({
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-
                   }}>
-                  <Checkbox.Item
-                    label={item.auditShowTitle}
-                    onPress={() => handleSelectAudit(item)}
-                    color="#012b20"
-                    style={{
-                      flexDirection: 'row-reverse',
-                    }}
-                    status={
-                      (watch('audits') || []).some(
-                        audit => audit.AuditData.id === item.id,
-                      )
-                        ? 'checked'
-                        : 'unchecked'
-                    }
-
-                  />
+                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <Checkbox.Android
+                      onPress={() => handleSelectStandard(item)}
+                      color="#012b20"
+                      style={{flexDirection: 'row-reverse'}}
+                      status={
+                        (watch('standards') || []).some(
+                          standard => standard.id === item.id,
+                        )
+                          ? 'checked'
+                          : 'unchecked'
+                      }
+                    />
+                    <Text>{item.standardShowTitle}</Text>
+                  </View>
                   <Image
-                    source={{uri: item.auditEffectImage}}
+                    source={{uri: item.badStandardImage}}
                     style={styles.productImage}
                   />
 
@@ -272,7 +254,7 @@ const SelectAudit = ({
           keyExtractor={item => item.id}
         />
 
-        {watch('audits').length > 0 && (
+        {watch('standards')?.length > 0 && (
           <View style={styles.containerBtn}>
             <Button
               style={{
@@ -282,7 +264,7 @@ const SelectAudit = ({
               buttonColor="#1b52a7"
               mode="contained"
               onPress={handleDonePress}>
-              {`บันทึก ${watch('audits')?.length} รายการ`}{' '}
+              {`บันทึก ${watch('standards')?.length} รายการ`}{' '}
             </Button>
           </View>
         )}
@@ -291,7 +273,7 @@ const SelectAudit = ({
   );
 };
 
-export default SelectAudit;
+export default SelectStandard;
 const {width, height} = Dimensions.get('window');
 
 const styles = StyleSheet.create({

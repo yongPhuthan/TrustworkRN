@@ -3,6 +3,7 @@ import {
   Text,
   View,
   TouchableOpacity,
+  Dimensions,
   StyleSheet,
   ScrollView,
 } from 'react-native';
@@ -54,21 +55,14 @@ const AddCustomer = ({onClose}: Props) => {
         mode="center-aligned"
         style={{
           backgroundColor: 'white',
-          width: '100%',
+          width: Dimensions.get('window').width,
         }}>
         <Appbar.Action icon={'close'} onPress={() => onClose()} />
         <Appbar.Content
           title="เพิ่มลูกค้า"
           titleStyle={{fontSize: 20, fontWeight: 'bold'}}
         />
-        <Button
-          // loading={postLoading}
-          disabled={!watch('customer.name') || !watch('customer.address')}
-          mode="contained"
-          buttonColor={'#1b52a7'}
-          onPress={onSubmit}>
-          {'บันทึก'}
-        </Button>
+        
       </Appbar.Header>
       <View style={styles.subContainer}>
         <View>
@@ -186,6 +180,19 @@ const AddCustomer = ({onClose}: Props) => {
           ]}>
           <Text style={styles.buttonText}>{`บันทึก`}</Text>
         </TouchableOpacity> */}
+        <Button
+          // loading={postLoading}
+          disabled={!watch('customer.name') || !watch('customer.address')}
+          mode="contained"
+          style={{
+            marginTop: 50,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          buttonColor={'#1b52a7'}
+          onPress={onSubmit}>
+          {'บันทึก'}
+        </Button>
         </View>
       </View>
     </>

@@ -147,8 +147,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       console.error('User or user email is not available');
       return;
     }
-    console.log('user dashboard', user);
-
     try {
       const token = await user.getIdToken(true);
       const response = await fetch(
@@ -325,18 +323,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
   const editQuotation = async (services, customer, quotation) => {
     setIsLoadingAction(true);
-    // await dispatch(stateAction.reset_service_list());
-    // await dispatch(stateAction.reset_contract());
-    // await dispatch(stateAction.reset_audit());
-    // await dispatch(stateAction.client_name(''));
-    // await dispatch(stateAction.client_address(''));
-    // await dispatch(stateAction.client_tel(''));
-    // await dispatch(stateAction.client_tax(''));
-    // await dispatch(stateAction.client_name(customer.name));
-    // await dispatch(stateAction.client_address(customer.address));
-    // await dispatch(stateAction.client_tel(customer.phone));
-    // await dispatch(stateAction.client_tax(customer.companyId));
-    // await dispatch(stateAction.service_list(services));
     dispatch(stateAction.get_companyID(data[0].id));
     setIsLoadingAction(false);
 

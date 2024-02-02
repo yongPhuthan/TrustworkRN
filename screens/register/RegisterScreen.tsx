@@ -46,14 +46,154 @@ const schema = yup.object().shape({
     .string()
     .oneOf([yup.ref('password'), ''], 'รหัสผ่านไม่ตรงกัน')
     .required('ยืนยันรหัสผ่าน'),
+  registrationCode: yup.string().required('กรอกรหัสลงทะเบียน'),
 });
 const RegisterScreen = ({navigation}: Props) => {
-  const [registrationCode, setRegistrationCode] = useState('');
   const [userLoading, setUserLoading] = useState(false);
   const user = useUser();
 
   const [error, setError] =
     useState<FirebaseAuthTypes.NativeFirebaseAuthError | null>(null);
+
+  const signUpEmail = async () => {
+    setUserLoading(true);
+    await AsyncStorage.setItem('userEmail', email);
+    await AsyncStorage.setItem('userPassword', password);
+
+    if (password !== confirmPassword) {
+      setError({
+        code: 'auth/passwords-not-matching',
+        message: 'รหัสผ่านไม่ตรงกัน',
+        userInfo: {
+          authCredential: null,
+          resolver: null,
+        },
+        name: 'FirebaseAuthError',
+        namespace: '',
+        nativeErrorCode: '',
+        nativeErrorMessage: '',
+      });
+      setUserLoading(false);
+      return;
+    }
+
+    const docRef = firebase
+      .firestore()
+      .collection('registrationCodes')
+      .doc(registrationCode);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      setError({
+        code: 'auth/invalid-registration-code',
+        message: 'รหัสลงทะเบียนไม่ถูกต้อง',
+        userInfo: {
+          authCredential: null,
+          resolver: null,
+        },
+        name: 'FirebaseAuthError',
+        namespace: '',
+        nativeErrorCode: '',
+        nativeErrorMessage: '',
+      });
+      setUserLoading(false);
+
+      return;
+    }
+
+    if (doc.data()?.used) {
+      setError({
+        code: 'auth/registration-code-used',
+        message: 'รหัสลงทะเบียนนี้ถูกใช้แล้ว',
+        userInfo: {
+          authCredential: null,
+          resolver: null,
+        },
+        name: 'FirebaseAuthError',
+        namespace: '',
+        nativeErrorCode: '',
+        nativeErrorMessage: '',
+      });
+      setUserLoading(false);
+
+      return;
+    }
+    try {
+      await docRef.update({used: true});
+      const userCredential = await firebase
+        .auth()
+        .createUserWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+      if (!user) {
+        throw new Error(
+          'User creation was successful, but no user data was returned.',
+        );
+      }
+      if (!user || !user.email) {
+        return;
+      }
+      try {
+        const token = await user.getIdToken(true);
+        console.log('token', token);
+        const response = await fetch(
+          `${BACK_END_SERVER_URL}/api/company/createUser`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({email: user.email, uid: user.uid}),
+          },
+        );
+        if (!response.ok) {
+          throw new Error('Failed to create user on the server');
+        }
+        console.log('response', response);
+
+        await response.json();
+        navigation.navigate('CreateCompanyScreen');
+
+        setUserLoading(false);
+        // Proceed with additional client-side logic if needed
+      } catch (serverError) {
+        Alert.alert(
+          'เกิดข้อผิดพลาด',
+          `Server-side user creation failed:, ${serverError}`,
+          [{text: 'OK', onPress: () => setUserLoading(false)}],
+          {cancelable: false},
+        );
+        // Handle server-side error
+      }
+    } catch (error) {
+      let errorMessage = '';
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'อีเมลล์นี้ถูกสมัครสมาชิกไปแล้ว';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'กรอกอีเมลล์ไม่ถูกต้อง';
+      }
+      setError({...error, message: errorMessage});
+      setUserLoading(false);
+    }
+  };
+  const {
+    handleSubmit,
+    control,
+    formState: {isValid, isDirty, errors},
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+      registrationCode: '',
+      confirmPassword: '',
+    },
+    resolver: yupResolver(schema),
+  });
+  const email = useWatch({control, name: 'email'});
+  const password = useWatch({control, name: 'password'});
+  const confirmPassword = useWatch({control, name: 'confirmPassword'});
+  const registrationCode = useWatch({control, name: 'registrationCode'});
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   // const signUpEmail = async () => {
   //   setUserLoading(true);
@@ -76,49 +216,7 @@ const RegisterScreen = ({navigation}: Props) => {
   //     setUserLoading(false);
   //     return;
   //   }
-
-  //   const docRef = firebase
-  //     .firestore()
-  //     .collection('registrationCodes')
-  //     .doc(registrationCode);
-  //   const doc = await docRef.get();
-  //   if (!doc.exists) {
-  //     setError({
-  //       code: 'auth/invalid-registration-code',
-  //       message: 'รหัสลงทะเบียนไม่ถูกต้อง',
-  //       userInfo: {
-  //         authCredential: null,
-  //         resolver: null,
-  //       },
-  //       name: 'FirebaseAuthError',
-  //       namespace: '',
-  //       nativeErrorCode: '',
-  //       nativeErrorMessage: '',
-  //     });
-  //     setUserLoading(false);
-
-  //     return;
-  //   }
-
-  //   if (doc.data()?.used) {
-  //     setError({
-  //       code: 'auth/registration-code-used',
-  //       message: 'รหัสลงทะเบียนนี้ถูกใช้แล้ว',
-  //       userInfo: {
-  //         authCredential: null,
-  //         resolver: null,
-  //       },
-  //       name: 'FirebaseAuthError',
-  //       namespace: '',
-  //       nativeErrorCode: '',
-  //       nativeErrorMessage: '',
-  //     });
-  //     setUserLoading(false);
-
-  //     return;
-  //   }
   //   try {
-  //     await docRef.update({used: true});
   //     const userCredential = await firebase
   //       .auth()
   //       .createUserWithEmailAndPassword(email, password);
@@ -149,7 +247,7 @@ const RegisterScreen = ({navigation}: Props) => {
   //         throw new Error('Failed to create user on the server');
   //       }
 
-  //       const responseData = await response.json();
+  //       await response.json();
   //       navigation.navigate('CreateCompanyScreen');
 
   //       setUserLoading(false);
@@ -158,8 +256,7 @@ const RegisterScreen = ({navigation}: Props) => {
   //       Alert.alert(
   //         'เกิดข้อผิดพลาด',
   //         `Server-side user creation failed:, ${serverError}`,
-  //         [{text: 'OK', onPress: () =>         setUserLoading(false)
-  //       }],
+  //         [{text: 'OK', onPress: () => setUserLoading(false)}],
   //         {cancelable: false},
   //       );
   //       // Handle server-side error
@@ -175,101 +272,6 @@ const RegisterScreen = ({navigation}: Props) => {
   //     setUserLoading(false);
   //   }
   // };
-  const {
-    handleSubmit,
-    control,
-    formState: {isValid, isDirty, errors},
-  } = useForm({
-    mode: 'onChange',
-    defaultValues: {
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
-    resolver: yupResolver(schema),
-  });
-  const email = useWatch({control, name: 'email'});
-  const password = useWatch({control, name: 'password'});
-  const confirmPassword = useWatch({control, name: 'confirmPassword'});
-  const [passwordVisible, setPasswordVisible] = useState(false);
-
-  const signUpEmail = async () => {
-    setUserLoading(true);
-    await AsyncStorage.setItem('userEmail', email);
-    await AsyncStorage.setItem('userPassword', password);
-
-    if (password !== confirmPassword) {
-      setError({
-        code: 'auth/passwords-not-matching',
-        message: 'รหัสผ่านไม่ตรงกัน',
-        userInfo: {
-          authCredential: null,
-          resolver: null,
-        },
-        name: 'FirebaseAuthError',
-        namespace: '',
-        nativeErrorCode: '',
-        nativeErrorMessage: '',
-      });
-      setUserLoading(false);
-      return;
-    }
-    try {
-      const userCredential = await firebase
-        .auth()
-        .createUserWithEmailAndPassword(email, password);
-      const user = userCredential.user;
-      if (!user) {
-        throw new Error(
-          'User creation was successful, but no user data was returned.',
-        );
-      }
-      if (!user || !user.email) {
-        return;
-      }
-      try {
-        const token = await user.getIdToken(true);
-
-        const response = await fetch(
-          `${BACK_END_SERVER_URL}/api/company/createUser`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({email: user.email, uid: user.uid}),
-          },
-        );
-        if (!response.ok) {
-          throw new Error('Failed to create user on the server');
-        }
-
-        await response.json();
-        navigation.navigate('CreateCompanyScreen');
-
-        setUserLoading(false);
-        // Proceed with additional client-side logic if needed
-      } catch (serverError) {
-        Alert.alert(
-          'เกิดข้อผิดพลาด',
-          `Server-side user creation failed:, ${serverError}`,
-          [{text: 'OK', onPress: () => setUserLoading(false)}],
-          {cancelable: false},
-        );
-        // Handle server-side error
-      }
-    } catch (error) {
-      let errorMessage = '';
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'อีเมลล์นี้ถูกสมัครสมาชิกไปแล้ว';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'กรอกอีเมลล์ไม่ถูกต้อง';
-      }
-      setError({...error, message: errorMessage});
-      setUserLoading(false);
-    }
-  };
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
@@ -291,7 +293,7 @@ const RegisterScreen = ({navigation}: Props) => {
               <TextInput
                 onChangeText={onChange}
                 onBlur={onBlur}
-                keyboardType='email-address'
+                keyboardType="email-address"
                 value={value}
                 error={!!error}
                 label={'อีเมล'}
@@ -311,7 +313,7 @@ const RegisterScreen = ({navigation}: Props) => {
                 onBlur={onBlur}
                 value={value}
                 label="รหัสผ่าน"
-                keyboardType='visible-password'
+                keyboardType="visible-password"
                 secureTextEntry={!passwordVisible}
                 right={
                   <TextInput.Icon
@@ -339,14 +341,31 @@ const RegisterScreen = ({navigation}: Props) => {
                 label={'ยืนยันรหัสผ่าน'}
                 right={<TextInput.Icon icon="eye" />}
                 secureTextEntry
-                keyboardType='visible-password'
+                keyboardType="visible-password"
                 mode="outlined"
               />
               {error && <Text style={styles.errorText}>{error.message}</Text>}
             </View>
           )}
         />
-
+        <Controller
+          name="registrationCode"
+          control={control}
+          render={({field: {onBlur, onChange, value}, fieldState: {error}}) => (
+            <View style={{marginBottom: 20}}>
+              <TextInput
+                onChangeText={onChange}
+                onBlur={onBlur}
+                keyboardType="default"
+                value={value}
+                error={!!error}
+                label={'รหัสลงทะเบียน'}
+                mode="outlined"
+              />
+              {error && <Text style={styles.errorText}>{error.message}</Text>}
+            </View>
+          )}
+        />
         <Button
           mode="contained"
           style={[

@@ -41,7 +41,7 @@ import {
   Controller,
   set,
 } from 'react-hook-form';
-import { Button, Text as TextPaper,Checkbox } from 'react-native-paper';
+import { Button, Text as TextPaper,Checkbox,Appbar } from 'react-native-paper';
 
 interface ExistingModalProps {
   isVisible: boolean;
@@ -68,16 +68,13 @@ const ExistingMaterials = ({
     watch,
     formState: {errors},
   } = context as any;
-  const route = useRoute();
   const user = useUser();
 
   const {
-    state: {serviceList, selectedMaterials, code, serviceImages},
+    state: { code, },
     dispatch,
   }: any = useContext(Store);
-  const servicListIndex = serviceList.findIndex(
-    service => service.id === serviceId,
-  );
+
 
   const fetchExistingMaterials = async () => {
     if (!user) {
@@ -115,14 +112,17 @@ const ExistingMaterials = ({
   const handleSelectMaterial = (material: Material) => {
     const currentMaterials = getValues('materials') || [];
     const materialIndex = currentMaterials.findIndex(
-      materialData => materialData.materialData.id === material.id,
+      materialData => materialData.id === material.id,
     );
     if (materialIndex !== -1) {
       const updatedMaterials = [...currentMaterials];
       updatedMaterials.splice(materialIndex, 1);
       setValue('materials', updatedMaterials, {shouldDirty: true});
     } else {
-      const updatedMaterials = [...currentMaterials, {materialData: material}];
+      const updatedMaterials = [...currentMaterials, {
+        id: material.id,
+        name: material.name,
+      }];
       setValue('materials', updatedMaterials, {shouldDirty: true});
     }
   };
@@ -151,12 +151,21 @@ const ExistingMaterials = ({
   };
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
+       <Appbar.Header
+        mode="center-aligned"
+        style={{
+          backgroundColor: 'white',
+          width: Dimensions.get('window').width,
+        }}>
+        <Appbar.Action icon={'close'} onPress={onClose} />
+        <Appbar.Content
+          title="วัสดุอุปกรณ์ที่ต้องการนำเสนอ"
+          titleStyle={{fontSize: 16, fontWeight: 'bold'}}
+        />
+        
+      </Appbar.Header>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <FontAwesomeIcon icon={faClose} size={32} color="gray" />
-          </TouchableOpacity>
-        </View>
+      
 
         <FlatList
           data={materials}
@@ -165,14 +174,15 @@ const ExistingMaterials = ({
               <TouchableOpacity
                 style={[
                   styles.card,
-                  (watch('materials') || []).some(m => m.materialData.id === item.id)
+                  (watch('materials') || []).some(m => m.id === item.id)
                     ? styles.cardChecked
                     : null,
                 ]}
                 onPress={() => handleSelectMaterial(item)}>
-                <Checkbox
+                <Checkbox.Android
+                
              status={(watch('materials') || []).some(
-              material => material.materialData.id === item.id,
+              material => material.id === item.id,
             ) ? 'checked' : 'unchecked'}
 
                   

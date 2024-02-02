@@ -280,7 +280,7 @@ const Quotation = ({navigation}: Props) => {
 
   const {data, isLoading, isError} = useQuery(
     // ['companyUser', email],
-    
+
     {
       queryKey: ['companyUser', email],
       queryFn: fetchCompanyUser,
@@ -293,17 +293,15 @@ const Quotation = ({navigation}: Props) => {
     },
   );
 
-
   const useSignature = () => {
     // Toggle the state of the picker and accordingly set the modal visibility
     setPickerVisible(prevPickerVisible => {
       const newPickerVisible = !prevPickerVisible;
       setSignatureModal(newPickerVisible);
-      if(!newPickerVisible){
-        methods.setValue('sellerSignature','', {shouldDirty:true})
-      }else{
-        methods.setValue('sellerSignature',signature, {shouldDirty:true})
-
+      if (!newPickerVisible) {
+        methods.setValue('sellerSignature', '', {shouldDirty: true});
+      } else {
+        methods.setValue('sellerSignature', signature, {shouldDirty: true});
       }
       return newPickerVisible;
     });
@@ -332,8 +330,7 @@ const Quotation = ({navigation}: Props) => {
 
   const handleAddProductForm = async () => {
     if (companyUser?.user) {
-      // setAddServicesModal(!addServicesModal);
-      dispatch(stateAction.reset_audit());
+
       navigation.navigate('AddProduct', {
         onAddService: newProduct => append(newProduct),
         quotationId: quotationId,
@@ -341,7 +338,8 @@ const Quotation = ({navigation}: Props) => {
       });
       // navigation.navigate('ExistingProduct', {id: companyUser.user?.id});
     } else {
-      await firebase.auth().signOut();
+      console.log('no user');
+      // await firebase.auth().signOut();
     }
   };
 
@@ -396,11 +394,11 @@ const Quotation = ({navigation}: Props) => {
     remove(index);
   };
 
-  const onClose =()=>{
-    setPickerVisible(false)
-    setSignatureModal(false)
-    methods.setValue('sellerSignature','', {shouldDirty:true})
-  }
+  const onClose = () => {
+    setPickerVisible(false);
+    setSignatureModal(false);
+    methods.setValue('sellerSignature', '', {shouldDirty: true});
+  };
 
   return (
     <>
@@ -417,15 +415,17 @@ const Quotation = ({navigation}: Props) => {
         />
         <Appbar.Content
           title="สร้างใบเสนอราคา"
-          titleStyle={{fontSize: 18, fontWeight: 'bold',      fontFamily: 'Sukhumvit Set Bold',
-        }}
+          titleStyle={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            fontFamily: 'Sukhumvit Set Bold',
+          }}
         />
         <Button
           // loading={postLoading}
           disabled={isDisabled}
           mode="contained"
           buttonColor={'#1b72e8'}
-
           onPress={handleButtonPress}>
           {'ไปต่อ'}
         </Button>
@@ -619,7 +619,6 @@ const Quotation = ({navigation}: Props) => {
                   })}
                 />
               </View>
-            
             </View>
           </ScrollView>
           <Modal
@@ -650,29 +649,24 @@ const Quotation = ({navigation}: Props) => {
         </View> */}
         </View>
         <Modal
-                isVisible={singatureModal}
-                style={styles.modal}
-                onBackdropPress={onClose}>
-                <SafeAreaView style={styles.containerModal}>
-                  <View style={styles.header}>
-                    <TouchableOpacity
-                      style={styles.closeButton}
-                      onPress={onClose}>
-                      <FontAwesomeIcon icon={faClose} size={24} color="gray" />
-                    </TouchableOpacity>
-                  </View>
-                  <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
-                  <SignatureComponent
-                    onClose={   ()=> setSignatureModal(false)
-                    }
-                    setSignatureUrl={setSignature}
-                    onSignatureSuccess={handleSignatureSuccess}
-                  />
-                </SafeAreaView>
-              </Modal>
-
+          isVisible={singatureModal}
+          style={styles.modal}
+          onBackdropPress={onClose}>
+          <SafeAreaView style={styles.containerModal}>
+            <View style={styles.header}>
+              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                <FontAwesomeIcon icon={faClose} size={24} color="gray" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text>
+            <SignatureComponent
+              onClose={() => setSignatureModal(false)}
+              setSignatureUrl={setSignature}
+              onSignatureSuccess={handleSignatureSuccess}
+            />
+          </SafeAreaView>
+        </Modal>
       </FormProvider>
-
     </>
   );
 };

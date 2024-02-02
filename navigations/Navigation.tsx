@@ -26,7 +26,6 @@ import {
 import Quotation from '../screens/quotation/create';
 import AddProductForm from '../screens/products/addProduct';
 import AddCustomer from '../screens/customer/addCustomer';
-import SelectContract from '../screens/contract/selectContract';
 import DocViewScreen from '../screens/quotation/webview';
 import DefaultContract from '../screens/contract/defaultContract';
 import ExistingProducts from '../screens/products/existingProducts';
@@ -314,21 +313,7 @@ const Navigation = ({initialRouteName}) => {
         />
        
      
-        <Stack.Screen
-          name="SelectContract"
-          component={SelectContract}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'รับทราบข้อกำหนดสัญญา',
-            headerBackTitleVisible: false,
-
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
+       
         <Stack.Screen
           name="EditQuotation"
           component={EditQuotation}

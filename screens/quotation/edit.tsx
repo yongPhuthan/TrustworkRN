@@ -131,7 +131,7 @@ const EditQuotation = ({navigation, route}: Props) => {
     dateOffer: quotation.dateOffer,
     dateEnd: quotation.dateEnd,
     docNumber: quotation.docNumber,
-    workers: quotation.workers.map((item: any) => item.worker),
+    workers: quotation.workers?  quotation.workers.map((item: any) => item.worker):'',
     sellerSignature: quotation.sellerSignature,
   };
 
@@ -143,6 +143,8 @@ const EditQuotation = ({navigation, route}: Props) => {
   const {fields, append, remove, update} = useFieldArray({
     control: methods.control,
     name: 'services',
+    
+    
   });
 
   const customer = useWatch({
@@ -201,9 +203,7 @@ const EditQuotation = ({navigation, route}: Props) => {
   };
 
   const handleAddProductForm = async () => {
-    if (companyUser?.user) {
-      // setAddServicesModal(!addServicesModal);
-      dispatch(stateAction.reset_audit());
+    if (companyUser) {
       navigation.navigate('AddProduct', {
         onAddService: newProduct => append(newProduct),
         quotationId: quotationId,
@@ -211,7 +211,8 @@ const EditQuotation = ({navigation, route}: Props) => {
       });
       // navigation.navigate('ExistingProduct', {id: companyUser.user?.id});
     } else {
-      await firebase.auth().signOut();
+      console.log('companyUser', companyUser);
+      // await firebase.auth().signOut();
     }
   };
 
@@ -269,7 +270,7 @@ const EditQuotation = ({navigation, route}: Props) => {
     setVisibleModalIndex(null);
     remove(index);
   };
-
+  console.log('services', services);
   return (
     <>
       <Appbar.Header
@@ -289,7 +290,7 @@ const EditQuotation = ({navigation, route}: Props) => {
         />
         <Button
           // loading={postLoading}
-          disabled={!isDisabled}
+          disabled={isDisabled}
           mode="contained"
           buttonColor={'#1b72e8'}
           onPress={handleButtonPress}>

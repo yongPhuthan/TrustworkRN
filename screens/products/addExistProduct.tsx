@@ -20,7 +20,6 @@ import {
   TouchableOpacity,
   Pressable,
 } from 'react-native';
-import {Header as HeaderRNE, HeaderProps} from '@rneui/themed';
 import Divider from '../../components/styles/Divider';
 import {
   useForm,
@@ -48,7 +47,7 @@ import SmallDivider from '../../components/styles/SmallDivider';
 import {FormData, ServiceList, CompanyUser, Audit} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
-import SelectAudit from '../../components/audits/selectAudit';
+import SelectStandard from '../../components/standard/selectStandard';
 import ExistingMaterials from '../../components/materials/existing';
 import GalleryScreen from '../../components/gallery/existing';
 import SaveButton from '../../components/ui/Button/SaveButton';
@@ -498,7 +497,7 @@ const AddProductForm = ({navigation, route}: Props) => {
             />
           </View>
           </View>
-          <SelectAudit
+          <SelectStandard
             isVisible={isModalVisible}
             serviceId={serviceID}
             onClose={() => setModalVisible(false)}

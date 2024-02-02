@@ -1,6 +1,6 @@
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {CompanyUser, Service, Quotation, AuditData} from './docType';
+import {CompanyUser, Service, Quotation, Standard} from './docType';
 
 export type Audit = {
   title: string;

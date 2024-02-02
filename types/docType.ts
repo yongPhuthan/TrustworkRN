@@ -92,7 +92,7 @@ export type Service = {
   serviceImages: string[];
   quotations: Quotation | null;
   quotationId: string | undefined;
-  audits: SelectedAuditData[]; 
+  standards: Standard[]; 
   materials: SelectedMaterialData[]; 
 };
 export type Material = {
@@ -265,15 +265,15 @@ export interface Audit {
   defaultChecked: boolean;
 }
 
-export type AuditData = {
-  id: number;
+export type Standard = {
+  id: string;
   number: number;
   image: string;
   title: string;
   content: string;
-  auditEffectDescription: string;
-  auditEffectImage: string;
-  auditShowTitle: string;
+  badStandardEffect: string;
+  badStandardImage: string;
+  standardShowTitle: string;
   category: string;
   subCategory: string;
   createdAt: string;
@@ -300,7 +300,7 @@ export type FormData = {
   qty: number;
   discountPercent: number;
   total: string;
-  audits: AuditData[];
+  audits: Standard[];
   materials?: MaterialData[];
   unit: string;
 };

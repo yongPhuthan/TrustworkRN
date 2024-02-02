@@ -49,7 +49,7 @@ import SmallDivider from '../../components/styles/SmallDivider';
 import {FormData, ServiceList, CompanyUser, Audit} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
-import SelectAudit from '../../components/audits/selectAudit';
+import SelectStandard from '../../components/standard/selectStandard';
 import ExistingMaterials from '../../components/materials/existing';
 import GalleryScreen from '../../components/gallery/existing';
 import SaveButton from '../../components/ui/Button/SaveButton';
@@ -86,7 +86,6 @@ const AddProductForm = ({navigation, route}: Props) => {
     navigation.goBack();
   };
   const defaultService = {
-    id: uuidv4(),
     title: null,
     description: null,
     unitPrice: 0,
@@ -97,7 +96,7 @@ const AddProductForm = ({navigation, route}: Props) => {
     serviceImage: '',
     serviceImages: [],
     quotationId,
-    audits: [],
+    standards: [],
     materials: [],
   };
   const methods = useForm<any>({
@@ -105,9 +104,9 @@ const AddProductForm = ({navigation, route}: Props) => {
     defaultValues: currentValue ? currentValue : defaultService,
     resolver: yupResolver(serviceValidationSchema),
   });
-  const audits = useWatch({
+  const standards = useWatch({
     control: methods.control,
-    name: 'audits',
+    name: 'standards',
     defaultValue: [],
   });
   const title = useWatch({
@@ -139,13 +138,12 @@ const AddProductForm = ({navigation, route}: Props) => {
   useEffect(() => {
     const unitPriceValue = methods.watch('unitPrice') || 0;
     const quantityValue = methods.watch('qty') || 0;
-  
+
     const unitPrice = new Decimal(unitPriceValue);
     const quantity = new Decimal(quantityValue);
-  
+
     const total = unitPrice.times(quantity);
     methods.setValue('total', total.toString());
-  
   }, [
     methods.watch('unitPrice'),
     methods.watch('qty'),
@@ -154,12 +152,11 @@ const AddProductForm = ({navigation, route}: Props) => {
   ]);
   const isButtonDisbled = useMemo(() => {
     return (
-      (materials.length > 0 && audits?.length > 0 && title !== null) ||
+      (materials.length > 0 && standards?.length > 0 && title !== null) ||
       ('' && unitPrice !== null) ||
       ''
     );
-  }, [audits, materials, title, unitPrice]);
-
+  }, [standards, materials, title, unitPrice]);
   return (
     <>
       <Appbar.Header
@@ -175,8 +172,7 @@ const AddProductForm = ({navigation, route}: Props) => {
         />
         <Appbar.Content
           title="เพิ่มสินค้า-บริการ"
-          titleStyle={{fontSize: 20,      fontFamily: 'Sukhumvit Set Bold',
-        }}
+          titleStyle={{fontSize: 18, fontFamily: 'Sukhumvit Set Bold',fontWeight: 'bold'}}
         />
         <Button
           // loading={postLoading}
@@ -259,7 +255,6 @@ const AddProductForm = ({navigation, route}: Props) => {
                             }}
                             onPress={() => {
                               setModalImagesVisible(true);
-
                             }}>
                             <FontAwesomeIcon
                               icon={faImages}
@@ -289,6 +284,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                     field: {onChange, onBlur, value},
                     fieldState: {error},
                   }) => (
+                    <View>
                     <TextInput
                       multiline
                       label={'ชื่อรายการ'}
@@ -300,9 +296,12 @@ const AddProductForm = ({navigation, route}: Props) => {
                       textAlignVertical="top"
                       value={value}
                     />
+                    {error && (
+                      <Text style={styles.errorText}>{error.message}</Text>
+                    )}
+                    </View>
                   )}
                 />
-
 
                 <Controller
                   control={methods.control}
@@ -312,18 +311,26 @@ const AddProductForm = ({navigation, route}: Props) => {
                     <TextInput
                       label={'รายละเอียด'}
                       keyboardType="name-phone-pad"
-                      multiline
-                      style={{marginTop: 10}}
+                      style={
+                        Platform.OS === 'ios'
+                          ? {
+                              height: 80,
+                              textAlignVertical: 'top',
+                              marginTop: 10,
+                            }
+                          : {marginTop: 10}
+                      }
                       mode="outlined"
+                      numberOfLines={3}
+                      multiline={true}
                       textAlignVertical="top"
                       error={!!error}
-                      numberOfLines={4}
                       onChangeText={onChange}
                       value={value}
                     />
                   )}
                 />
-               
+
                 <Controller
                   control={methods.control}
                   name="unitPrice"
@@ -334,36 +341,35 @@ const AddProductForm = ({navigation, route}: Props) => {
                     fieldState: {error},
                   }) => (
                     <CurrencyInput
-  placeholder="0"
-  onBlur={onBlur}
-  renderTextInput={(textInputProps: any) => (
-    <TextInput
-      left={<TextInput.Affix text={'ราคา/หน่วย'} />}
-      contentStyle={{
-        textAlign: 'center',
-      }}
-      right={<TextInput.Affix text={'บาท'} />}
-      {...textInputProps}
-      mode="outlined"
-      textAlignVertical='center'
-      keyboardType="number-pad"
-      textAlign='center'
-      error={!!error}
-      style={{
-        marginTop: 10,
-      }}
-    />
-  )}
-  onChangeValue={(newValue) => {
-    onChange(newValue);
-  }}
-  value={value.toString()}
-  delimiter=","
-  separator="."
-  precision={0}
-  minValue={0}
-/>
-
+                      placeholder="0"
+                      onBlur={onBlur}
+                      renderTextInput={(textInputProps: any) => (
+                        <TextInput
+                          left={<TextInput.Affix text={'ราคา/หน่วย'} />}
+                          contentStyle={{
+                            textAlign: 'center',
+                          }}
+                          right={<TextInput.Affix text={'บาท'} />}
+                          {...textInputProps}
+                          mode="outlined"
+                          textAlignVertical="center"
+                          keyboardType="number-pad"
+                          textAlign="center"
+                          error={!!error}
+                          style={{
+                            marginTop: 10,
+                          }}
+                        />
+                      )}
+                      onChangeValue={newValue => {
+                        onChange(newValue);
+                      }}
+                      value={value}
+                      delimiter=","
+                      separator="."
+                      precision={0}
+                      minValue={0}
+                    />
                   )}
                 />
                 <View style={styles.summary}>
@@ -469,7 +475,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                 <SmallDivider />
 
                 <View>
-                  {methods.watch('audits')?.length > 0 ? (
+                  {methods.watch('standards')?.length > 0 ? (
                     <View style={styles.cardContainer}>
                       <Text
                         style={{
@@ -482,13 +488,13 @@ const AddProductForm = ({navigation, route}: Props) => {
                         }}>
                         มาตรฐานของบริการนี้:
                       </Text>
-                      {methods.watch('audits')?.map((item: any) => (
+                      {methods.watch('standards')?.map((item: any) => (
                         <TouchableOpacity
-                          key={item.AuditData.id}
+                          key={item.id}
                           style={styles.card}
                           onPress={() => setModalVisible(true)}>
                           <Text style={styles.cardTitle}>
-                            {item.AuditData.auditShowTitle}
+                            {item.standardShowTitle}
                           </Text>
                           <Icon name="chevron-right" size={24} color="gray" />
                         </TouchableOpacity>
@@ -542,9 +548,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                           key={index}
                           style={styles.card}
                           onPress={() => setIsModalMaterialsVisible(true)}>
-                          <Text style={styles.cardTitle}>
-                            {item.materialData.name}
-                          </Text>
+                          <Text style={styles.cardTitle}>{item.name}</Text>
                           <Icon name="chevron-right" size={24} color="gray" />
                         </TouchableOpacity>
                       ))}
@@ -593,7 +597,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                   {/* <SaveButton disabled={!isButtonDisbled} onPress={handleDone} /> */}
                 </View>
               </View>
-              <SelectAudit
+              <SelectStandard
                 isVisible={isModalVisible}
                 serviceId={methods.watch('id')}
                 onClose={() => setModalVisible(false)}

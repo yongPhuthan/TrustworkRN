@@ -68,10 +68,10 @@ const DocViewScreen = ({navigation, route}: Props) => {
   );
 
   const [routes] = React.useState([
-    {key: 'quotation', title: 'Quotation', focusedIcon: 'file-document'},
+    {key: 'quotation', title: 'เพจ', focusedIcon: 'web'},
     {
       key: 'contracts',
-      title: 'Contracts',
+      title: 'เอกสาร',
       focusedIcon: 'file-document-outline',
     },
   ]);

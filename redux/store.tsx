@@ -1,6 +1,6 @@
 import React, {createContext, useReducer} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {SelectedAuditData, AuditData} from '../types/docType';
+import {SelectedAuditData, Standard} from '../types/docType';
 import * as contrains from './constrains';
 import {Service} from '../types/docType';
 export type StateType = {
@@ -13,7 +13,7 @@ export type StateType = {
   client_tax: string;
   client_address: string;
   serviceList: Service[];
-  selectedAudit: AuditData[];
+  selectedAudit: Standard[];
   selectedContract: [];
   periodPercent: JSON[];
   selectedMaterials: [];
@@ -234,7 +234,7 @@ function reducer(state: StateType, action: ActionType): StateType {
         ...state,
         selectedAudit: [
           ...state.selectedAudit,
-          ...(action.payload as AuditData[]),
+          ...(action.payload as Standard[]),
         ],
       };
 
