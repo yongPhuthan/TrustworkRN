@@ -632,6 +632,22 @@ const Quotation = ({navigation}: Props) => {
             isVisible={workerModal}
             onBackdropPress={() => setWorkerModal(false)}
             style={styles.modal}>
+               <Appbar.Header
+        mode="center-aligned"
+        style={{
+          backgroundColor: 'white',
+          width: Dimensions.get('window').width,
+        }}>
+        <Appbar.Action icon={'close'} onPress={()=>{
+                setWorkerpicker(!workerPicker);
+                setWorkerModal(false);
+              }} />
+        <Appbar.Content
+          title="เลือกทีมงานติดตั้ง"
+          titleStyle={{fontSize: 18, fontWeight: 'bold'}}
+        />
+        
+      </Appbar.Header>
             <ExistingWorkers
               onClose={() => {
                 setWorkerpicker(!workerPicker);
@@ -666,12 +682,6 @@ const Quotation = ({navigation}: Props) => {
         
       </Appbar.Header>
           <SafeAreaView style={styles.containerModal}>
-            {/* <View style={styles.header}>
-              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                <FontAwesomeIcon icon={faClose} size={24} color="gray" />
-              </TouchableOpacity>
-            </View> */}
-            {/* <Text style={styles.modalTitle}>ลายเซ็นผู้เสนอราคา</Text> */}
             <SignatureComponent
               onClose={() => setSignatureModal(false)}
               setSignatureUrl={setSignature}

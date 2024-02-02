@@ -131,7 +131,9 @@ const EditQuotation = ({navigation, route}: Props) => {
     dateOffer: quotation.dateOffer,
     dateEnd: quotation.dateEnd,
     docNumber: quotation.docNumber,
-    workers: quotation.workers?  quotation.workers.map((item: any) => item.worker):'',
+    workers: quotation.workers
+      ? quotation.workers.map((item: any) => item.worker)
+      : '',
     sellerSignature: quotation.sellerSignature,
   };
 
@@ -143,8 +145,6 @@ const EditQuotation = ({navigation, route}: Props) => {
   const {fields, append, remove, update} = useFieldArray({
     control: methods.control,
     name: 'services',
-    
-    
   });
 
   const customer = useWatch({
@@ -212,7 +212,7 @@ const EditQuotation = ({navigation, route}: Props) => {
       navigation.navigate('AddProduct', {
         onAddService: newProduct => append(newProduct),
         quotationId: quotationId,
-        currentValue:null
+        currentValue: null,
       });
       // navigation.navigate('ExistingProduct', {id: companyUser.user?.id});
     } else {
@@ -221,11 +221,11 @@ const EditQuotation = ({navigation, route}: Props) => {
     }
   };
 
-  const handleEditService = (index: number, currentValue:Service) => {
+  const handleEditService = (index: number, currentValue: Service) => {
     setShowEditServiceModal(!showEditServiceModal);
     handleModalClose();
     navigation.navigate('AddProduct', {
-      onAddService: newProduct => update(index,newProduct),
+      onAddService: newProduct => update(index, newProduct),
       currentValue,
       quotationId: quotationId,
     });
@@ -433,42 +433,6 @@ const EditQuotation = ({navigation, route}: Props) => {
                         </TouchableOpacity>
                       ) : null
                     }
-                    // ListEmptyComponent={
-                    //   <View>
-                    //     <TouchableOpacity
-                    //       style={{
-                    //         justifyContent: 'center',
-                    //         alignItems: 'center',
-                    //         marginBottom: 20,
-                    //         borderColor: '#0073BA',
-                    //         borderWidth: 1,
-                    //         borderRadius: 5,
-                    //         borderStyle: 'dashed',
-                    //         // marginHorizontal: 100,
-                    //         padding: 10,
-                    //         height: 150,
-                    //         width: 200,
-                    //       }}
-                    //       onPress={() => {
-                    //         setWorkerModal(true);
-                    //       }}>
-                    //       <FontAwesomeIcon
-                    //         icon={faImages}
-                    //         style={{marginVertical: 5, marginHorizontal: 50}}
-                    //         size={32}
-                    //         color="#0073BA"
-                    //       />
-                    //       <Text
-                    //         style={{
-                    //           textAlign: 'center',
-                    //           color: '#0073BA',
-                    //           fontFamily: 'Sukhumvit set',
-                    //         }}>
-                    //         เลือกภาพตัวอย่างผลงาน
-                    //       </Text>
-                    //     </TouchableOpacity>
-                    //   </View>
-                    // }
                   />
                 </View>
               )}
@@ -491,30 +455,57 @@ const EditQuotation = ({navigation, route}: Props) => {
                 />
               </View>
               <Modal
-          isVisible={singatureModal}
-          style={styles.modal}
-          onBackdropPress={onCloseSignature}>
-              <Appbar.Header
+            isVisible={workerModal}
+            onBackdropPress={() => setWorkerModal(false)}
+            style={styles.modal}>
+               <Appbar.Header
         mode="center-aligned"
         style={{
           backgroundColor: 'white',
           width: Dimensions.get('window').width,
         }}>
-        <Appbar.Action icon={'close'} onPress={onCloseSignature} />
+        <Appbar.Action icon={'close'} onPress={()=>{
+                setWorkerpicker(!workerPicker);
+                setWorkerModal(false);
+              }} />
         <Appbar.Content
-          title="ลายเซ็นผู้เสนอราคา"
+          title="เลือกทีมงานติดตั้ง"
           titleStyle={{fontSize: 18, fontWeight: 'bold'}}
         />
         
       </Appbar.Header>
-          <SafeAreaView style={styles.containerModal}>
-            <SignatureComponent
-              onClose={() => setSignatureModal(false)}
-              setSignatureUrl={setSignature}
-              onSignatureSuccess={handleSignatureSuccess}
+            <ExistingWorkers
+              onClose={() => {
+                setWorkerpicker(!workerPicker);
+                setWorkerModal(false);
+              }}
+              isVisible={workerModal}
             />
-          </SafeAreaView>
-        </Modal>
+          </Modal>
+              <Modal
+                isVisible={singatureModal}
+                style={styles.modal}
+                onBackdropPress={onCloseSignature}>
+                <Appbar.Header
+                  mode="center-aligned"
+                  style={{
+                    backgroundColor: 'white',
+                    width: Dimensions.get('window').width,
+                  }}>
+                  <Appbar.Action icon={'close'} onPress={onCloseSignature} />
+                  <Appbar.Content
+                    title="ลายเซ็นผู้เสนอราคา"
+                    titleStyle={{fontSize: 18, fontWeight: 'bold'}}
+                  />
+                </Appbar.Header>
+                <SafeAreaView style={styles.containerModal}>
+                  <SignatureComponent
+                    onClose={() => setSignatureModal(false)}
+                    setSignatureUrl={setSignature}
+                    onSignatureSuccess={handleSignatureSuccess}
+                  />
+                </SafeAreaView>
+              </Modal>
             </View>
           </ScrollView>
           <Modal
@@ -523,7 +514,7 @@ const EditQuotation = ({navigation, route}: Props) => {
             onBackdropPress={() => setAddCustomerModal(false)}>
             <AddCustomer onClose={() => setAddCustomerModal(false)} />
           </Modal>
-       
+
           <Modal
             isVisible={workerModal}
             onBackdropPress={() => setWorkerModal(false)}

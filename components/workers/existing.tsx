@@ -149,28 +149,10 @@ console.log(data)
   const handleAddNewProduct = () => {
     setIsOpenModal(true);
   };
-  console.log('workr')
   return (
     < >
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <FontAwesomeIcon icon={faClose} size={24} color="gray" />
-          </TouchableOpacity>
-          <Text style={{
-            fontSize: 16,
-            fontWeight: 'bold',
-            marginTop: 10,
-            textAlign: 'center',
-            marginBottom: 16,
-          
-          }}>เลือกทีมงานติดตั้ง</Text>
-          <TouchableOpacity
-              style={styles.onPlusButton}
-              onPress={() => setIsOpenModal(true)}>
-              <FontAwesomeIcon icon={faCirclePlus} size={24} color="gray" />
-            </TouchableOpacity>
-        </View>
+        
 
         <FlatList
           data={workers}
