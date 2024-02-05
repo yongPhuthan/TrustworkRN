@@ -1,56 +1,43 @@
-import React, {useState, useEffect} from 'react';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
 import {
-  StyleSheet,
   ActivityIndicator,
-  View,
-  TouchableOpacity,
-  Text,
+  StyleSheet,
+  View
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import CreateCompanyScreen from '../screens/register/createcompanyScreen';
-import {useNavigation} from '@react-navigation/native';
-import {useUser} from '../providers/UserContext';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import {HeaderBackButton} from '@react-navigation/elements';
-import firebase from '../firebase';
-import {
-  Audit,
-  ProductItem,
-  ParamListBase,
-  ScreenItem,
-  ScreenName,
-} from '../types/navigationType';
-import Quotation from '../screens/quotation/create';
-import AddProductForm from '../screens/products/addProduct';
-import AddCustomer from '../screens/customer/addCustomer';
-import DocViewScreen from '../screens/quotation/webview';
+import { useUser } from '../providers/UserContext';
 import DefaultContract from '../screens/contract/defaultContract';
+import AddCustomer from '../screens/customer/addCustomer';
+import AddProductForm from '../screens/products/addProduct';
 import ExistingProducts from '../screens/products/existingProducts';
+import Quotation from '../screens/quotation/create';
+import DocViewScreen from '../screens/quotation/webview';
+import CreateCompanyScreen from '../screens/register/createcompanyScreen';
+import {
+  ParamListBase,
+  ScreenItem
+} from '../types/navigationType';
 
-import AddExistProduct from '../screens/products/addExistProduct';
-import EditSetting from '../screens/setting/editSetting';
-import EditQuotation from '../screens/quotation/edit';
 import ContractOption from '../screens/contract/contractOptions';
+import AddExistProduct from '../screens/products/addExistProduct';
+import EditQuotation from '../screens/quotation/edit';
+import EditSetting from '../screens/setting/editSetting';
 
-import Installment from '../screens/utils/installment';
+import DashboardContract from '../screens/contract/dashboard';
+import EditDefaultContract from '../screens/contract/edit/editDefaultContract';
+import ExistingContract from '../screens/contract/existingContract';
 import FirstAppScreen from '../screens/register/firstAppScreen';
 import LoginScreen from '../screens/register/loginScreen';
-import SettingsScreen from '../screens/setting/setting';
-import Dashboard from '../screens/quotation/dashboard';
-import ExistingWorkers from '../screens/workers/existing';
-import AddNewWorker from '../screens/workers/addNew';
 import RegisterScreen from '../screens/register/registerScreen';
-import EditDefaultContract from '../screens/contract/edit/editDefaultContract';
-import CreateContractScreen from '../screens/contract/createContractScreen';
+import SettingsScreen from '../screens/setting/setting';
 import Selectworks from '../screens/submit/selectworks';
 import SendWorks from '../screens/submit/sendWorks';
-import DashboardDrawer from './dashboardDrawer';
-import ExistingContract from '../screens/contract/existingContract';
-import DashboardContract from '../screens/contract/dashboard';
+import Installment from '../screens/utils/installment';
 import TopUpScreen from '../screens/utils/topup';
+import AddNewWorker from '../screens/workers/addNew';
+import ExistingWorkers from '../screens/workers/existing';
+import DashboardDrawer from './dashboardDrawer';
 // import BootSplash from "react-native-bootsplash";
 
 
@@ -184,7 +171,7 @@ const Navigation = ({initialRouteName}) => {
           component={Installment}
           options={{
             ...commonScreenOptions,
-            headerShown: true,
+            headerShown: false,
             title: 'แบ่งงวดชำระ',
             headerBackTitleVisible: false,
             headerStyle: {
@@ -214,7 +201,7 @@ const Navigation = ({initialRouteName}) => {
           component={EditSetting}
           options={{
             ...commonScreenOptions,
-            headerShown: true,
+            headerShown: false,
             title: 'แก้ไขข้อมูลธุรกิจ',
             headerBackTitleVisible: false,
             headerStyle: {
@@ -378,7 +365,7 @@ const Navigation = ({initialRouteName}) => {
           component={ContractOption}
           options={{
             ...commonScreenOptions,
-            headerShown: true,
+            headerShown: false,
             title: 'รายละเอียดสัญญา',
             headerBackTitleVisible: false,
 
@@ -388,34 +375,8 @@ const Navigation = ({initialRouteName}) => {
             headerTintColor: 'black',
           }}
         />
-         <Stack.Screen
-          name="DashboardContract"
-          component={DashboardContract}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'รายการสัญญา',
-            headerBackTitleVisible: false,
+        
 
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-        <Stack.Screen name="CreateContractScreen" 
-         options={{
-          ...commonScreenOptions,
-          headerShown: true,
-          title: 'เริ่มทำสัญญา',
-          headerBackTitleVisible: false,
-
-          headerStyle: {
-            backgroundColor: '#ffffff',
-          },
-          headerTintColor: 'black',
-        }}
-        component={CreateContractScreen} />
 
        
       </Stack.Navigator>

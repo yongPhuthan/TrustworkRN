@@ -1,42 +1,43 @@
-import React, {useState, useEffect, useCallback} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  FlatList,
-  Alert,
-  ScrollView,
-  TextInput,
-  KeyboardAvoidingView,
-  SafeAreaView,
-  Dimensions,
-  Platform,
-} from 'react-native';
-import {Button} from 'react-native-paper';
-import RNPickerSelect from 'react-native-picker-select';
-import {useForm, Controller, useFieldArray} from 'react-hook-form';
+import {BACK_END_SERVER_URL} from '@env';
+import {RouteProp, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {HOST_URL, BACK_END_SERVER_URL} from '@env';
-import {useRoute} from '@react-navigation/native';
-import {faChevronDown} from '@fortawesome/free-solid-svg-icons';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Or another library of your choice
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {useUser} from '../../providers/UserContext';
-import SmallDivider from '../../components/styles/SmallDivider';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import ContractFooter from '../../components/styles/ContractFooter';
-import {ParamListBase} from '../../types/navigationType';
-import {RouteProp} from '@react-navigation/native';
-import {useSignatureUpload} from '../../hooks/utils/image/useSignatureUpload';
-import SaveButton from '../../components/ui/Button/SaveButton';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
+import React, {useCallback, useEffect, useState} from 'react';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import Decimal from 'decimal.js-light';
+import SignatureComponent from '../../components/utils/signature';
+import {installmentValidationSchema} from '../utils/validationSchema';
+import {yupResolver} from '@hookform/resolvers/yup';
+import Modal from 'react-native-modal';
 
-interface InstallmentDetail {
-  installment: number;
-  percentage: number;
-  amount: number;
-}
+import {Controller, useFieldArray, useForm} from 'react-hook-form';
+import {
+  Alert,
+  Dimensions,
+  FlatList,
+  Switch,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import {
+  Appbar,
+  Button,
+  ProgressBar,
+  Card,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native-paper';
+import RNPickerSelect from 'react-native-picker-select';
+import Icon from 'react-native-vector-icons/FontAwesome'; // Or another library of your choice
+import SmallDivider from '../../components/styles/SmallDivider';
+import SaveButton from '../../components/ui/Button/SaveButton';
+import {useSignatureUpload} from '../../hooks/utils/image/useSignatureUpload';
+import {useUser} from '../../providers/UserContext';
+import {ParamListBase} from '../../types/navigationType';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'Installment'>;
@@ -44,45 +45,17 @@ type Props = {
 
   data: any;
 };
-interface MyError {
-  response: object;
-}
-type UpdateContractInput = {
-  data: any;
-};
-// const updateContract = async (input: UpdateContractInput): Promise<any> => {
-//   const {data} = input;
-//   const user = auth().currentUser;
-//   console.log('data PUT', JSON.stringify(data));
-//   let url;
-//   if (__DEV__) {
-//     url = `http://${HOST_URL}:5001/${PROJECT_FIREBASE}/asia-southeast1/appUpdateFinalContract`;
-//   } else {
-//     url = `https://asia-southeast1-${PROJECT_FIREBASE}.cloudfunctions.net/appUpdateFinalContract`;
-//   }
-
-//   const response = await fetch(url, {
-//     method: 'PUT',
-//     headers: {
-//       'Content-Type': 'application/json',
-//       Authorization: `Bearer ${user?.uid}`,
-//     },
-//     body: JSON.stringify({data}),
-//   });
-//   if (!response.ok) {
-//     throw new Error('Network response was not ok');
-//   }
-//   const responseData = await response.json();
-//   return responseData;
-// };
 
 const Installment = ({navigation}: Props) => {
   const route = useRoute();
   const dataProps: any = route.params?.data;
+  const [singatureModal, setSignatureModal] = useState(false);
   const totalPrice = dataProps.total;
   const [installments, setInstallments] = useState<number>(0);
   const user = useUser();
   const queryClient = useQueryClient();
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [signature, setSignature] = useState<string | null>(null);
 
   const {isSignatureUpload, signatureUrl, handleSignatureUpload} =
     useSignatureUpload();
@@ -91,16 +64,24 @@ const Installment = ({navigation}: Props) => {
   const [isPercentagesValid, setIsPercentagesValid] = useState<boolean>(true);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
+  const onCloseSignature = () => {
+    setPickerVisible(false);
+    setSignatureModal(false);
+    setValue('sellerSignature', '', {shouldDirty: true});
+  };
+  const handleSignatureSuccess = () => {
+    setSignatureModal(false);
+  };
   const updateQuotation = async (data: any) => {
     if (!user || !user.email) {
-      console.error('User or user email is not available');
-      return;
+      throw new Error('User or user email is not available');
     }
     try {
       const token = await user.getIdToken(true);
       const response = await fetch(
-        `${BACK_END_SERVER_URL}/api/documents/updateQuotationPeriod`,
+        `${BACK_END_SERVER_URL}/api/documents/updateQuotationPeriod?email=${encodeURIComponent(
+          user.email,
+        )}`,
         {
           method: 'PUT',
           headers: {
@@ -111,21 +92,16 @@ const Installment = ({navigation}: Props) => {
         },
       );
       if (!response.ok) {
-        if (response.status === 401) {
-          const errorData = await response.json();
-          if (
-            errorData.message ===
-            'Token has been revoked. Please reauthenticate.'
-          ) {
-          }
-          throw new Error(errorData.message);
-        }
-        throw new Error('Network response was not ok.');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Network response was not ok.');
       }
+      const text = await response.text();
+      return text ? JSON.parse(text) : {};
     } catch (err) {
-      console.log(err);
+      throw new Error(err);
     }
   };
+  
 
   const [installmentDetailsText, setInstallmentDetailsText] = useState<{
     [key: number]: string;
@@ -140,6 +116,7 @@ const Installment = ({navigation}: Props) => {
     setValue,
   } = useForm({
     defaultValues: {
+      sellerSignature: '',
       installments: [
         {
           amount: 0,
@@ -148,6 +125,7 @@ const Installment = ({navigation}: Props) => {
         },
       ],
     },
+    resolver: yupResolver(installmentValidationSchema),
   });
 
   const {fields, append, remove} = useFieldArray({
@@ -159,27 +137,21 @@ const Installment = ({navigation}: Props) => {
     mutationFn: updateQuotation,
     onSuccess: data => {
       const newId = dataProps.quotationId.slice(0, 8);
-      queryClient.invalidateQueries(['dashboardData']);
-      navigation.navigate('Signature', {
-        text: 'signature',
-        data: dataProps,
+      queryClient.invalidateQueries(['contractDashboard']);
+      navigation.navigate('DocViewScreen', {
+        id: newId,
       });
-      // navigation.navigate('DocViewScreen', {
-      //   id: newId,
-      // });
     },
     onError: (error: any) => {
-      console.error('There was a problem calling the function:', error);
-      let errorMessage = 'An unexpected error occurred';
+      Alert.alert(
+        'เกิดข้อผิดพลาด',
+        `Server-side user creation failed:, ${error}`,
+        [{text: 'OK'}],
 
-      if (error.response && error.response.status === 401) {
-        errorMessage = 'Authentication error. Please re-login.';
-      } else if (error.response) {
-        errorMessage = error.response.data.error || errorMessage;
-      }
-
-      Alert.alert('Error', errorMessage);
+        {cancelable: false},
+      );
     },
+    
   });
   useEffect(() => {
     const totalPercentage = Object.values(percentages).reduce(
@@ -213,25 +185,16 @@ const Installment = ({navigation}: Props) => {
         details: installmentDetailsText[Number(key)],
       }),
     );
+    if (!dataProps.contract) {
+      dataProps.contract = {};
+  }
     dataProps.periodPercent = newInstallmentDetails;
     dataProps.contract.projectName = dataProps.projectName;
     dataProps.contract.signAddress = dataProps.signAddress;
     dataProps.contract.signDate = dataProps.signDate;
     dataProps.contract.servayDate = dataProps.servayDate;
-    dataProps.contract.id = dataProps.contractID;
-    if (dataProps.sellerSignature) {
-      navigation.navigate('ExistingSignature', {
-        data: dataProps,
-      });
-    } else {
-      // await mutate({data: dataProps});
-      navigation.navigate('Signature', {
-        text: 'signature',
-        data: dataProps,
-      });
-    }
 
-    // await mutate({data: dataProps});
+    await mutate({data: dataProps});
   }, [
     isPercentagesValid,
     errorMessage,
@@ -277,162 +240,167 @@ const Installment = ({navigation}: Props) => {
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        <ActivityIndicator />
+        <ActivityIndicator size={'large'} />
       </View>
     );
   }
-
+console.log('dataProps.projectName', dataProps)
   const renderItem = ({item, index}: {item: any; index: number}) => (
-    <View style={styles.card}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-        }}>
-        <View style={styles.inputContainerForm}>
-          <TextInput
-            style={{fontWeight: 'bold'}}
-            textAlign="center"
-            aria-disabled>
-            งวดที่ {index + 1}
-          </TextInput>
-          <Controller
-            control={control}
-            render={({field}) => (
+    <Card
+      mode="outlined"
+      style={{
+        borderRadius: 8,
+        width: '100%',
+        // paddingHorizontal: 12,
+        paddingVertical: 12,
+        backgroundColor: 'white',
+        marginBottom: 10,
+      }}
+      testID="installmentCard">
+      <Card.Title title={`งวดที่ ${index + 1}`} />
+      <Card.Content>
+        <Controller
+          control={control}
+          render={({field: {onBlur, onChange, value}, fieldState: {error}}) => (
+            <View>
               <TextInput
-                style={{width: 40, textAlign: 'center'}}
+                left={<TextInput.Affix text={`จำนวน`} />}
+                right={<TextInput.Affix text="%" />}
+                style={{width: '70%', textAlign: 'center'}}
+                mode="outlined"
+                error={!!error}
                 placeholder="0"
+                onBlur={onBlur}
+                value={value ? String(value) : '0'}
                 onChangeText={value => {
-                  field.onChange(value);
-                  handlePercentageChange(value, index);
+                  const formattedValue = String(parseFloat(value));
+                  onChange(formattedValue);
+                  handlePercentageChange(formattedValue, index);
                 }}
                 keyboardType="numeric"
               />
-            )}
-            name={`installments.${index}.percentage`}
-            rules={{required: true}}
-          />
-
-          <TextInput textAlign="center">%</TextInput>
-        </View>
-        {/* <View style={styles.inputContainerForm}>
-          <Text
-            style={{
-              width: 30,
-              height: 45,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            งวดที่ {index + 1}
-          </Text>
-          <Controller
-            control={control}
-            render={({field}) => (
-              <TextInput
-                style={{width: 40, textAlign: 'center'}}
-                placeholder="0"
-                onChangeText={value => {
-                  field.onChange(value);
-                  handlePercentageChange(value, index);
-                }}
-                keyboardType="numeric"
-              />
-            )}
-            name={`installments[${index}].percentage`}
-            rules={{required: true}}
-          />
-
-          <Text style={styles.inputSuffix}>%</Text>
-        </View> */}
+              {error && <Text style={{color: 'red'}}>{error.message}</Text>}
+            </View>
+          )}
+          name={`installments.${index}.percentage`}
+          rules={{required: true}}
+        />
         <Text style={styles.amountText}>
-          {(!isNaN(totalPrice * percentages[index])
-            ? (totalPrice * percentages[index]) / 100
-            : 0
-          ).toFixed(2)}{' '}
+          เป็นเงิน{' '}
+          {!isNaN(totalPrice * percentages[index])
+            ? new Intl.NumberFormat('th-TH', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2,
+              }).format(
+                new Decimal((totalPrice * percentages[index]) / 100).toNumber(),
+              )
+            : 0}{' '}
           บาท
         </Text>
-      </View>
-      <View style={styles.cardContent}>
-        <View style={{alignSelf: 'flex-start'}}>
+
+        <View style={{alignSelf: 'flex-start', marginTop: 30}}>
           <Text style={styles.title}>{`รายละเอียดงวดที่ ${index + 1}`}</Text>
           <Controller
             control={control}
             name={`installments.${index}.details`}
-            render={({field}) => (
-              <TextInput
-                multiline
-                style={styles.Multilines}
-                placeholder={
-                  index === 0
-                    ? `ตัวอย่าง. ชำระมัดจำเพื่อเริ่มผลิตงาน...`
-                    : `ตัวอย่าง. ชำระเมื่อส่งงานติดตั้งรายการที่ ${index} แล้วเสร็จ...`
-                }
-                onChangeText={value => {
-                  field.onChange(value);
-                  handleInstallmentDetailsTextChange(value, index);
-                }}
-              />
+            render={({field, fieldState: {error}}) => (
+              <View>
+                <TextInput
+                  error={!!error}
+                  multiline
+                  mode="outlined"
+                  style={{
+                    width: Dimensions.get('window').width * 0.75,
+                    marginBottom: 10,
+                    height: 100,
+                  }}
+                  placeholder={
+                    index === 0
+                      ? `เช่น ชำระมัดจำเพื่อเริ่มผลิตงาน...`
+                      : `เช่น ชำระเมื่อส่งงานติดตั้งรายการที่ ${index} แล้วเสร็จ...`
+                  }
+                  onChangeText={value => {
+                    field.onChange(value);
+                    handleInstallmentDetailsTextChange(value, index);
+                  }}
+                />
+                {error && <Text style={{color: 'red'}}>{error.message}</Text>}
+              </View>
             )}
             rules={{required: true}}
           />
-
-          {/* {errors && (
-            <Text
-              style={{
-                color: 'red',
-                fontSize: 12,
-              }}>
-              กรุณาใส่ข้อมูล
-            </Text>
-          )} */}
         </View>
-      </View>
-
-      <View style={{marginTop: 5}}>
-        <SmallDivider />
-      </View>
-    </View>
+      </Card.Content>
+    </Card>
   );
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <View style={{flex: 1, marginTop: 5}}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={
-            Platform.OS === 'ios' ? 0 : -Dimensions.get('window').height
-          }
-          style={styles.container}>
-          <ScrollView
-            style={{flex: 1, backgroundColor: '#FFFFFF', paddingHorizontal: 5}}>
-            <View style={styles.innerContainer}>
-              {installments < 1 && (
-                <Text style={styles.header}>โครงการนี้แบ่งจ่ายกี่งวด</Text>
-              )}
-              <Text style={styles.subHeader}>
-                ยอดรวม:{' '}
-                {Number(totalPrice)
-                  .toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}{' '}
-                บาท
-              </Text>
-              <RNPickerSelect
-                onValueChange={value => setInstallments(value)}
-                items={pickerItems}
-                placeholder={{label: 'เลือกจำนวนงวด', value: null}}
-                style={pickerSelectStyles}
-                useNativeAndroidPickerStyle={false}
-                Icon={DropdownIcon as any}
-              />
-              {installments > 0 && (
-                <>
-                  <FlatList
-                    data={Array.from({length: installments})}
-                    renderItem={renderItem}
-                    keyExtractor={(_, index) => index.toString()}
-                  />
-                  <View
+    <>
+      <Appbar.Header
+        elevated
+        mode="center-aligned"
+        style={{
+          backgroundColor: 'white',
+        }}>
+        <Appbar.BackAction
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
+        <Appbar.Content
+          title="แบ่งงวดชำระ"
+          titleStyle={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            fontFamily: 'Sukhumvit Set Bold',
+          }}
+        />
+        <Button
+          // loading={postLoading}
+          disabled={!isPercentagesValid || !isValid}
+          mode="contained"
+          buttonColor={'#1b72e8'}
+          onPress={handleSave}>
+          {'ไปต่อ'}
+        </Button>
+      </Appbar.Header>
+      <SafeAreaView style={{flex: 1}}>
+        <View style={{flex: 1, marginTop: 5}}>
+          <KeyboardAwareScrollView style={styles.container}>
+            <ScrollView
+              style={{
+                flex: 1,
+                backgroundColor: '#FFFFFF',
+                paddingHorizontal: 5,
+              }}>
+              <View style={styles.innerContainer}>
+                {installments < 1 && (
+                  <Text style={styles.header}>โครงการนี้แบ่งจ่ายกี่งวด</Text>
+                )}
+                <Text style={styles.subHeader}>
+                  ยอดรวม{' '}
+                  {Number(totalPrice)
+                    .toFixed(2)
+                    .replace(/\d(?=(\d{3})+\.)/g, '$&,')}{' '}
+                  บาท
+                </Text>
+                <RNPickerSelect
+                  onValueChange={value => setInstallments(value)}
+                  items={pickerItems}
+                  placeholder={{label: 'เลือกจำนวนงวด', value: null}}
+                  style={pickerSelectStyles}
+                  useNativeAndroidPickerStyle={false}
+                  Icon={DropdownIcon as any}
+                />
+
+                {installments > 0 && (
+                  <>
+                    <FlatList
+                      data={Array.from({length: installments})}
+                      renderItem={renderItem}
+                      keyExtractor={(_, index) => index.toString()}
+                    />
+                    {/* <View
                     style={{
                       width: '100%',
                       alignSelf: 'center',
@@ -443,14 +411,15 @@ const Installment = ({navigation}: Props) => {
                       onPress={handleSave}
                       disabled={!isPercentagesValid || !isValid}
                     />
-                  </View>
-                </>
-              )}
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </View>
-    </SafeAreaView>
+                  </View> */}
+                  </>
+                )}
+              </View>
+            </ScrollView>
+          </KeyboardAwareScrollView>
+        </View>
+      </SafeAreaView>
+    </>
   );
 };
 const {width} = Dimensions.get('window');
@@ -482,9 +451,8 @@ const styles = StyleSheet.create({
   },
   amountText: {
     fontSize: 16,
-    fontWeight: '500',
+    // fontWeight: '500',
     marginTop: 10,
-    verticalAlign: 'middle',
   },
   containerBtn: {
     justifyContent: 'center',
@@ -531,6 +499,20 @@ const styles = StyleSheet.create({
     marginTop: 10,
     verticalAlign: 'middle',
   },
+  signatureRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  signHeader: {
+    flexDirection: 'row',
+    marginTop: 10,
+    fontSize: 16,
+    color: '#19232e',
+  },
+  signText: {
+    fontSize: 18,
+    marginVertical: 10,
+  },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -551,6 +533,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modal: {
+    marginTop: 10,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    borderRadius: 10,
+    height: Dimensions.get('window').height * 0.2,
+  },
 
   input: {
     flex: 1,
@@ -567,6 +556,12 @@ const styles = StyleSheet.create({
     width: width * 0.8,
     marginBottom: 20,
     height: 100,
+  },
+  containerModal: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#fff',
+    width: Dimensions.get('window').width,
   },
   button: {
     width: '90%',

@@ -1,35 +1,27 @@
-import React, {useState, useContext} from 'react';
+import { BACK_END_SERVER_URL } from '@env';
 import {
-  View,
-  Text,
+  faPlus
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useQuery } from '@tanstack/react-query';
+import React, { useContext, useState } from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
   Image,
   StyleSheet,
-  Dimensions,
+  Text,
   TouchableOpacity,
-  ActivityIndicator,
-  FlatList,
+  View,
 } from 'react-native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp} from '@react-navigation/native';
-import {useRoute} from '@react-navigation/native';
-import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {CompanyUser, Service} from '../../types/docType';
-import {ParamListBase, ProductItem} from '../../types/navigationType';
+import { useUser } from '../../providers/UserContext';
 import * as stateAction from '../../redux/actions';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {useUser} from '../../providers/UserContext';
-import {
-  faPlus,
-  faDrawPolygon,
-  faCog,
-  faBell,
-  faChevronRight,
-  faCashRegister,
-  faCoins,
-} from '@fortawesome/free-solid-svg-icons';
-import {Store} from '../../redux/store';
+import { Store } from '../../redux/store';
+import { CompanyUser, Service } from '../../types/docType';
+import { ParamListBase } from '../../types/navigationType';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ExistingProduct'>;
   route: RouteProp<ParamListBase, 'ExistingProduct'>;

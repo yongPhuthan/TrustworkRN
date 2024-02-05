@@ -1,15 +1,13 @@
+import { faBell } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import React from 'react';
-import Dashboard from '../screens/quotation/dashboard';
-import {TouchableOpacity, View, Text,KeyboardAvoidingView,SafeAreaView} from 'react-native';
+import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 import 'react-native-gesture-handler';
-import {Divider, Drawer as PaperDrawer} from 'react-native-paper';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faBell} from '@fortawesome/free-solid-svg-icons';
-import DefaultContract from '../screens/contract/defaultContract';
-import {ParamListBase} from '../types/navigationType';
-import SettingsScreen from '../screens/setting/setting';
+import { Divider, Drawer as PaperDrawer } from 'react-native-paper';
 import ExistingContract from '../screens/contract/existingContract';
-import {createDrawerNavigator} from '@react-navigation/drawer';
+import Dashboard from '../screens/quotation/dashboard';
+import { ParamListBase } from '../types/navigationType';
 
 const Drawer = createDrawerNavigator<ParamListBase>();
 const commonScreenOptions = {
@@ -90,10 +88,13 @@ function DashboardDrawer() {
       <Drawer.Screen
         name="Dashboard"
         component={Dashboard}
+
         options={{
           ...commonScreenOptions,
-          headerShown: true,
+          headerShown: false,
+         
           title: 'ใบเสนอราคา',
+          
           headerRight: () => (
             <TouchableOpacity
               style={{marginRight: 10}}
@@ -106,15 +107,7 @@ function DashboardDrawer() {
           // ... other common options ...
         }}
       />
-      <Drawer.Screen
-        name="ExistingContract"
-        component={ExistingContract}
-        options={{
-          ...commonScreenOptions,
-          headerShown: false,
-          title: 'สัญญา',
-        }}
-      />
+     
       {/* ... other screens ... */}
     </Drawer.Navigator>
   );

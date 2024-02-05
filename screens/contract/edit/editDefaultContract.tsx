@@ -1,40 +1,29 @@
-import React, {useState, useContext, useCallback, useMemo} from 'react';
+import React, { useState } from 'react';
 import {
-  Alert,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  StyleSheet,
-  Platform,
-  Text,
-  View,
   ActivityIndicator,
-  ScrollView,
-  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View
 } from 'react-native';
-import {ProgressBar, Appbar, Button} from 'react-native-paper';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import {TextInput,Divider} from 'react-native-paper';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { Appbar, Button, Divider, ProgressBar, TextInput } from 'react-native-paper';
 
-import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp} from '@react-navigation/native';
-import {useRoute} from '@react-navigation/native';
-import {yupResolver} from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import {defaultContractSchema} from '../../utils/validationSchema';
-import {
-  Contract,
-  Quotation,
-  Customer,
-  DefaultContractType,
-} from '../../../types/docType';
-import {useForm, Controller} from 'react-hook-form';
-import {useUser} from '../../../providers/UserContext';
+import { BACK_END_SERVER_URL } from '@env';
+import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Controller, useForm } from 'react-hook-form';
 import SmallDivider from '../../../components/styles/SmallDivider';
+import { useUser } from '../../../providers/UserContext';
+import {
+  DefaultContractType
+} from '../../../types/docType';
 
-import {ParamListBase} from '../../../types/navigationType';
-import FooterBtn from '../../../components/styles/FooterBtn';
+import { ParamListBase } from '../../../types/navigationType';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'EditDefaultContract'>;
   route: RouteProp<ParamListBase, 'EditDefaultContract'>;

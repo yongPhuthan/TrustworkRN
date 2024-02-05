@@ -1,57 +1,46 @@
 import {
-  StyleSheet,
-  Image,
-  Text,
-  View,
-  SafeAreaView,
-  ScrollView,
-  Alert,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   Dimensions,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import {
-  TextInput,
-  List,
-  Text as TextPaper,
-  Checkbox,
   Appbar,
-  ProgressBar,
-  RadioButton,
   Button,
+  Checkbox,
+  ProgressBar,
+  TextInput
 } from 'react-native-paper';
 
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import React, {useState, useEffect, useCallback} from 'react';
+import React, { useEffect, useState } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faCloudUpload, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
+import { faCloudUpload } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { useMutation } from '@tanstack/react-query';
 import {
-  launchImageLibrary,
-  MediaType,
+  Asset,
   ImageLibraryOptions,
   ImagePickerResponse,
-  Asset,
+  MediaType,
+  launchImageLibrary,
 } from 'react-native-image-picker';
-import {useMutation, useQuery} from '@tanstack/react-query';
 
-import storage from '@react-native-firebase/storage';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {v4 as uuidv4} from 'uuid';
-import {useForm, FormProvider, Controller, useWatch} from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import {
-
   BACK_END_SERVER_URL,
 } from '@env';
-import {ParamListBase} from '../../types/navigationType';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {useUser} from '../../providers/UserContext';
-import {companyValidationSchema} from '../utils/validationSchema';
-import * as yup from 'yup';
-import {yupResolver} from '@hookform/resolvers/yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useUser } from '../../providers/UserContext';
+import { ParamListBase } from '../../types/navigationType';
+import { companyValidationSchema } from '../utils/validationSchema';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'RegisterScreen'>;
 }
@@ -337,8 +326,7 @@ const userPosition = useWatch({
     };
     mutate({data, token: user?.uid});
   };
-  console.log('Platform.OS', Platform.OS)
-  console.log('categories', categoryId)
+
   const renderPage = () => {
     switch (page) {
       case 1:

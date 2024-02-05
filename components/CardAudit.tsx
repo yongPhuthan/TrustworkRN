@@ -1,15 +1,11 @@
-import React, {useState, useContext, useEffect} from 'react';
-import {View, Text, Image, StyleSheet} from 'react-native';
-import {Checkbox} from 'react-native-paper';
 import {
-  faCheck,
-  faPlus,
-  faSquare,
-  faSquareCheck,
-  faSquareFull,
+  faSquare
 } from '@fortawesome/free-solid-svg-icons';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {Store} from '../redux/store';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import React, { useContext, useEffect, useState } from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import { Checkbox } from 'react-native-paper';
+import { Store } from '../redux/store';
 type CardProps = {
   title: string;
   description: string;

@@ -1,56 +1,39 @@
+import {BACK_END_SERVER_URL} from '@env';
+import messaging from '@react-native-firebase/messaging';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
+import React, {useContext, useEffect, useMemo, useState} from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
-  FlatList,
-  Dimensions,
-  ActivityIndicator,
-  TouchableOpacity,
   Alert,
+  Dimensions,
+  FlatList,
   Platform,
   Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import React, {useState, useContext, useEffect, useMemo} from 'react';
-import CardDashBoard from '../../components/CardDashBoard';
-import {HOST_URL, BACK_END_SERVER_URL, PROJECT_FIREBASE} from '@env';
-import {Store} from '../../redux/store';
 import Modal from 'react-native-modal';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Header as HeaderRNE, HeaderProps, Icon} from '@rneui/themed';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faBell,
-  faCog,
-  faCogs,
-  faPlus,
-  faSheetPlastic,
-  faBars,
-} from '@fortawesome/free-solid-svg-icons';
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import messaging from '@react-native-firebase/messaging';
-import {User, Quotation, CompanyUser} from '../../types/docType';
-import * as stateAction from '../../redux/actions';
-import {DashboardScreenProps} from '../../types/navigationType';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+
+import CardDashBoard from '../../components/CardDashBoard';
 import {useUser} from '../../providers/UserContext';
-import {NavigationContainer, useNavigation} from '@react-navigation/native';
+import * as stateAction from '../../redux/actions';
+import {Store} from '../../redux/store';
+import {CompanyUser, Quotation} from '../../types/docType';
+import {DashboardScreenProps} from '../../types/navigationType';
 
 import {
-  check,
-  PERMISSIONS,
-  RESULTS,
+  FAB,
+  Portal,
+  PaperProvider,
+  ActivityIndicator,
+  Dialog,
+  Appbar,
+} from 'react-native-paper';
+import {
   checkNotifications,
   requestNotifications,
 } from 'react-native-permissions';
-import {
-  Menu,
-  Button,
-  Portal,
-  List,
-  PaperProvider,
-  FAB,
-  Divider,
-} from 'react-native-paper';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(true);
@@ -66,6 +49,11 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [originalQuotationData, setOriginalQuotationData] = useState<
     Quotation[] | null
   >(null);
+  const [state, setState] = React.useState({open: false});
+
+  const onStateChange = ({open}) => setState({open});
+
+  const {open} = state;
 
   const {dispatch}: any = useContext(Store);
 
@@ -90,7 +78,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const filterLabels = {
     ALL: 'ทั้งหมด',
     PENDING: 'รออนุมัติ',
-    APPROVED: 'อนุมัติแล้ว',
+    APPROVED: 'รอทำสัญญา',
   };
 
   const [filters, setFilters] = useState(['ALL', 'PENDING', 'APPROVED']);
@@ -283,7 +271,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   if (isQuery) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator />
+        <ActivityIndicator size={'large'} />
       </View>
     );
   }
@@ -298,14 +286,28 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       </View>
     );
   }
+  const handleCreateContract = index => {
+    if (companyData && quotationData && quotationData.length > 0) {
+      navigation.navigate('ContractOptions', {
+        id: quotationData[index].id,
+        sellerId: companyData.id,
+        allTotal: quotationData[index].allTotal,
+        customerName: quotationData[index].customer?.name as string,
+      });
+    }
+    setModalVisible(false);
+  };
 
   const handleModal = (item, index) => {
-    console.log('index Modal', index);
+    setSelectedItem(item);
+    setSelectedIndex(index);
     setShowModal(false);
     setModalVisible(true);
   };
   const handleModalOpen = (item, index) => {
     console.log('item', item);
+    console.log('status', selectedItem?.status);
+
     console.log('index', index);
     setSelectedItem(item);
     setSelectedIndex(index);
@@ -357,8 +359,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             end={item.dateEnd}
             price={item.allTotal}
             customerName={item.customer?.name as string}
-            description={'quotation.'}
-            unit={'quotation.'}
             // onCardPress={()=>handleModal(item, index)}
             onCardPress={() => handleModalOpen(item, index)}
           />
@@ -408,7 +408,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                       selectedItem,
                     );
                   }}>
-                  <Text style={styles.ModalButtonText}>แก้ไขเอกสาร</Text>
+                  <Text style={styles.ModalButtonText}>แก้ไขใบเสนอราคา</Text>
                 </Pressable>
                 <View
                   style={{
@@ -424,8 +424,25 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                       selectedItem?.customer?.name,
                     )
                   }>
-                  <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
+                  <Text style={styles.deleteButtonText}>ลบใบเสนอราคา</Text>
                 </Pressable>
+                {selectedItem?.status === 'APPROVED' && (
+                  <>
+                    <View
+                      style={{
+                        width: '100%',
+                        alignSelf: 'center',
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: '#cccccc',
+                      }}></View>
+                    <Pressable
+                      onPress={() => {
+                        handleModal(item, index);
+                      }}>
+                      <Text style={styles.ModalButtonText}>เริ่มทำสัญญา</Text>
+                    </Pressable>
+                  </>
+                )}
 
                 <View
                   style={{
@@ -456,10 +473,28 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             <Pressable
               onPress={() => {
                 setShowModal(false);
+                
                 navigation.navigate('DocViewScreen', {id: item.id});
               }}>
               <Text style={styles.ModalButtonText}>ดูตัวอย่าง</Text>
             </Pressable>
+            {selectedItem?.status === 'APPROVED' && (
+                  <>
+                    <View
+                      style={{
+                        width: '100%',
+                        alignSelf: 'center',
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: '#cccccc',
+                      }}></View>
+                    <Pressable
+                      onPress={() => {
+                        handleModal(item, index);
+                      }}>
+                      <Text style={styles.ModalButtonText}>เริ่มทำสัญญา</Text>
+                    </Pressable>
+                  </>
+                )}
             <View
               style={{
                 width: '100%',
@@ -478,7 +513,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                       selectedItem,
                     );
                   }}>
-                  <Text style={styles.ModalButtonText}>แก้ไขเอกสาร</Text>
+                  <Text style={styles.ModalButtonText}>แก้ไขใบเสนอราคา</Text>
                 </Pressable>
                 <View
                   style={{
@@ -487,23 +522,27 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                     borderBottomWidth: 0.5,
                     borderBottomColor: '#cccccc',
                   }}></View>
-                <Pressable
-                  onPress={() =>
-                    confirmRemoveQuotation(
-                      item.id,
-                      selectedItem?.customer?.name,
-                    )
-                  }>
-                  <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
-                </Pressable>
-
-                <View
-                  style={{
-                    width: '100%',
-                    alignSelf: 'center',
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#cccccc',
-                  }}></View>
+                {selectedItem?.status === 'PENDING' && (
+                  <>
+                    <Pressable
+                      onPress={() =>
+                        confirmRemoveQuotation(
+                          item.id,
+                          selectedItem?.customer?.name,
+                        )
+                      }>
+                      <Text style={styles.deleteButtonText}>ลบใบเสนอราคา</Text>
+                    </Pressable>
+                    <View
+                      style={{
+                        width: '100%',
+                        alignSelf: 'center',
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: '#cccccc',
+                      }}></View>
+                  </>
+                )}
+                  
               </>
             )}
           </Modal>
@@ -520,108 +559,151 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
   return (
     <>
-      <View>
-        {/* <HeaderRNE
-          containerStyle={{
-            backgroundColor: '#ffffffff',
-            borderBottomColor: 'white',
-          }}
-     
-
-          rightComponent={
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('SettingsScreen');
+      <PaperProvider>
+        <Portal>
+          <View>
+            <Appbar.Header
+              // elevated
+              mode="center-aligned"
+              style={{
+                backgroundColor: 'white',
               }}>
-              <FontAwesomeIcon icon={faCog} color="#1f303cff" size={22} />
-            </TouchableOpacity>
-          }
-        /> */}
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={filters}
-          renderItem={({item}) => (
-            <FilterButton
-              filter={item}
-              isActive={item === activeFilter}
-              onPress={() => {
-                updateContractData(item);
-              }}
+              <Appbar.Action
+                icon={'menu'}
+                onPress={() => {
+                  navigation.openDrawer();
+                }}
+              />
+              <Appbar.Content
+                title={
+                  activeFilter == 'ALL'
+                    ? 'รายการทั้งหมด'
+                    : activeFilter === 'PENDING'
+                    ? 'รายการรออนุมัติ'
+                    : 'รายการรอทำสัญญา'
+                }
+                titleStyle={{
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  fontFamily: 'Sukhumvit Set Bold',
+                }}
+              />
+              <Appbar.Action
+                icon="bell-outline"
+                // onPress={() => {
+                //   navigation.navigate('SearchScreen');
+                // }}
+              />
+            </Appbar.Header>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={filters}
+              renderItem={({item}) => (
+                <FilterButton
+                  filter={item}
+                  isActive={item === activeFilter}
+                  onPress={() => {
+                    updateContractData(item);
+                  }}
+                />
+              )}
+              keyExtractor={item => item}
             />
+          </View>
+          {companyData && (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#f5f5f5',
+              }}>
+              <FlatList
+                data={filteredQuotationData}
+                renderItem={renderItem}
+                keyExtractor={item => item.id}
+                ListEmptyComponent={
+                  <View
+                    style={{
+                      flex: 1,
+                      justifyContent: 'center',
+                      height: height * 0.5,
+
+                      alignItems: 'center',
+                    }}>
+                    <Text style={{marginTop: 10}}>
+                      กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
+                    </Text>
+                  </View>
+                }
+                contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
+              />
+            </View>
           )}
-          keyExtractor={item => item}
-        />
-      </View>
-      {companyData && (
 
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#f5f5f5',
-          }}>
-          <FlatList
-            data={filteredQuotationData}
-            renderItem={renderItem}
-            keyExtractor={item => item.id}
-            ListEmptyComponent={
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: 'center',
-                  height: height * 0.5,
+          <FAB.Group
+            open={open}
+            visible
+            color="white"
+            fabStyle={{
+              backgroundColor: '#1b52a7',
+            }}
+            icon={open ? 'minus' : 'plus'}
+            actions={[
+              {
+                icon: 'plus',
+                label: 'สร้างใบเสนอราคา',
 
-                  alignItems: 'center',
-                }}>
-                <Text style={{marginTop: 10}}>
-                  กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
-                </Text>
-              </View>
-            }
-            contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
+                onPress: () => createNewQuotation(),
+              },
+              {
+                icon: 'file-document-edit-outline',
+                label: 'ทำสัญญา',
+                onPress: () => setActiveFilter('APPROVED'),
+              },
+            ]}
+            onStateChange={onStateChange}
+            onPress={() => {
+              if (open) {
+                // do something if the speed dial is open
+              }
+            }}
           />
-        </View>
-      )}
 
-      <FAB
-        icon="plus"
-        color="white"
-        // color="#012b20"
-        style={{
-          backgroundColor: '#1b52a7',
-
-          position: 'absolute',
-          right: 16,
-          bottom: 25,
-        }}
-        onPress={() => createNewQuotation()}
-      />
-      {/* modal popup */}
-      <Modal
+          {/* modal popup */}
+          <Dialog
         style={styles.modalContainer}
-        backdropTransitionOutTiming={100}
-        onBackdropPress={handleNoResponse}
-        isVisible={isModalVisible}>
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <Text style={styles.modalText}>
-            ท่านได้นัดลูกค้าเข้าดูพื้นที่หน้างานโครงการนี้แล้วหรือยัง ?
-          </Text>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => handleYesResponse(selectedIndex)}>
-            <Text style={styles.whiteText}> ดูหน้างานแล้ว</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleNoResponse}>
-            <Text style={styles.whiteText}>ยังไม่ได้ดูหน้างาน</Text>
-          </TouchableOpacity>
-          <Text style={styles.RedText}>
-            {' '}
-            *จำเป็นต้องดูหน้างานก่อนเริ่มทำสัญญา
-          </Text>
-        </View>
-      </Modal>
+        // backdropTransitionOutTiming={100}
+        onDismiss={handleNoResponse}
+        visible={isModalVisible}>
+        <Dialog.Content>
+          <View
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <Text style={styles.selectedQuotationText}>ทำสัญญากับลูกค้า</Text>
+            <Text style={styles.selectedQuotationText}>
+              {selectedItem?.customer?.name}
+            </Text>
+            <Text style={styles.modalText}>
+              คุณได้นัดเข้าดูพื้นที่หน้างานโครงการนี้เรียบร้อยแล้วหรือไม่ ?
+            </Text>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleCreateContract(selectedIndex)}>
+              <Text style={styles.whiteText}> ดูหน้างานแล้ว</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={handleNoResponse}>
+              <Text style={styles.whiteText}>ยังไม่ได้ดูหน้างาน</Text>
+            </TouchableOpacity>
+            <Text style={styles.RedText}>
+              {' '}
+              *จำเป็นต้องดูหน้างานก่อนเริ่มทำสัญญา
+            </Text>
+          </View>
+        </Dialog.Content>
+      </Dialog>
+        </Portal>
+      </PaperProvider>
     </>
   );
 };
@@ -656,8 +738,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     backgroundColor: 'white',
     padding: 20,
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
+    borderRadius: 5,
     width: '90%',
     alignItems: 'center',
     position: 'absolute',

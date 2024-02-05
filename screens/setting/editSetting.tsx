@@ -1,45 +1,39 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import { BACK_END_SERVER_URL } from '@env';
+import { yupResolver } from '@hookform/resolvers/yup';
+import auth from '@react-native-firebase/auth';
+import React, { useContext, useState } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  Image,
-  View,
-  SafeAreaView,
-  ActivityIndicator,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  KeyboardAvoidingView,
+  View
 } from 'react-native';
-import {useForm, Controller,useWatch} from 'react-hook-form';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {TextInput} from 'react-native-paper';
-import {yupResolver} from '@hookform/resolvers/yup';
-import {companyValidationSchema} from '../utils/validationSchema';
-import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
+import { Appbar, TextInput } from 'react-native-paper';
+import { companyValidationSchema } from '../utils/validationSchema';
 
-import {useQueryClient, useMutation} from '@tanstack/react-query';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import firebase from '../../firebase';
+import { faCloudUpload } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import storage from '@react-native-firebase/storage';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faUpload, faCloudUpload} from '@fortawesome/free-solid-svg-icons';
 
+import type { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import {
-  launchImageLibrary,
-  MediaType,
   ImageLibraryOptions,
-  ImagePickerResponse,
+  launchImageLibrary
 } from 'react-native-image-picker';
-import {Store} from '../../redux/store';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {CheckBox} from '@rneui/themed';
-import type {RouteProp} from '@react-navigation/native';
-import {CompanyUser} from '../../types/docType';
-import {ParamListBase} from '../../types/navigationType';
-import {Button} from 'react-native-paper';
-import {useUser} from '../../providers/UserContext';
+import { Button } from 'react-native-paper';
+import { useUser } from '../../providers/UserContext';
+import { Store } from '../../redux/store';
+import { CompanyUser } from '../../types/docType';
+import { ParamListBase } from '../../types/navigationType';
 
 interface MyError {
   response: object;
@@ -88,11 +82,9 @@ const EditSetting = ({navigation, route}: Props) => {
     resolver: yupResolver(companyValidationSchema),
   });
   const watchedValues: any = useWatch({
-    defaultValue:defaultValues,
+    defaultValue: defaultValues,
     control,
-    
-    
-  })
+  });
   const dirtyValues = Object.keys(dirtyFields).reduce((acc, key) => {
     if (key in watchedValues) {
       acc[key] = watchedValues[key as keyof CompanyUser];
@@ -103,7 +95,6 @@ const EditSetting = ({navigation, route}: Props) => {
   const updateCompany = async (data: any) => {
     if (!user || !user.email) {
       throw new Error('User or user email is not available');
-
     }
     try {
       const token = await user.getIdToken(true);
@@ -186,14 +177,13 @@ const EditSetting = ({navigation, route}: Props) => {
         'บันทึกข้อมูลสำเร็จ',
         ``,
         [
-            {
-              text: 'ปิดหน้าต่าง',
-              onPress: () => navigation.goBack(),
-            }
-          ],
+          {
+            text: 'ปิดหน้าต่าง',
+            onPress: () => navigation.goBack(),
+          },
+        ],
         {cancelable: false},
       );
-    
     },
     onError: (error: MyError) => {
       Alert.alert(
@@ -241,264 +231,290 @@ const EditSetting = ({navigation, route}: Props) => {
     }
   };
 
-  React.useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Button
-          loading={isMuatationLoading}
-          disabled={!isDirty || !isValid || isMuatationLoading}
-          mode="contained"
-          onPress={handleDonePress}
-          buttonColor={'#1b52a7'}>
-          {'บันทึก'}
-        </Button>
-      ),
-    });
-  }, [navigation, isDirty, isValid,dirtyValues]);
-  console.log('dirtyValues', dirtyValues);
+  // React.useEffect(() => {
+  //   navigation.setOptions({
+  //     headerRight: () => (
+  //       <Button
+  //         loading={isMuatationLoading}
+  //         disabled={!isDirty || !isValid || isMuatationLoading}
+  //         mode="contained"
+  //         onPress={handleDonePress}
+  //         buttonColor={'#1b52a7'}>
+  //         {'บันทึก'}
+  //       </Button>
+  //     ),
+  //   });
+  // }, [navigation, isDirty, isValid,dirtyValues]);
   const renderPage = () => {
     return (
-      <View>
-        {/* <Text style={styles.title}>หัวเอกสาร</Text> */}
-        <TouchableOpacity
-          style={{
-            alignItems: 'center',
-            marginBottom: 10,
+      <>
+      
+        <View>
+       
+       <TouchableOpacity
+         style={{
+           alignItems: 'center',
+           marginBottom: 10,
 
-            borderColor: 'gray',
-            borderWidth: 1,
-            borderRadius: 5,
-            borderStyle: 'dotted',
-            padding: 10,
-          }}
-          onPress={handleLogoUpload}>
-          {isImageUpload ? (
-            <ActivityIndicator size="small" color="gray" />
-          ) : logo && logo !== 'NONE' ? (
-            <Image
-              source={{
-                uri: logo,
-              }}
-              style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
-            />
-          ) : (
-            <View>
-              <FontAwesomeIcon
-                icon={faCloudUpload}
-                style={{marginVertical: 5, marginHorizontal: 50}}
-                size={32}
-                color="gray"
-              />
-              <Text style={{textAlign: 'center', color: 'gray'}}>
-                อัพโหลดโลโก้
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        <Controller
-          control={control}
-          name="bizName"
-          rules={{required: true}}
-          render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
-            <TextInput
-              label="ชื่อบริษัท"
-              error={!!error}
-              style={styles.input}
-              mode="outlined"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-        />
-
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-          }}>
-          <View style={{flex: 0.45, marginVertical: 5}}>
-            <Controller
-              control={control}
-              name="userName"
-              rules={{required: true}}
-              render={({
-                field: {onChange, onBlur, value},
-                fieldState: {error},
-              }) => (
-                <TextInput
-                  label="ชื่อจริง"
-                  error={!!error}
-                  placeholder="ชื่อจริง"
-                  multiline
-                  textAlignVertical="top"
-                  numberOfLines={1}
-                  mode="outlined"
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
-          </View>
-          <View style={{flex: 0.45, marginVertical: 5}}>
-            <Controller
-              control={control}
-              name="userLastName"
-              rules={{required: true}}
-              render={({
-                field: {onChange, onBlur, value},
-                fieldState: {error},
-              }) => (
-                <TextInput
-                  label="นามสกุล"
-                  // placeholder="นามสกุล"
-                  multiline
-                  error={!!error}
-                  textAlignVertical="top"
-                  numberOfLines={1}
-                  mode="outlined"
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
-          </View>
-        </View>
-        <Controller
-          control={control}
-          name="userPosition"
-          rules={{required: true}}
-          render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
-            <TextInput
-              label="คำแหน่ง"
-              error={!!error}
-              style={styles.input}
-              // placeholder="คำแหน่งในบริษัท"
-              multiline
-              textAlignVertical="top"
-              numberOfLines={1}
-              mode="outlined"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-        />
-        {/* {company.bizType === 'business' && (
-          <Controller
-            control={control}
-            name="userPosition"
-            rules={{required: true}}
-            render={({field: {onChange, onBlur, value}}) => (
-              <TextInput
-              label="คำแหน่งในบริษัท"
+           borderColor: 'gray',
+           borderWidth: 1,
+           borderRadius: 5,
+           borderStyle: 'dotted',
+           padding: 10,
+         }}
+         onPress={handleLogoUpload}>
+         {isImageUpload ? (
+           <ActivityIndicator size="small" color="gray" />
+         ) : logo && logo !== 'NONE' ? (
+           <Image
+             source={{
+               uri: logo,
+             }}
+             style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
+           />
+         ) : (
+           <View>
+             <FontAwesomeIcon
+               icon={faCloudUpload}
+               style={{marginVertical: 5, marginHorizontal: 50}}
+               size={32}
+               color="gray"
+             />
+             <Text style={{textAlign: 'center', color: 'gray'}}>
+               อัพโหลดโลโก้
+             </Text>
+           </View>
+         )}
+       </TouchableOpacity>
+       <Controller
+         control={control}
+         name="bizName"
+         rules={{required: true}}
+         render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
+           <TextInput
+             label="ชื่อบริษัท"
+             error={!!error}
+             style={styles.input}
+             mode="outlined"
+             onBlur={onBlur}
+             onChangeText={onChange}
+             value={value}
+           />
+         )}
+       />
+       <View
+         style={{
+           flexDirection: 'row',
+           justifyContent: 'space-between',
+         }}>
+         <View style={{flex: 0.45, marginVertical: 5}}>
+           <Controller
+             control={control}
+             name="userName"
+             rules={{required: true}}
+             render={({
+               field: {onChange, onBlur, value},
+               fieldState: {error},
+             }) => (
+               <TextInput
+                 label="ชื่อจริง"
+                 error={!!error}
+                 placeholder="ชื่อจริง"
+                 multiline
+                 textAlignVertical="top"
+                 numberOfLines={1}
+                 mode="outlined"
+                 onBlur={onBlur}
+                 onChangeText={onChange}
+                 value={value}
+               />
+             )}
+           />
+         </View>
+         <View style={{flex: 0.45, marginVertical: 5}}>
+           <Controller
+             control={control}
+             name="userLastName"
+             rules={{required: true}}
+             render={({
+               field: {onChange, onBlur, value},
+               fieldState: {error},
+             }) => (
+               <TextInput
+                 label="นามสกุล"
+                 // placeholder="นามสกุล"
+                 multiline
+                 error={!!error}
+                 textAlignVertical="top"
+                 numberOfLines={1}
+                 mode="outlined"
+                 onBlur={onBlur}
+                 onChangeText={onChange}
+                 value={value}
+               />
+             )}
+           />
+         </View>
+       </View>
+       <Controller
+         control={control}
+         name="userPosition"
+         rules={{required: true}}
+         render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
+           <TextInput
+             label="คำแหน่ง"
+             error={!!error}
+             style={styles.input}
+             // placeholder="คำแหน่งในบริษัท"
+             multiline
+             textAlignVertical="top"
+             numberOfLines={1}
+             mode="outlined"
+             onBlur={onBlur}
+             onChangeText={onChange}
+             value={value}
+           />
+         )}
+       />
+       {/* {company.bizType === 'business' && (
+         <Controller
+           control={control}
+           name="userPosition"
+           rules={{required: true}}
+           render={({field: {onChange, onBlur, value}}) => (
+             <TextInput
+             label="คำแหน่งในบริษัท"
 style={styles.input}
-                // placeholder="คำแหน่งในบริษัท"
-                multiline
-                textAlignVertical="top"
-                numberOfLines={1}
-                mode='outlined'
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-          />
-        )} */}
-        <Controller
-          control={control}
-          name="address"
-          rules={{required: true}}
-          render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
-            <TextInput
-              label="ที่อยู่"
-              error={!!error}
-              style={styles.input}
-              // placeholder="ที่อยู่"
-              keyboardType="name-phone-pad"
-              multiline
-              textAlignVertical="top"
-              numberOfLines={4}
-              mode="outlined"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-        />
-
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            marginVertical: 5,
-          }}>
-          <View style={{flex: 0.45}}>
-            <Controller
-              control={control}
-              name="officeTel"
-              render={({field: {onChange, onBlur, value}}) => (
-                <TextInput
-                  label="เบอร์โทรศัพท์"
-                  // placeholder="เบอร์โทรศัพท์"
-                  keyboardType="phone-pad"
-                  mode="outlined"
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
-          </View>
-          <View style={{flex: 0.45}}>
-            <Controller
-              control={control}
-              name="mobileTel"
-              render={({
-                field: {onChange, onBlur, value},
-                fieldState: {error},
-              }) => (
-                <TextInput
-                  label="เบอร์มือถือ"
-                  error={!!error}
-                  // placeholder="เบอร์โทรศัพท์"
-                  keyboardType="phone-pad"
-                  mode="outlined"
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
-          </View>
-        </View>
-        <Controller
-          control={control}
-          name="companyNumber"
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              style={styles.input}
-              label="เลขทะเบียนภาษี(ถ้ามี)"
-              // placeholder="เลขทะเบียนภาษี(ถ้ามี)"
-              keyboardType="number-pad"
-              mode="outlined"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-        />
-        <View style={{marginBottom: 50}}></View>
-      </View>
+               // placeholder="คำแหน่งในบริษัท"
+               multiline
+               textAlignVertical="top"
+               numberOfLines={1}
+               mode='outlined'
+               onBlur={onBlur}
+               onChangeText={onChange}
+               value={value}
+             />
+           )}
+         />
+       )} */}
+       <Controller
+         control={control}
+         name="address"
+         rules={{required: true}}
+         render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
+           <TextInput
+             label="ที่อยู่"
+             error={!!error}
+             style={styles.input}
+             // placeholder="ที่อยู่"
+             keyboardType="name-phone-pad"
+             multiline
+             textAlignVertical="top"
+             numberOfLines={4}
+             mode="outlined"
+             onBlur={onBlur}
+             onChangeText={onChange}
+             value={value}
+           />
+         )}
+       />
+       <View
+         style={{
+           flexDirection: 'row',
+           justifyContent: 'space-between',
+           marginVertical: 5,
+         }}>
+         <View style={{flex: 0.45}}>
+           <Controller
+             control={control}
+             name="officeTel"
+             render={({field: {onChange, onBlur, value}}) => (
+               <TextInput
+                 label="เบอร์โทรศัพท์"
+                 // placeholder="เบอร์โทรศัพท์"
+                 keyboardType="phone-pad"
+                 mode="outlined"
+                 onBlur={onBlur}
+                 onChangeText={onChange}
+                 value={value}
+               />
+             )}
+           />
+         </View>
+         <View style={{flex: 0.45}}>
+           <Controller
+             control={control}
+             name="mobileTel"
+             render={({
+               field: {onChange, onBlur, value},
+               fieldState: {error},
+             }) => (
+               <TextInput
+                 label="เบอร์มือถือ"
+                 error={!!error}
+                 // placeholder="เบอร์โทรศัพท์"
+                 keyboardType="phone-pad"
+                 mode="outlined"
+                 onBlur={onBlur}
+                 onChangeText={onChange}
+                 value={value}
+               />
+             )}
+           />
+         </View>
+       </View>
+       <Controller
+         control={control}
+         name="companyNumber"
+         render={({field: {onChange, onBlur, value}}) => (
+           <TextInput
+             style={styles.input}
+             label="เลขทะเบียนภาษี(ถ้ามี)"
+             // placeholder="เลขทะเบียนภาษี(ถ้ามี)"
+             keyboardType="number-pad"
+             mode="outlined"
+             onBlur={onBlur}
+             onChangeText={onChange}
+             value={value}
+           />
+         )}
+       />
+       <View style={{marginBottom: 50}}></View>
+     </View>
+      </>
+    
     );
   };
   const isButtonDisabled = !{isValid} || !{isDirty};
 
   return (
     <>
+     <Appbar.Header
+          elevated
+          mode="center-aligned"
+          style={{
+            backgroundColor: 'white',
+          }}>
+          <Appbar.BackAction onPress={() => navigation.goBack()} />
+          <Appbar.Content
+            title="แก้ไขข้อมูลธุรกิจ"
+            titleStyle={{
+              fontSize: 18,
+              fontFamily: 'Sukhumvit Set Bold',
+              fontWeight: 'bold',
+            }}
+          />
+          <Button
+            disabled={!isDirty}
+            mode="contained"
+            loading={isMuatationLoading}
+            buttonColor={'#1b52a7'}
+            onPress={handleDonePress}>
+            {'บันทึก'}
+          </Button>
+        </Appbar.Header>
       <SafeAreaView style={{flex: 1}}>
+     
         <ScrollView style={styles.container}>{renderPage()}</ScrollView>
         {/* <TouchableOpacity
          disabled={!isDirty}

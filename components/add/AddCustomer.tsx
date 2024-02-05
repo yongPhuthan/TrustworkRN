@@ -1,32 +1,14 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import React from 'react';
+import { Controller, useFormContext } from 'react-hook-form';
 import {
-  Text,
-  View,
-  TouchableOpacity,
   Dimensions,
   StyleSheet,
-  ScrollView,
+  View,
+  Platform
 } from 'react-native';
-import {useForm, Controller, useFormContext, set} from 'react-hook-form';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
-import {
-  faCloudUpload,
-  faEdit,
-  faPlus,
-  faImages,
-  faPlusCircle,
-  faClose,
-  faCamera,
-  faArrowLeft,
-} from '@fortawesome/free-solid-svg-icons';
-import {Store} from '../../redux/store';
-import * as stateAction from '../../redux/actions';
-import {CustomerForm, ServiceList, CompanyUser} from '../../types/docType';
-import SaveButton from '../ui/Button/SaveButton';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import {TextInput, Button, Appbar} from 'react-native-paper';
+import { Appbar, Button, TextInput } from 'react-native-paper';
 
 interface Props {
   onClose: Function;
@@ -106,11 +88,14 @@ const AddCustomer = ({onClose}: Props) => {
               <TextInput
                 keyboardType="name-phone-pad"
                 multiline
+                
                 label={'ที่อยู่'}
                 textAlignVertical="top"
-                style={{
-                  marginTop: 10,
-                }}
+                style={
+                  Platform.OS === 'ios'
+                    ? {height: 80, textAlignVertical: 'top',marginTop:10}
+                    : {marginTop:10}
+                }
                 error={!!error}
                 numberOfLines={4}
                 mode="outlined"

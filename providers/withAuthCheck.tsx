@@ -1,9 +1,7 @@
 // withAuthCheck.tsx
-import React, {useState, useEffect, ComponentType} from 'react';
-import {View, ActivityIndicator} from 'react-native';
-import firebase from '../firebase';
-import {NavigationContainer} from '@react-navigation/native';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import React, { ComponentType, useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import UserContext from './UserContext';
 
 function withAuthCheck<T>(WrappedComponent: ComponentType<T>) {

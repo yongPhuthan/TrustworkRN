@@ -1,41 +1,23 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import { BACK_END_SERVER_URL } from '@env';
+import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useQuery } from '@tanstack/react-query';
+import React, { useContext, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
   FlatList,
-  Pressable,
-  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {
-  faCloudUpload,
-  faEdit,
-  faExpand,
-  faPlus,
-  faImages,
-  faClose,
-} from '@fortawesome/free-solid-svg-icons';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {RouteProp} from '@react-navigation/native';
-import {useRoute} from '@react-navigation/native';
-import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {CompanyUser, Service, Material} from '../../types/docType';
-import {ParamListBase, ProductItem} from '../../types/navigationType';
-import * as stateAction from '../../redux/actions';
-import Modal from 'react-native-modal';
-import CustomCheckbox from '../../components/CustomCheckbox';
-import {useUser} from '../../providers/UserContext';
-import {Store} from '../../redux/store';
-import {useForm, Controller, set} from 'react-hook-form';
+import { useUser } from '../../providers/UserContext';
+import { Store } from '../../redux/store';
+import { ParamListBase } from '../../types/navigationType';
 
-import {Divider,CheckBox} from 'react-native-paper';
+import { Checkbox, Divider } from 'react-native-paper';
 type Props = {
   navigation: StackNavigationProp<ParamListBase>;
   route: RouteProp<ParamListBase, 'SelectWorks'>;
@@ -228,12 +210,11 @@ const Selectworks = (props: Props) => {
                     : null,
                 ]}
                 onPress={() => handleSelectedService(item)}>
-                <CheckBox
-                  center
-                  checked={selectedServices.some(m => m.id === item.id)}
+                <Checkbox.Android
+                  status={selectedServices.some(m => m.id === item.id ) ? 'checked' : 'unchecked'}
                   onPress={() => handleSelectedService(item)}
-                  containerStyle={styles.checkboxContainer}
-                  checkedColor="#012b20"
+                  // containerStyle={styles.checkboxContainer}
+                  color="#012b20"
                 />
                 <View style={styles.textContainer}>
                   <Text style={styles.productTitle}>

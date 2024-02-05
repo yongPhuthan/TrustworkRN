@@ -1,63 +1,41 @@
-import React, {
-  useState,
-  useContext,
-  useEffect,
-  useMemo,
-  useCallback,
-} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 import {
-  View,
-  Text,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
   Platform,
   ScrollView,
   StyleSheet,
-  Alert,
-  Image,
-  FlatList,
-  ActivityIndicator,
-  Dimensions,
-  SafeAreaView,
+  Text,
   TouchableOpacity,
-  Pressable,
+  View,
 } from 'react-native';
 
-import {
-  useForm,
-  FormProvider,
-  useFormContext,
-  Controller,
-  useWatch,
-  set,
-} from 'react-hook-form';
+import {Controller, FormProvider, useForm, useWatch} from 'react-hook-form';
 
-import {Store} from '../../redux/store';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
-  faCloudUpload,
-  faEdit,
-  faPlus,
   faImages,
+  faPlus,
   faPlusCircle,
 } from '@fortawesome/free-solid-svg-icons';
-import {Snackbar, Appbar, Button, IconButton} from 'react-native-paper';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp} from '@react-navigation/native';
-import {v4 as uuidv4} from 'uuid';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import SmallDivider from '../../components/styles/SmallDivider';
-import {FormData, ServiceList, CompanyUser, Audit} from '../../types/docType';
-import {ParamListBase} from '../../types/navigationType';
-import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
-import SelectStandard from '../../components/standard/selectStandard';
-import ExistingMaterials from '../../components/materials/existing';
-import GalleryScreen from '../../components/gallery/existing';
-import SaveButton from '../../components/ui/Button/SaveButton';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {yupResolver} from '@hookform/resolvers/yup';
-import {serviceValidationSchema} from '../utils/validationSchema';
+import {RouteProp} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
 import CurrencyInput from 'react-native-currency-input';
-import {TextInput, List, Text as TextPaper} from 'react-native-paper';
+import {Appbar, Button, TextInput, Text as TextPaper} from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import GalleryScreen from '../../components/gallery/existing';
+import ExistingMaterials from '../../components/materials/existing';
+import SelectStandard from '../../components/standard/selectStandard';
+import SmallDivider from '../../components/styles/SmallDivider';
+import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
+import {ParamListBase} from '../../types/navigationType';
+import {serviceValidationSchema} from '../utils/validationSchema';
 
 import Decimal from 'decimal.js-light';
 
@@ -77,10 +55,6 @@ const AddProductForm = ({navigation, route}: Props) => {
   const [isModalImagesVisible, setModalImagesVisible] = useState(false);
   const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
   const [serviceID, setServiceID] = useState<string>('');
-  const {
-    state: {serviceList, selectedAudit, code},
-    dispatch,
-  }: any = useContext(Store);
 
   const handleDone = data => {
     onAddService(methods.watch());
@@ -169,28 +143,32 @@ const AddProductForm = ({navigation, route}: Props) => {
         <Appbar.BackAction
           onPress={() => {
             Alert.alert(
-              "ปิดหน้าต่าง",
-              "ยืนยันไม่บันทึกข้อมูลและปิดหน้าต่าง",
+              'ปิดหน้าต่าง',
+              'ยืนยันไม่บันทึกข้อมูลและปิดหน้าต่าง',
               [
                 // The "No" button
                 // Does nothing but dismiss the dialog when pressed
                 {
-                  text: "อยู่ต่อ",
-                  style: "cancel",
+                  text: 'อยู่ต่อ',
+                  style: 'cancel',
                 },
                 // The "Yes" button
                 {
-                  text: "ปิดหน้าต่าง",
+                  text: 'ปิดหน้าต่าง',
                   onPress: () => navigation.goBack(),
                 },
               ],
-              { cancelable: false }
+              {cancelable: false},
             );
           }}
         />
         <Appbar.Content
           title="เพิ่มสินค้า-บริการ"
-          titleStyle={{fontSize: 18, fontFamily: 'Sukhumvit Set Bold',fontWeight: 'bold'}}
+          titleStyle={{
+            fontSize: 18,
+            fontFamily: 'Sukhumvit Set Bold',
+            fontWeight: 'bold',
+          }}
         />
         <Button
           // loading={postLoading}
@@ -303,20 +281,20 @@ const AddProductForm = ({navigation, route}: Props) => {
                     fieldState: {error},
                   }) => (
                     <View>
-                    <TextInput
-                      multiline
-                      label={'ชื่อรายการ'}
-                      onBlur={onBlur}
-                      error={!!error}
-                      mode="outlined"
-                      onChangeText={onChange}
-                      numberOfLines={2}
-                      textAlignVertical="top"
-                      value={value}
-                    />
-                    {error && (
-                      <Text style={styles.errorText}>{error.message}</Text>
-                    )}
+                      <TextInput
+                        multiline
+                        label={'ชื่อรายการ'}
+                        onBlur={onBlur}
+                        error={!!error}
+                        mode="outlined"
+                        onChangeText={onChange}
+                        numberOfLines={2}
+                        textAlignVertical="top"
+                        value={value}
+                      />
+                      {error && (
+                        <Text style={styles.errorText}>{error.message}</Text>
+                      )}
                     </View>
                   )}
                 />

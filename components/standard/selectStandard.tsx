@@ -1,43 +1,33 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-  FlatList,
   ActivityIndicator,
   Dimensions,
+  FlatList,
+  Image,
   SafeAreaView,
+  StyleSheet,
+  Text,
+  View
 } from 'react-native';
-import {Store} from '../../redux/store';
+import { Store } from '../../redux/store';
 
-import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
-import {useQuery} from '@tanstack/react-query';
+import { BACK_END_SERVER_URL } from '@env';
+import { useQuery } from '@tanstack/react-query';
+import {
+  useFormContext
+} from 'react-hook-form';
 import {
   Audit,
-  ServiceList,
-  EditProductList,
-  Standard,
+  Standard
 } from '../../types/docType';
-import {
-  useForm,
-  FormProvider,
-  useFormContext,
-  Controller,
-  set,
-} from 'react-hook-form';
 
 import Modal from 'react-native-modal';
-import {useUser} from '../../providers/UserContext';
 import {
-  Button,
-  Text as TextPaper,
   Appbar,
-  Checkbox,
-  Banner,
+  Button,
+  Checkbox
 } from 'react-native-paper';
+import { useUser } from '../../providers/UserContext';
 
 interface AuditModalProps {
   isVisible: boolean;
@@ -210,18 +200,18 @@ const SelectStandard = ({
                     containerStyle={styles.checkboxContainer}
                     checkedColor="#012b20"
                   /> */}
-
-                <View
-                  style={{
+                  <View 
+                   style={{
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  }}
+                  >
+
+                
+  <View style={{flexDirection: 'row', alignItems: 'center'}}>
                     <Checkbox.Android
                       onPress={() => handleSelectStandard(item)}
                       color="#012b20"
-                      style={{flexDirection: 'row-reverse'}}
+                      style={{flexDirection: 'row-reverse',alignItems:'flex-start'}}
                       status={
                         (watch('standards') || []).some(
                           standard => standard.id === item.id,
@@ -232,12 +222,20 @@ const SelectStandard = ({
                     />
                     <Text>{item.standardShowTitle}</Text>
                   </View>
+                <View
+                  style={{
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                
                   <Image
                     source={{uri: item.badStandardImage}}
                     style={styles.productImage}
                   />
 
                   <Text style={styles.description}>{item.content}</Text>
+                </View>
                 </View>
               </View>
             </>
@@ -314,7 +312,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 16,
     marginTop: 10,
-    textAlign: 'left',
+    textAlign: 'center',
     color: 'black',
   },
   auditListContainer: {

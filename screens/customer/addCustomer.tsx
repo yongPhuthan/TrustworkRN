@@ -1,26 +1,21 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import React, { useContext } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
-  Text,
-  View,
-  TextInput,
-  Button,
-  Pressable,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
   Platform,
-  StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from 'react-native';
-import {useForm, Controller} from 'react-hook-form';
 
-import {Store} from '../../redux/store';
-import * as stateAction from '../../redux/actions';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp, ParamListBase} from '@react-navigation/native';
-import {CustomerForm, ServiceList, CompanyUser} from '../../types/docType';
+import { ParamListBase, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import SaveButton from '../../components/ui/Button/SaveButton';
+import * as stateAction from '../../redux/actions';
+import { Store } from '../../redux/store';
+import { CustomerForm } from '../../types/docType';
 
 type WatchedValues = {
   name: string;

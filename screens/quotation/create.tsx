@@ -1,86 +1,55 @@
 import {
-  StyleSheet,
-  Text,
-  View,
+  Dimensions,
+  FlatList,
   Image,
+  Platform,
   SafeAreaView,
   ScrollView,
-  FlatList,
-  Dimensions,
-  ActivityIndicator,
-  TouchableOpacity,
-  Platform,
+  StyleSheet,
   Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {ProgressBar, MD3Colors, Appbar, Button} from 'react-native-paper';
+import {
+  Appbar,
+  Button,
+  ProgressBar,
+  ActivityIndicator,
+  
+} from 'react-native-paper';
 
+import {BACK_END_SERVER_URL} from '@env';
+import {faPlus} from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {yupResolver} from '@hookform/resolvers/yup';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {useQuery} from '@tanstack/react-query';
+import React, {useContext, useMemo, useState} from 'react';
+import {FormProvider, useFieldArray, useForm, useWatch} from 'react-hook-form';
+import Modal from 'react-native-modal';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {v4 as uuidv4} from 'uuid';
-import React, {
-  useState,
-  useContext,
-  useEffect,
-  useMemo,
-  useCallback,
-} from 'react';
-import DocNumber from '../../components/DocNumber';
 import AddClient from '../../components/AddClient';
 import AddServices from '../../components/AddServices';
-import Summary from '../../components/Summary';
-import Divider from '../../components/styles/Divider';
-import {NavigationContainer} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faCloudUpload,
-  faEdit,
-  faPlus,
-  faImages,
-  faPlusCircle,
-} from '@fortawesome/free-solid-svg-icons';
-import EditCustomer from '../../components/edit/customer/EditCustomer';
-import {
-  useForm,
-  Controller,
-  FormProvider,
-  useWatch,
-  useFieldArray,
-  set,
-} from 'react-hook-form';
-import {
-  HOST_URL,
-  PROJECT_FIREBASE,
-  PROD_API_URL,
-  BACK_END_SERVER_URL,
-} from '@env';
-import Modal from 'react-native-modal';
-import firebase from '../../firebase';
-import {faCamera, faClose} from '@fortawesome/free-solid-svg-icons';
-import CardProject from '../../components/CardProject';
 import CardClient from '../../components/CardClient';
-import FooterBtn from '../../components/styles/FooterBtn';
-import DatePickerButton from '../../components/styles/DatePicker';
-import {Store} from '../../redux/store';
-import * as stateAction from '../../redux/actions';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useQuery} from '@tanstack/react-query';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import Signature from 'react-native-signature-canvas';
-import {yupResolver} from '@hookform/resolvers/yup';
+import CardProject from '../../components/CardProject';
+import DocNumber from '../../components/DocNumber';
+import Summary from '../../components/Summary';
 import AddCustomer from '../../components/add/AddCustomer';
-import AddProductForm from '../../components/edit/products/addProduct';
-import {useUser} from '../../providers/UserContext';
-import messaging from '../../firebase';
-import {Audit, CompanyUser, Service} from '../../types/docType';
-import {ParamListBase} from '../../types/navigationType';
-import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
-import SignatureComponent from '../../components/utils/signature';
-import EditProductForm from '../../components/edit/products/EditProduct';
+import DatePickerButton from '../../components/styles/DatePicker';
+import Divider from '../../components/styles/Divider';
 import SmallDivider from '../../components/styles/SmallDivider';
-import {
-  quotationsValidationSchema,
-  customersValidationSchema,
-} from '../utils/validationSchema';
+import SignatureComponent from '../../components/utils/signature';
 import ExistingWorkers from '../../components/workers/existing';
+import firebase from '../../firebase';
+import useThaiDateFormatter from '../../hooks/utils/useThaiDateFormatter';
+import {useUser} from '../../providers/UserContext';
+import * as stateAction from '../../redux/actions';
+import {Store} from '../../redux/store';
+import {CompanyUser, Service} from '../../types/docType';
+import {ParamListBase} from '../../types/navigationType';
+import {quotationsValidationSchema} from '../utils/validationSchema';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
 }
@@ -330,7 +299,6 @@ const Quotation = ({navigation}: Props) => {
 
   const handleAddProductForm = async () => {
     if (companyUser?.user) {
-
       navigation.navigate('AddProduct', {
         onAddService: newProduct => append(newProduct),
         quotationId: quotationId,
@@ -384,7 +352,7 @@ const Quotation = ({navigation}: Props) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator />
+        <ActivityIndicator size={'large'} />
       </View>
     );
   }
@@ -425,6 +393,10 @@ const Quotation = ({navigation}: Props) => {
           // loading={postLoading}
           disabled={isDisabled}
           mode="contained"
+          icon={'arrow-right'}
+          contentStyle={{
+            flexDirection: 'row-reverse',
+          }}
           buttonColor={'#1b72e8'}
           onPress={handleButtonPress}>
           {'ไปต่อ'}
@@ -438,6 +410,7 @@ const Quotation = ({navigation}: Props) => {
             <View style={styles.subContainerHead}>
               <DatePickerButton
                 label="วันที่เสนอราคา"
+                title="วันที่เสนอราคา"
                 date="today"
                 onDateSelected={handleStartDateSelected}
               />
@@ -448,6 +421,7 @@ const Quotation = ({navigation}: Props) => {
               />
               <DatePickerButton
                 label="ยืนราคาถึงวันที่ี"
+                title="ยืนราคาถึงวันที่ี"
                 date="sevenDaysFromNow"
                 onDateSelected={handleEndDateSelected}
               />
@@ -632,22 +606,24 @@ const Quotation = ({navigation}: Props) => {
             isVisible={workerModal}
             onBackdropPress={() => setWorkerModal(false)}
             style={styles.modal}>
-               <Appbar.Header
-        mode="center-aligned"
-        style={{
-          backgroundColor: 'white',
-          width: Dimensions.get('window').width,
-        }}>
-        <Appbar.Action icon={'close'} onPress={()=>{
-                setWorkerpicker(!workerPicker);
-                setWorkerModal(false);
-              }} />
-        <Appbar.Content
-          title="เลือกทีมงานติดตั้ง"
-          titleStyle={{fontSize: 18, fontWeight: 'bold'}}
-        />
-        
-      </Appbar.Header>
+            <Appbar.Header
+              mode="center-aligned"
+              style={{
+                backgroundColor: 'white',
+                width: Dimensions.get('window').width,
+              }}>
+              <Appbar.Action
+                icon={'close'}
+                onPress={() => {
+                  setWorkerpicker(!workerPicker);
+                  setWorkerModal(false);
+                }}
+              />
+              <Appbar.Content
+                title="เลือกทีมงานติดตั้ง"
+                titleStyle={{fontSize: 18, fontWeight: 'bold'}}
+              />
+            </Appbar.Header>
             <ExistingWorkers
               onClose={() => {
                 setWorkerpicker(!workerPicker);
@@ -668,19 +644,18 @@ const Quotation = ({navigation}: Props) => {
           isVisible={singatureModal}
           style={styles.modal}
           onBackdropPress={onCloseSignature}>
-              <Appbar.Header
-        mode="center-aligned"
-        style={{
-          backgroundColor: 'white',
-          width: Dimensions.get('window').width,
-        }}>
-        <Appbar.Action icon={'close'} onPress={onCloseSignature} />
-        <Appbar.Content
-          title="ลายเซ็นผู้เสนอราคา"
-          titleStyle={{fontSize: 18, fontWeight: 'bold'}}
-        />
-        
-      </Appbar.Header>
+          <Appbar.Header
+            mode="center-aligned"
+            style={{
+              backgroundColor: 'white',
+              width: Dimensions.get('window').width,
+            }}>
+            <Appbar.Action icon={'close'} onPress={onCloseSignature} />
+            <Appbar.Content
+              title="ลายเซ็นผู้เสนอราคา"
+              titleStyle={{fontSize: 18, fontWeight: 'bold'}}
+            />
+          </Appbar.Header>
           <SafeAreaView style={styles.containerModal}>
             <SignatureComponent
               onClose={() => setSignatureModal(false)}

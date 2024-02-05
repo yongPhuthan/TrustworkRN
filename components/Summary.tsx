@@ -1,24 +1,22 @@
+import Decimal from 'decimal.js-light';
+import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
-  Dimensions,
-  Platform,
-  Switch,
-  TextInput
-} from 'react-native';
-import React, {useState, useContext, useEffect} from 'react';
-import RNPickerSelect from 'react-native-picker-select';
-import SmallDivider from './styles/SmallDivider';
-import {
-  useForm,
   Controller,
   useFormContext,
-  useWatch,
-  set,
+  useWatch
 } from 'react-hook-form';
-import Decimal from 'decimal.js-light';
-import { List, Text as TextPaper} from 'react-native-paper';
+import {
+  Dimensions,
+  Platform,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View
+} from 'react-native';
+import { Text as TextPaper } from 'react-native-paper';
+import RNPickerSelect from 'react-native-picker-select';
+import SmallDivider from './styles/SmallDivider';
 
 const windowWidth = Dimensions.get('window').width;
 

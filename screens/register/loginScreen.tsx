@@ -1,27 +1,24 @@
 // LoginScreen.tsx
-import React, {useState} from 'react';
-import {
-  View,
-  ActivityIndicator,
-  SafeAreaView,
-  Text,
-  StyleSheet,
-  Pressable,
-  Alert,
-  TouchableOpacity,
-} from 'react-native';
-import auth from '@react-native-firebase/auth';
-import {HOST_URL, BACK_END_SERVER_URL, PROJECT_FIREBASE} from '@env';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {ParamListBase} from '../../types/navigationType';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { yupResolver } from '@hookform/resolvers/yup';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {TextInput, List} from 'react-native-paper';
-import {useForm, FormProvider, Controller, useWatch} from 'react-hook-form';
+import auth from '@react-native-firebase/auth';
+import { StackNavigationProp } from '@react-navigation/stack';
+import React, { useState } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import {
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { Button, TextInput } from 'react-native-paper';
 import * as yup from 'yup';
-import {yupResolver} from '@hookform/resolvers/yup';
-import {faArrowLeft} from '@fortawesome/free-solid-svg-icons';
-import {Button} from 'react-native-paper';
+import { ParamListBase } from '../../types/navigationType';
 
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'LoginScreen'>;

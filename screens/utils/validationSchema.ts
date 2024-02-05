@@ -12,13 +12,13 @@ export const companyValidationSchema = yup.object().shape({
   logo: yup.string(),
   userName: yup.string().required('ระบุชื่อจริง'),
   categoryId: yup.string().required('ระบุหมวดหมู่ธุรกิจ'),
-  userLastName:yup.string().required('ระบุนามสกุล'),
+  userLastName: yup.string().required('ระบุนามสกุล'),
   officeTel: yup.string().required('ระบุเบอร์โทรออฟฟิศ'),
   address: yup.string().required('ระบุที่อยู่ร้าน'),
   mobileTel: yup.string().required('ระบุเบอร์มือถือ'),
   userPosition: yup.string().required('ระบุตำแหน่ง'),
   companyTax: yup.string(),
-  bizType: yup.string().required('ระบุประเภทธุรกิจ'),  
+  bizType: yup.string().required('ระบุประเภทธุรกิจ'),
 });
 
 const selectedAuditDataSchema = yup.object().shape({
@@ -58,12 +58,18 @@ export const servicesValidationSchema = yup.object().shape({
   serviceImages: yup.array().of(yup.string()).required('เลือกภาพตัวอย่างผลงาน'),
   quotations: yup.mixed(),
   quotationId: yup.string(),
-  audits: yup.array().of(selectedAuditDataSchema).required('ต้องเลือกมาตรฐานอย่างน้อย 1 รายการ'),
-  materials: yup.array().of(selectedMaterialDataSchema).required('ต้องเลือกวัสดุอุปกรณ์อย่างน้อย 1 รายการ'),
+  audits: yup
+    .array()
+    .of(selectedAuditDataSchema)
+    .required('ต้องเลือกมาตรฐานอย่างน้อย 1 รายการ'),
+  materials: yup
+    .array()
+    .of(selectedMaterialDataSchema)
+    .required('ต้องเลือกวัสดุอุปกรณ์อย่างน้อย 1 รายการ'),
 });
 export const quotationsValidationSchema = yup.object().shape({
   id: yup.string().required('ID is required'),
-  customer:customersValidationSchema,
+  customer: customersValidationSchema,
   vat7: yup.number(),
   taxType: yup.string(),
   taxValue: yup.number(),
@@ -79,9 +85,11 @@ export const quotationsValidationSchema = yup.object().shape({
   docNumber: yup.string(),
   FCMToken: yup.string().default('none'),
   sellerSignature: yup.string().default('none'),
-  services: yup.array().of(servicesValidationSchema)
-  .required('เพิ่มบริการอย่างน้อย 1 รายการ')
-  .min(1, 'ต้องเลือกบริการอย่างน้อย 1 รายการ'),
+  services: yup
+    .array()
+    .of(servicesValidationSchema)
+    .required('เพิ่มบริการอย่างน้อย 1 รายการ')
+    .min(1, 'ต้องเลือกบริการอย่างน้อย 1 รายการ'),
 });
 export const serviceValidationSchema = yup.object().shape({
   id: yup.string(),
@@ -99,13 +107,79 @@ export const serviceValidationSchema = yup.object().shape({
 });
 
 export const defaultContractSchema = yup.object().shape({
-  productWarantyYear: yup.number().required(' required').positive().integer(),
-  skillWarantyYear: yup.number().required('required').positive().integer(),
-  installingDay: yup.number().required('required').positive().integer(),
-  workAfterGetDeposit: yup.number().required('required').positive().integer(),
-  prepareDay: yup.number().required('required').positive().integer(),
-  finishedDay: yup.number().required('required').positive().integer(),
-  workCheckDay: yup.number().required('required').positive().integer(),
-  workCheckEnd: yup.number().required('required').positive().integer(),
-  adjustPerDay: yup.number().required('required').positive().integer(),
+  productWarantyYear: yup
+    .number()
+    .required('จำเป็น')
+    .positive('ต้องมากกว่า0')
+    .integer(),
+  skillWarantyYear: yup
+    .number()
+    .required('จำเป็น')
+    .positive('ต้องมากกว่า0')
+    .integer(),
+  installingDay: yup
+    .number()
+    .required('จำเป็น')
+    .positive('ต้องมากกว่า0')
+    .integer(),
+  workAfterGetDeposit: yup
+    .number()
+    .required('จำเป็น')
+    .positive('ต้องมากกว่า0')
+    .integer(),
+  prepareDay: yup
+    .number()
+    .required('จำเป็น')
+    .positive('ต้องมากกว่า0')
+    .integer(),
+  finishedDay: yup
+    .number()
+    .required('จำเป็น')
+    .positive('ต้องมากกว่า0')
+    .integer(),
+  workCheckDay: yup
+    .number()
+    .required('จำเป็น')
+    .positive('ต้องมากกว่า0')
+    .integer(),
+  workCheckEnd: yup
+    .number()
+    .required('จำเป็น')
+    .positive('ต้องมากกว่า0')
+    .integer(),
+  adjustPerDay: yup
+    .number()
+    .required('จำเป็น')
+    .positive('ต้องมากกว่า0')
+    .integer(),
+});
+export const signContractValidationSchema = yup.object().shape({
+  projectName: yup.string().required('ระบุชื่อโครงการ'),
+  sellerSignature: yup.string(),
+  companyUser: yup.object().shape({
+  signature: yup.string(),
+  }),
+  signAddress: yup.string().required('ระบุที่อยู่'),
+  signDate: yup.string(),
+  signName: yup.string(),
+  sellerId: yup.string(),
+  servayDate: yup.string(),
+  warantyTimeWork: yup.number(),
+  customer: customersValidationSchema,
+  allTotal: yup.number(),
+  contractId: yup.string(),
+});
+export const installmentValidationSchema = yup.object().shape({
+  sellerSignature: yup.string(),
+  installments: yup.array().of(
+    yup.object().shape({
+      amount: yup.number(), // หากคุณต้องการตรวจสอบจำนวนเงิน คุณอาจต้องการปรับแต่งตามความต้องการของคุณ
+      details: yup.string().required('ระบุรายละเอียดการชำระงวดนี้'),
+      percentage: yup
+        .number()
+        .required('ระบุจำนวน % การชำระงวดนี้')
+        .positive('ต้องมากกว่า 0')
+        .integer('ต้องเป็นจำนวนเต็ม'),
+    })
+  ),
 });

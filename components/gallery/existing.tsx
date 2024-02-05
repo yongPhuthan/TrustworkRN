@@ -1,41 +1,36 @@
-import React, {useState, useCallback, useContext, useEffect} from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useCallback, useContext, useState } from 'react';
 import {
-  View,
+  
+  Dimensions,
+  FlatList,
   Image,
   SafeAreaView,
-  ActivityIndicator,
-  FlatList,
-  TouchableOpacity,
-  Dimensions,
   StyleSheet,
   Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {useUser} from '../../providers/UserContext';
-import {useQuery, useQueryClient, useMutation} from '@tanstack/react-query';
+import { useUser } from '../../providers/UserContext';
+import {ActivityIndicator} from 'react-native-paper';
 
-import {Store} from '../../redux/store';
-import {faPlus, faCamera, faArrowLeft, faClose} from '@fortawesome/free-solid-svg-icons';
-import {CheckBox} from '@rneui/themed';
+import { BACK_END_SERVER_URL } from '@env';
+import { faCamera, faClose, faExpand } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
-  launchImageLibrary,
-  MediaType,
+  useFormContext
+} from 'react-hook-form';
+import {
   ImageLibraryOptions,
   ImagePickerResponse,
+  MediaType,
+  launchImageLibrary,
 } from 'react-native-image-picker';
-import {BACK_END_SERVER_URL} from '@env';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faExpand, faExpandArrowsAlt} from '@fortawesome/free-solid-svg-icons';
-import CustomCheckbox from '../../components/CustomCheckbox';
-import {useSlugify} from '../../hooks/utils/useSlugify';
-import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
 import Modal from 'react-native-modal';
-import {
-  useForm,
-  FormProvider,
-  useFormContext,
-  Controller,
-  set,
-} from 'react-hook-form';
+import CustomCheckbox from '../../components/CustomCheckbox';
+import { useUriToBlob } from '../../hooks/utils/image/useUriToBlob';
+import { useSlugify } from '../../hooks/utils/useSlugify';
+import { Store } from '../../redux/store';
 type ImageData = {
   id: number;
   url: string;
@@ -196,7 +191,9 @@ const GalleryScreen = ({
       }
 
       const blob = (await uriToBlobFunction(imagePath)) as Blob;
-
+      const filePath = __DEV__
+      ? `Test/${code}/gallery/${filename}`
+      : `${code}/gallery/${filename}`;
       try {
         const response = await fetch(
           `${BACK_END_SERVER_URL}/api/upload/postGallery`,
@@ -208,6 +205,7 @@ const GalleryScreen = ({
             body: JSON.stringify({
               fileName: filename,
               contentType: contentType,
+              filePath,
               code,
             }),
           },
@@ -312,7 +310,7 @@ const GalleryScreen = ({
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       {isImageUpload ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator />
+          <ActivityIndicator color='white'/>
         </View>
       ) : (
         <SafeAreaView style={styles.container}>
@@ -320,11 +318,14 @@ const GalleryScreen = ({
             <TouchableOpacity style={styles.onCloseButton} onPress={onClose}>
               <FontAwesomeIcon icon={faClose} size={24} color="gray" />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.onPlusButton}
-              onPress={handleUploadMoreImages}>
-              <FontAwesomeIcon icon={faCamera} size={24} color="gray" />
-            </TouchableOpacity>
+            {galleryImages && galleryImages.length > 0 && (
+                <TouchableOpacity
+                style={styles.onPlusButton}
+                onPress={handleUploadMoreImages}>
+                <FontAwesomeIcon icon={faCamera} size={24} color="gray" />
+              </TouchableOpacity>
+            )}
+          
           </View>
           <FlatList
             data={galleryImages}
@@ -491,7 +492,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 5,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     height: 90,
   },
   buttonContainerEmpty: {

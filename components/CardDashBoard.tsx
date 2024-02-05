@@ -1,29 +1,17 @@
-import {
-  StyleSheet,
-  Dimensions,
-  Text,
-  View,
-  TouchableOpacity,
-} from 'react-native';
 import React from 'react';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
-  faFile,
-  faDrawPolygon,
-  faCog,
-  faBell,
-  faChevronRight,
-  faCashRegister,
-  faCoins,
-} from '@fortawesome/free-solid-svg-icons';
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 type Props = {
   customerName: string;
   price: number;
-  unit: string;
-  description: string;
   date: string;
   end:string;
-  status: any;
+  status: string;
   onCardPress?: () => void; 
 
 };
@@ -77,8 +65,9 @@ const CardDashBoard = (props: Props) => {
             : 'รออนุมัติ'}
         </Text>
       </View>
-
+     
       <View style={styles.telAndTax}>
+    
         <Text style={styles.summaryPrice}>เสนอราคา {props.date}</Text>
         <Text style={styles.summaryPrice}>สิ้นสุด {props.end}</Text>
       </View>

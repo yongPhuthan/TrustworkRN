@@ -1,61 +1,40 @@
-import React, {useState, useCallback, useContext, useEffect} from 'react';
+import React, { useCallback, useContext, useState } from 'react';
+import { useFormContext } from 'react-hook-form';
 import {
-  View,
-  Image,
   ActivityIndicator,
-  FlatList,
-  TouchableOpacity,
   Dimensions,
+  FlatList,
+  Image,
   StyleSheet,
   Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {useUser} from '../../../../providers/UserContext';
-import {useForm, Controller, useFormContext, set} from 'react-hook-form';
+import { useUser } from '../../../../providers/UserContext';
 
-import {StackNavigationProp} from '@react-navigation/stack';
-import {ParamListBase, ProductItem} from '../../../../types/navigationType';
-import {useQuery, useQueryClient, useMutation} from '@tanstack/react-query';
-import {GlobalStyles} from '../../../../styles/GlobalStyles';
-import ImageResizer from '@bam.tech/react-native-image-resizer';
-import {RouteProp} from '@react-navigation/native';
-import * as stateAction from '../../../../redux/actions';
-import {Store} from '../../../../redux/store';
 import {
-  faCloudUpload,
-  faEdit,
-  faPlus,
-  faImages,
-  faPlusCircle,
-  faClose,
-  faCamera,
   faArrowLeft,
+  faCamera,
+  faPlus
 } from '@fortawesome/free-solid-svg-icons';
-import {CheckBox} from '@rneui/themed';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  launchImageLibrary,
-  MediaType,
   ImageLibraryOptions,
   ImagePickerResponse,
+  MediaType,
+  launchImageLibrary,
 } from 'react-native-image-picker';
-import storage from '@react-native-firebase/storage';
+import { Store } from '../../../../redux/store';
 
 import {
-  HOST_URL,
-  CLOUDFLARE_WORKER_DEV,
-  PROJECT_FIREBASE,
-  CLOUDFLARE_WORKER,
-  CLOUDFLARE_R2_BUCKET_BASE_URL,
-  BACK_END_SERVER_URL,
-  CLOUDFLARE_R2_PUBLIC_URL,
+  BACK_END_SERVER_URL
 } from '@env';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faExpand, faExpandArrowsAlt} from '@fortawesome/free-solid-svg-icons';
-import CustomCheckbox from '../../../../components/CustomCheckbox';
-import useImagesQuery from '../../../../hooks/utils/image/useImageQuery';
-import {useSlugify} from '../../../../hooks/utils/useSlugify';
-import {useUriToBlob} from '../../../../hooks/utils/image/useUriToBlob';
+import { faExpand } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import Modal from 'react-native-modal';
-import getStorage from '@react-native-firebase/storage';
+import CustomCheckbox from '../../../../components/CustomCheckbox';
+import { useUriToBlob } from '../../../../hooks/utils/image/useUriToBlob';
+import { useSlugify } from '../../../../hooks/utils/useSlugify';
 
 type ImageData = {
   id: number;
@@ -72,16 +51,7 @@ interface ImageModalProps {
 
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
-const resizeImageForUpload = async (uri, newWidth, newHeight) => {
-  const response = await ImageResizer.createResizedImage(
-    uri,
-    newWidth,
-    newHeight,
-    'JPEG',
-    100,
-  );
-  return response.uri;
-};
+
 const GalleryScreen = ({
   isVisible,
   onClose,

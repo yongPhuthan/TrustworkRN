@@ -1,51 +1,33 @@
 import {
+  BACK_END_SERVER_URL
+} from '@env';
+import {
+  faChevronRight
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Alert,
-  NativeModules,
+  View
 } from 'react-native';
-import React, {useState, useEffect, useContext} from 'react';
-import {ParamListBase} from '../../types/navigationType';
-import {Store} from '../../redux/store';
-import Modal from 'react-native-modal';
-import {
-  HOST_URL,
-  PROJECT_NAME,
-  PROJECT_FIREBASE,
-  BACK_END_SERVER_URL,
-} from '@env';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faFile,
-  faDrawPolygon,
-  faCog,
-  faBell,
-  faChevronRight,
-  faCashRegister,
-  faCoins,
-  faSign,
-  faFileCirclePlus,
-  faSignature,
-  faCreditCard,
-} from '@fortawesome/free-solid-svg-icons';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import { Divider } from 'react-native-paper';
 import firebase from '../../firebase';
-import {Divider} from 'react-native-paper';
+import { ParamListBase } from '../../types/navigationType';
 
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useQuery } from '@tanstack/react-query';
 import {
-  launchCamera,
   launchImageLibrary,
-  MediaType,
+  MediaType
 } from 'react-native-image-picker';
-import {useQuery} from '@tanstack/react-query';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {Audit, CompanyUser, IdContractList, Service} from '../../types/docType';
-import {useUser} from '../../providers/UserContext';
+import { useUser } from '../../providers/UserContext';
+import { CompanyUser } from '../../types/docType';
 
 interface SettingScreenProps {
   navigation: StackNavigationProp<ParamListBase, 'TopUpScreen'>;
@@ -53,13 +35,9 @@ interface SettingScreenProps {
 
 const SettingsScreen = ({navigation}: SettingScreenProps) => {
   const [company, setCompany] = useState<CompanyUser>();
-  const [credit, setCredit] = useState(0);
   const user = useUser();
 
-  const {
-    state: {client_name, isEmulator, client_tel, client_tax},
-    dispatch,
-  }: any = useContext(Store);
+
   const [logo, setLogo] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
@@ -128,7 +106,6 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
       console.log('data setting success', data);
       setCompany(data.user);
       setLogo(data.user.logo);
-      setCredit(Number(data.balance));
     },
   });
   if (isLoading) {

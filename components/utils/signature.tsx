@@ -1,50 +1,36 @@
 // SignatureComponent.js
 import React, {
-  useState,
   useCallback,
   useContext,
   useEffect,
   useRef,
+  useState,
 } from 'react';
-import firebase from '../../firebase';
 import FastImage from 'react-native-fast-image';
+import firebase from '../../firebase';
 
-import Signature from 'react-native-signature-canvas';
 import {
-  View,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  Image,
-  TouchableOpacity,
-  Text,
-} from 'react-native';
-import {useSignatureUpload} from '../../hooks/utils/image/useSignatureUpload';
-import {useMutation, useQueryClient} from '@tanstack/react-query';
-import {useUpdateContract} from '../../hooks/contract/useUpdateContract';
-import {
-  HOST_URL,
-  CLOUDFLARE_WORKER_DEV,
-  PROJECT_FIREBASE,
-  CLOUDFLARE_WORKER,
-  CLOUDFLARE_R2_BUCKET_BASE_URL,
-  CLOUDFLARE_DIRECT_UPLOAD_URL,
-  CLOUDFLARE_R2_PUBLIC_URL,
-  BACK_END_SERVER_URL,
+  BACK_END_SERVER_URL
 } from '@env';
-import {Store} from '../../redux/store';
-import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
-import {useSlugify} from '../../hooks/utils/useSlugify';
-import {Avatar, Button, Card} from 'react-native-paper';
-import {useUser} from '../../providers/UserContext';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  useForm,
-  FormProvider,
   useFormContext,
-  Controller,
-  useWatch,
-  set,
+  useWatch
 } from 'react-hook-form';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Signature from 'react-native-signature-canvas';
+import { useUpdateContract } from '../../hooks/contract/useUpdateContract';
+import { useSlugify } from '../../hooks/utils/useSlugify';
+import { useUser } from '../../providers/UserContext';
+import { Store } from '../../redux/store';
 interface SignaturePadProps {
   setSignatureUrl: React.Dispatch<React.SetStateAction<string | null>>;
   onSignatureSuccess?: () => void;

@@ -1,36 +1,31 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, { useState } from 'react';
 import {
-  StyleSheet,
-  Image,
-  Text,
-  View,
-  SafeAreaView,
-  ScrollView,
-  Alert,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
-  Pressable,
+  Alert,
   Dimensions,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import {TextInput, List, Text as TextPaper} from 'react-native-paper';
+import { TextInput } from 'react-native-paper';
 
-import {useForm, FormProvider, Controller, useWatch} from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faArrowLeft} from '@fortawesome/free-solid-svg-icons';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Button } from 'react-native-paper';
 import firebase from '../../firebase';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {ParamListBase} from '../../types/navigationType';
-import {Button} from 'react-native-paper';
+import { ParamListBase } from '../../types/navigationType';
 
-import {useUser} from '../../providers/UserContext';
-import {BACK_END_SERVER_URL} from '@env';
+import { BACK_END_SERVER_URL } from '@env';
+import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import {yupResolver} from '@hookform/resolvers/yup';
+import { useUser } from '../../providers/UserContext';
 const screenWidth = Dimensions.get('window').width;
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'RegisterScreen'>;

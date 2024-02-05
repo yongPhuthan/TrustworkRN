@@ -1,48 +1,37 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
-import {
-  Button,
-  SafeAreaView,
-  StyleSheet,
-  TextInput,
-  Text,
-  Platform,
-  View,
-  ActivityIndicator,
-  Dimensions,
-  KeyboardAvoidingView,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
-import DatePickerButton from '../../components/styles/DatePicker';
-import messaging from '@react-native-firebase/messaging';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {Contract} from '../../types/docType';
-
-import axios, {AxiosResponse, AxiosError} from 'axios';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
-import {v4 as uuidv4} from 'uuid';
+import {BACK_END_SERVER_URL} from '@env';
+import {yupResolver} from '@hookform/resolvers/yup';
+import {RouteProp, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp} from '@react-navigation/native';
-import {useRoute} from '@react-navigation/native';
-import {ParamListBase} from '../../types/navigationType';
+import {useQuery} from '@tanstack/react-query';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import Modal from 'react-native-modal';
+import SignatureComponent from '../../components/utils/signature';
 
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Store} from '../../redux/store';
-import {useForm, Controller} from 'react-hook-form';
-
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import React, {useEffect, useState} from 'react';
+import {Controller, useForm,FormProvider, useWatch} from 'react-hook-form';
 import {
-  faChevronRight,
-  faCashRegister,
-  faCoins,
-} from '@fortawesome/free-solid-svg-icons';
-import SmallDivider from '../../components/styles/SmallDivider';
-import ContractFooter from '../../components/styles/ContractFooter';
-import CreateContractScreen from './createContractScreen';
-import Installment from '../utils/installment';
-import {useUser} from '../../providers/UserContext';
+  Dimensions,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  Switch,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import {
+  Appbar,
+  Button,
+  ProgressBar,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native-paper';
+import DatePickerButton from '../../components/styles/DatePicker';
 import SaveButton from '../../components/ui/Button/SaveButton';
+import {useUser} from '../../providers/UserContext';
+import {Contract} from '../../types/docType';
+import {ParamListBase} from '../../types/navigationType';
+import {signContractValidationSchema} from '../utils/validationSchema';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ContractOptions'>;
@@ -63,30 +52,24 @@ interface MyError {
 const ContractOption = ({navigation}: Props) => {
   const route = useRoute();
   const {id} = route?.params as any;
-
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [singatureModal, setSignatureModal] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [signature, setSignature] = useState<string | null>(null);
   const [signDate, setDateSign] = useState('');
   const [servayDate, setDateServay] = useState('');
-  const [step, setStep] = useState(1);
-  const [stepData, setStepData] = useState({});
-  const textRequired = 'จำเป็นต้องระบุ';
+
+  const [showPicker, setShowPicker] = useState(false);
 
   const [contract, setContract] = useState<Contract>();
   const user = useUser();
 
-  const [showSecondPage, setShowSecondPage] = useState(false);
-  // const {updatedData, contract}: any = route.params;
-  const {
-    handleSubmit,
-    control,
-    watch,
-    getValues,
-    setValue,
-    reset,
-    formState: {errors, isDirty, dirtyFields, isValid},
-  } = useForm({
+  const methods  = useForm({
     mode: 'onChange',
     defaultValues: {
       projectName: '',
+      companyUser: undefined,
+      sellerSignature: '',
       signDate: '',
       sellerId: '',
       servayDate: '',
@@ -98,9 +81,23 @@ const ContractOption = ({navigation}: Props) => {
       },
       allTotal: 0,
       signAddress: '',
-      contractId:'',
+      contractId: '',
     },
+    resolver: yupResolver(signContractValidationSchema),
   });
+  const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const onCloseSignature = () => {
+    setPickerVisible(false);
+    setSignatureModal(false);
+    methods.setValue('sellerSignature', '', {shouldDirty: true});
+  };
+  const handleSignatureSuccess = () => {
+    setSignatureModal(false);
+  };
   async function queryContractByQuotation() {
     if (!user || !user.email) {
       console.error('User or user email is not available');
@@ -144,66 +141,51 @@ const ContractOption = ({navigation}: Props) => {
     }
   }
 
-  const handleAddressChange = (newAddress: string) => {
-    setValue('signAddress', newAddress);
+  const sellerSignature = useWatch({
+    control: methods.control,
+    name: 'sellerSignature',
+  });
+  const useSignature = () => {
+    // Toggle the state of the picker and accordingly set the modal visibility
+    setPickerVisible(prevPickerVisible => {
+      const newPickerVisible = !prevPickerVisible;
+      setSignatureModal(newPickerVisible);
+      if (!newPickerVisible) {
+       methods.setValue('sellerSignature', '', {shouldDirty: true});
+      } else {
+       methods.setValue('sellerSignature', signature? signature:'', {shouldDirty: true});
+      }
+      return newPickerVisible;
+    });
   };
-  const updateInstallmentData = (
-    percentage: number,
-    details: string,
-    index: number,
-  ) => {
-    setStepData(prevState => ({
-      ...prevState,
-      [`percentage_${index}`]: percentage,
-      [`details_${index}`]: details,
-    }));
+  const handleDateChange = (event: any, date?: Date) => {
+    setShowPicker(false);
+    if (date) {
+    }
   };
   const {data, isLoading, isError} = useQuery(
     ['ContractID', id],
     () => queryContractByQuotation(),
     {
       onSuccess: data => {
-        console.log('data Query', data);
-
         if (data) {
           setContract(data.contract as Contract);
           console.log(data);
-          reset({
+          methods.reset({
             projectName: data.projectName,
+            companyUser: data.companyUser,
             signDate: data.signDate,
             servayDate: data.servayDate,
             customer: data.customer,
             allTotal: data.allTotal,
             sellerId: data.companyUser.id,
             contractId: data.contract?.id,
+            sellerSignature,
           });
         }
       },
     },
   );
-  const {
-    state: {selectedContract, isEmulator},
-    dispatch,
-  }: any = useContext(Store);
-
-  const handleStartDateSelected = (date: Date) => {
-    const formattedDate = thaiDateFormatter.format(date);
-    // setServayDate(formattedDate);
-    console.log(servayDate);
-  };
-  // const {mutate} = useMutation(createContract, {
-  //   onSuccess: data => {
-  //     navigation.navigate('WebViewScreen', {id: data?.data.id});
-  //   },
-  //   onError: (error: MyError) => {
-  //     console.error('There was a problem calling the function:', error);
-  //     console.log(error.response);
-  //   },
-  // });
-
-  const handleShowSecondPage = () => {
-    setShowSecondPage(true);
-  };
 
   const handleDateSigne = (date: Date) => {
     const formattedDate = thaiDateFormatter.format(date);
@@ -213,10 +195,6 @@ const ContractOption = ({navigation}: Props) => {
   const handleDateServay = (date: Date) => {
     const formattedDate = thaiDateFormatter.format(date);
     setDateServay(formattedDate);
-  };
-
-  const handleHideSecondPage = () => {
-    setShowSecondPage(false);
   };
 
   useEffect(() => {
@@ -231,146 +209,100 @@ const ContractOption = ({navigation}: Props) => {
   const handleNextPress = () => {
     navigation.navigate('Installment', {
       data: {
-        projectName: getValues('projectName'),
+        projectName: methods.getValues('projectName'),
         signDate,
         servayDate,
-        total: Number(getValues('allTotal')),
-        signAddress: watch('signAddress'),
+        total: Number(methods.getValues('allTotal')),
+        signAddress: methods.watch('signAddress'),
         quotationId: data.id,
-        sellerId:  getValues('sellerId'),
-        contract: dirtyData,
+        sellerId: methods.getValues('sellerId'),
         contractID: contract?.id,
+        sellerSignature: methods.getValues('sellerSignature'),
       },
     });
   };
 
-  const handleBackPress = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    } else {
-      reset({
-        projectName: '',
-        signDate: '',
-        servayDate: '',
-        customer: {
-          name: '',
-          address: '',
-          phone: '',
-        },
-        allTotal: 0,
-        signAddress: '',
-      });
-      navigation.goBack();
-    }
-  };
-  function safeToString(value) {
-    return value !== undefined && value !== null ? value.toString() : '';
-  }
-
-  const renderTextInput = (
-    name: any,
-    label: string,
-    defaultValue: string = '',
-  ) => (
-    <>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          marginTop: 10,
-        }}>
-        <Text style={styles.label}>{label}</Text>
-
-        <View style={styles.inputContainerForm}>
-          <Controller
-            control={control}
-            render={({field: {onChange, onBlur, value}}) => (
-              <TextInput
-                keyboardType="number-pad"
-                defaultValue={defaultValue}
-                onBlur={onBlur}
-                onChangeText={val => {
-                  const numericValue = Number(val);
-                  if (!isNaN(numericValue)) {
-                    onChange(numericValue);
-                  }
-                }}
-                value={
-                  value !== undefined && value !== null
-                    ? value.toString()
-                    : defaultValue
-                }
-                style={{width: 30}}
-                placeholderTextColor="#A6A6A6"
-              />
-            )}
-            name={name}
-            rules={{required: true}}
-          />
-
-          <Text style={styles.inputSuffix}>วัน</Text>
-        </View>
-      </View>
-      {errors[name] && (
-        <Text
-          style={{
-            alignSelf: 'flex-end',
-          }}>
-          {textRequired}
-        </Text>
-      )}
-    </>
-  );
-  const dirtyData = Object.fromEntries(
-    Object.entries({
-      productWarantyYear: Number(watch('productWarantyYear')),
-      warantyTimeWork: Number(watch('warantyTimeWork')),
-      workingDays: Number(watch('workingDays')),
-      installingDay: Number(watch('installingDay')),
-      adjustPerDay: Number(watch('adjustPerDay')),
-      workAfterGetDeposit: Number(watch('workAfterGetDeposit')),
-      prepareDay: Number(watch('prepareDay')),
-      finishedDay: Number(watch('finishedDay')),
-      workCheckDay: Number(watch('workCheckDay')),
-      workCheckEnd: Number(watch('workCheckEnd')),
-    }).filter(([key]) => dirtyFields[key]),
-  );
-
-  console.log('DATA DEFAULT', data);
   if (isError) return <Text>{'errors'}</Text>;
   return (
     <>
+      <Appbar.Header
+        elevated
+        mode="center-aligned"
+        style={{
+          backgroundColor: 'white',
+        }}>
+        <Appbar.BackAction
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
+        <Appbar.Content
+          title="ทำสัญญา"
+          titleStyle={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            fontFamily: 'Sukhumvit Set Bold',
+          }}
+        />
+        <Button
+          // loading={postLoading}
+          disabled={!methods.formState.isValid}
+          mode="contained"
+          icon={'arrow-right'}
+          contentStyle={{
+            flexDirection: 'row-reverse',
+          }}
+          buttonColor={'#1b72e8'}
+          onPress={handleNextPress}>
+          {'ไปต่อ'}
+        </Button>
+      </Appbar.Header>
+      <ProgressBar progress={0.5} color={'#1b52a7'} />
       {data && (
+        <>
+              <FormProvider {...methods}>
         <SafeAreaView style={{flex: 1}}>
           <View style={styles.formInput}>
-            <KeyboardAvoidingView
-              style={{flex: 1}}
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              keyboardVerticalOffset={
-                Platform.OS === 'ios' ? 0 : -Dimensions.get('window').height
-              }
-              
-              >
+            <KeyboardAwareScrollView>
               <ScrollView style={styles.containerForm}>
                 <View style={styles.card}>
+                  
+                    <Text style={styles.title}>รายละเอียดโครงการ</Text>
                   <View style={styles.inputContainer}>
-                    <Text style={styles.title}>ตั้งชื่อโครงการ</Text>
                     <Controller
-                      control={control}
-                      render={({field: {onChange, onBlur, value}}) => (
-                        <TextInput
-                          onBlur={onBlur}
-                          onChangeText={onChange}
-                          value={value}
-                          style={styles.inputForm}
-                          placeholder="โครงการติดตั้ง..."
-                          placeholderTextColor="#A6A6A6"
-                        />
+                      control={methods.control}
+                      render={({
+                        field: {onChange, onBlur, value},
+                        fieldState: {error},
+                      }) => (
+                        <View>
+                          <TextInput
+                            onBlur={onBlur}
+                            style={{
+                              width: '100%',
+                              marginBottom: 10,
+                              height: 70,
+                            }}
+                            multiline
+                            textAlign='left'
+                            textAlignVertical='top'
+                            textBreakStrategy='highQuality'
+                            mode="outlined"
+                            label={'ตั้งชื่อโครงการ'}
+                            error={!!error}
+                            onChangeText={onChange}
+                            value={value}
+                            // placeholder="โครงการติดตั้ง..."
+                            placeholderTextColor="#A6A6A6"
+                          />
+                          {error && (
+                            <Text style={{color: 'red'}}>{error.message}</Text>
+                          )}
+                        </View>
                       )}
                       name="projectName"
                       rules={{required: true}} // This line sets the field to required
                     />
-                    {errors.projectName && <Text>{textRequired}</Text>}
                   </View>
                   <View style={{flexDirection: 'row'}}>
                     <Text
@@ -388,7 +320,7 @@ const ContractOption = ({navigation}: Props) => {
                         marginTop: 10,
                         marginLeft: 40,
                       }}>
-                      {getValues('customer.name')}
+                      {methods.getValues('customer.name')}
                     </Text>
                   </View>
                   <View style={{flexDirection: 'row'}}>
@@ -407,7 +339,7 @@ const ContractOption = ({navigation}: Props) => {
                         marginTop: 10,
                         marginLeft: 22,
                       }}>
-                      {Number(getValues('allTotal'))
+                      {Number(methods.getValues('allTotal'))
                         .toFixed(2)
                         .replace(/\d(?=(\d{3})+\.)/g, '$&,')}{' '}
                       บาท
@@ -416,78 +348,110 @@ const ContractOption = ({navigation}: Props) => {
                 </View>
 
                 <View style={styles.stepContainer}>
-                  <SmallDivider />
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      width: '70%',
-                    }}>
-                    <Text style={styles.titleDate}>วันที่ทำสัญญา:</Text>
-                    <View style={{marginTop: 10}}>
-                      <DatePickerButton
-                        label=""
-                        date="today"
-                        onDateSelected={handleDateSigne}
-                      />
-                    </View>
+                  {/* <SmallDivider /> */}
+                  <View style={{marginTop: 10}}>
+                    <DatePickerButton
+                      label="วันที่ทำสัญญา"
+                      title="วันที่ทำสัญญา"
+                      date="today"
+                      onDateSelected={handleDateSigne}
+                    />
                   </View>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      width: '70%',
-                    }}>
-                    <Text style={styles.titleDate}>วันที่วัดหน้างาน:</Text>
-
-                    <View style={{marginTop: 10}}>
-                      <DatePickerButton
-                        label=""
-                        date="today"
-                        onDateSelected={handleDateServay}
-                      />
-                    </View>
+                  <View style={{marginTop: 10}}>
+                    <DatePickerButton
+                      label="วันที่ดูหน้างาน"
+                      title="วันที่ดูหน้างาน"
+                      date="today"
+                      onDateSelected={handleDateServay}
+                    />
                   </View>
-                  <View style={{marginTop: 10}}></View>
-                  <SmallDivider />
-                  <View style={{alignSelf: 'flex-start'}}>
-                    <Text style={styles.title}>สถาณที่ติดตั้งงาน:</Text>
-                    <Controller
-                      control={control}
-                      name="signAddress"
-                      render={({field: {onChange, onBlur, value}}) => (
+                  <View style={{marginTop: 20}}></View>
+                  {/* <SmallDivider /> */}
+                  <Controller
+                    control={methods.control}
+                    name="signAddress"
+                    render={({
+                      field: {onChange, onBlur, value},
+                      fieldState: {error},
+                    }) => (
+                      <View>
                         <TextInput
                           multiline
+                          error={!!error}
+                          textAlignVertical="top"
+                          mode="outlined"
+                          label={'ที่อยู่ติดตั้งงาน'}
                           numberOfLines={4}
-                          style={styles.input}
-                          placeholder="เช่นบ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด"
+                          style={{
+                            width: '100%',
+                            marginBottom: 10,
+                            height: 100,
+                          }}
+                          // style={styles.input}
+                          placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด..."
                           onBlur={onBlur}
                           keyboardType="default"
                           onChangeText={onChange}
                           value={value}
                         />
-                      )}
-                    />
-                  </View>
+                        {error && (
+                          <Text style={{color: 'red'}}>{error.message}</Text>
+                        )}
+                      </View>
+                    )}
+                  />
                 </View>
-
-                <View
-                  style={{
-                    width: '90%',
-                    marginTop: 20,
-                    alignSelf: 'center',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                  <SaveButton onPress={handleNextPress} disabled={!isValid} />
-                </View>
+                <View style={styles.signatureRow}>
+                <Text style={styles.signHeader}>เพิ่มลายเซ็น</Text>
+                <Switch
+                  trackColor={{false: '#767577', true: '#81b0ff'}}
+                  thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={useSignature}
+                  value={pickerVisible}
+                  style={Platform.select({
+                    ios: {
+                      transform: [{scaleX: 0.7}, {scaleY: 0.7}],
+                      marginTop: 5,
+                    },
+                    android: {},
+                  })}
+                />
+              </View>
+              
               </ScrollView>
-            </KeyboardAvoidingView>
+            </KeyboardAwareScrollView>
           </View>
-
-  
         </SafeAreaView>
+        <Modal
+          isVisible={singatureModal}
+          style={styles.modal}
+          onBackdropPress={onCloseSignature}>
+          <Appbar.Header
+            mode="center-aligned"
+            style={{
+              backgroundColor: 'white',
+              width: Dimensions.get('window').width,
+            }}>
+            <Appbar.Action icon={'close'} onPress={onCloseSignature} />
+            <Appbar.Content
+              title="ลายเซ็นผู้เสนอราคา"
+              titleStyle={{fontSize: 18, fontWeight: 'bold'}}
+            />
+          </Appbar.Header>
+          <SafeAreaView style={styles.containerModal}>
+            <SignatureComponent
+              onClose={() => setSignatureModal(false)}
+              setSignatureUrl={setSignature}
+              onSignatureSuccess={handleSignatureSuccess}
+            />
+          </SafeAreaView>
+        </Modal>
+        </FormProvider>
+        
+        </>
       )}
+        
     </>
   );
 };
@@ -579,6 +543,19 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 10,
   },
+  containerModal: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#fff',
+    width: Dimensions.get('window').width,
+  },
+  modal: {
+    marginTop: 10,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    borderRadius: 10,
+    height: Dimensions.get('window').height*0.2,
+  },
   inputPrefix: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -628,6 +605,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  signatureRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddindHorizontal: 50,
+    marginHorizontal: 20,
+  },
+  signHeader: {
+    flexDirection: 'row',
+    marginTop: 10,
+    fontSize: 16,
+    color: '#19232e',
+  },  signText: {
+    fontSize: 18,
+    marginVertical: 10,
+  },
   containerBtn: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -675,7 +667,7 @@ const styles = StyleSheet.create({
     // shadowOpacity: 0.3,
     // shadowRadius: 3,
     padding: 20,
-    width: '80%',
+    width: '100%',
     alignSelf: 'baseline',
   },
   iconForm: {

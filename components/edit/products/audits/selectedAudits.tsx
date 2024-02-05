@@ -1,25 +1,25 @@
-import React, {useState, useContext, useEffect, useMemo} from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  Dimensions,
-} from 'react-native';
+import { BACK_END_SERVER_URL } from '@env';
 import {
   faClose,
 } from '@fortawesome/free-solid-svg-icons';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {useForm, Controller, useFormContext} from 'react-hook-form';
-import CardAudit from '../../../../components/CardAudit';
-import {Store} from '../../../../redux/store';
-import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
-import {useQuery} from '@tanstack/react-query';
-import {Audit, ServiceList, EditProductList} from '../../../../types/docType';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { useQuery } from '@tanstack/react-query';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { useFormContext } from 'react-hook-form';
+import {
+  ActivityIndicator,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Modal from 'react-native-modal';
-import {useUser} from '../../../../providers/UserContext';
+import CardAudit from '../../../../components/CardAudit';
+import { useUser } from '../../../../providers/UserContext';
+import { Store } from '../../../../redux/store';
+import { Audit } from '../../../../types/docType';
 
 interface AuditModalProps {
   isVisible: boolean;

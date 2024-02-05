@@ -1,40 +1,22 @@
-import React, {useState, useContext, useEffect, useMemo} from 'react';
+import React, { useContext, useState } from 'react';
 import {
-  View,
-  StyleSheet,
-  Platform,
-  ScrollView,
   ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  View
 } from 'react-native';
-import {Text} from 'react-native-paper';
 
-import {WebView} from 'react-native-webview';
-import {ThemeProvider, Icon} from '@rneui/themed';
-import {Share} from 'react-native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp} from '@react-navigation/native';
-import {Store} from '../../redux/store';
-import {HOST_URL} from '@env';
-import {ParamListBase} from '../../types/navigationType';
+import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Share } from 'react-native';
 import {
-  FAB,
-  IconButton,
-  Button,
-  BottomNavigation,
   AnimatedFAB,
   Appbar,
+  BottomNavigation
 } from 'react-native-paper';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faBell,
-  faCog,
-  faCogs,
-  faPlus,
-  faSheetPlastic,
-  faBars,
-  faSeedling,
-  faPaperPlane,
-} from '@fortawesome/free-solid-svg-icons';
+import { WebView } from 'react-native-webview';
+import { Store } from '../../redux/store';
+import { ParamListBase } from '../../types/navigationType';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'DocViewScreen'>;
   route: RouteProp<ParamListBase, 'DocViewScreen'>;
