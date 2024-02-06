@@ -1,54 +1,47 @@
-import {BACK_END_SERVER_URL} from '@env';
-import {RouteProp, useRoute} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {useMutation, useQueryClient} from '@tanstack/react-query';
-import React, {useCallback, useEffect, useState} from 'react';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import { BACK_END_SERVER_URL } from '@env';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Decimal from 'decimal.js-light';
-import SignatureComponent from '../../components/utils/signature';
-import {installmentValidationSchema} from '../utils/validationSchema';
-import {yupResolver} from '@hookform/resolvers/yup';
-import Modal from 'react-native-modal';
+import React, { useCallback, useEffect, useState } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { installmentValidationSchema } from '../utils/validationSchema';
 
-import {Controller, useFieldArray, useForm} from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import {
   Alert,
   Dimensions,
   FlatList,
-  Switch,
   Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
-  View,
+  View
 } from 'react-native';
 import {
+  ActivityIndicator,
   Appbar,
   Button,
-  ProgressBar,
   Card,
-  ActivityIndicator,
-  TextInput,
+  TextInput
 } from 'react-native-paper';
 import RNPickerSelect from 'react-native-picker-select';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Or another library of your choice
-import SmallDivider from '../../components/styles/SmallDivider';
-import SaveButton from '../../components/ui/Button/SaveButton';
-import {useSignatureUpload} from '../../hooks/utils/image/useSignatureUpload';
-import {useUser} from '../../providers/UserContext';
-import {ParamListBase} from '../../types/navigationType';
+import { useSignatureUpload } from '../../hooks/utils/image/useSignatureUpload';
+import { useUser } from '../../providers/UserContext';
+import { ParamListBase } from '../../types/navigationType';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'Installment'>;
   route: RouteProp<ParamListBase, 'Installment'>;
-
-  data: any;
 };
 
-const Installment = ({navigation}: Props) => {
-  const route = useRoute();
+const Installment = ({ navigation, route }: Props) => {
+
   const dataProps: any = route.params?.data;
+
   const [singatureModal, setSignatureModal] = useState(false);
   const totalPrice = dataProps.total;
   const [installments, setInstallments] = useState<number>(0);

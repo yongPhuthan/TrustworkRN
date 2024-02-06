@@ -7,7 +7,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
+  
   Alert,
   Image,
   ScrollView,
@@ -16,7 +16,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { Divider } from 'react-native-paper';
+import { Divider,ActivityIndicator } from 'react-native-paper';
 import firebase from '../../firebase';
 import { ParamListBase } from '../../types/navigationType';
 
@@ -109,13 +109,32 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
     },
   });
   if (isLoading) {
-    // firebase.auth().signOut();
-
-    return <ActivityIndicator />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size={'large'} />
+      </View>
+    );
   }
-  if (error) {
-    console.log(error);
-  }
+  // if (error instanceof Error) {
+  //   // Use Alert to notify the user
+  //   Alert.alert(
+  //     "seesion หมดอายุ",
+  //     "ลงทะเบียนเข้าใช้งานใหม่อีกครั้ง",
+  //     [
+       
+  //       {
+  //         text: "ตกลง",
+  //         onPress: () => {
+  //           firebase.auth().signOut().then(() => {
+  //             navigation.navigate('FirstAppScreen');
+  //           }).catch((signOutError) => {
+  //             console.error("Sign out error: ", signOutError);
+  //           });
+  //         },
+  //       }
+  //     ]
+  //   );
+  // }
 
   const handleLogoUpload = () => {
     const options = {

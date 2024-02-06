@@ -1,7 +1,19 @@
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {CompanyUser, Service, Quotation, Standard} from './docType';
-
+type InstallmentParams = {
+  data: {
+    projectName: string;
+    signDate: string; // Adjust the type based on your actual data structure
+    servayDate: string; // Same here, ensure the type matches your data
+    total: number;
+    signAddress: string;
+    quotationId: string; // Adjust based on actual ID type (string or number)
+    sellerId: string; // Adjust as needed
+    contractID: string | undefined; // Assuming contract?.id can be undefined
+    sellerSignature: string; // Adjust as needed
+  };
+};
 export type Audit = {
   title: string;
   description: string;
@@ -72,6 +84,7 @@ export type ParamListBase = {
     company: CompanyUser
   }
   ContactInfoScreen: undefined;
+  Installment: InstallmentParams
   ExistingCategories: undefined;
   GalleryScreen: {code: string | undefined};
   SettingCompany: undefined;
@@ -125,7 +138,6 @@ export type ParamListBase = {
     sellerId: string;
   };
   NavigationScreen: undefined;
-  Installment: any;
 };
 
 export type ScreenItem = {

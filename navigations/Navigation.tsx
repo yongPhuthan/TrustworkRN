@@ -24,7 +24,6 @@ import AddExistProduct from '../screens/products/addExistProduct';
 import EditQuotation from '../screens/quotation/edit';
 import EditSetting from '../screens/setting/editSetting';
 
-import DashboardContract from '../screens/contract/dashboard';
 import EditDefaultContract from '../screens/contract/edit/editDefaultContract';
 import ExistingContract from '../screens/contract/existingContract';
 import FirstAppScreen from '../screens/register/firstAppScreen';

@@ -43,10 +43,10 @@ const DocViewScreen = ({navigation, route}: Props) => {
   }: any = useContext(Store);
   const [index, setIndex] = React.useState(0);
   const QuotationRoute = () => (
-    <QuotationWebView url={`https://www.google.com`} />
+    <QuotationWebView url={`https://www.trusth.co/preview/${id}`} />
   );
   const ContractRoute = () => (
-    <ContractWebView url={`https://www.google.com`} />
+    <ContractWebView url={`https://www.trusth.co/preview/doc/${id}`} />
   );
 
   const [routes] = React.useState([
@@ -113,7 +113,11 @@ const DocViewScreen = ({navigation, route}: Props) => {
             <Appbar.BackAction onPress={backHome} />
             <Appbar.Content  mode='center-aligned' titleStyle={{
               fontSize:18
-            }} title="" />
+            }} title={
+              firstPart === 'quotation'
+                ? 'เพจ'
+                : 'เอกสาร'
+            } />
           </Appbar.Header>
           <View style={{flex: 1}}>
             {/* <ScrollView onScroll={onScroll}> */}

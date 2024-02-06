@@ -7,13 +7,14 @@
     "sourceMap": true,
     "strict": true,
     "target": "es2017",
+    "baseUrl": ".",
     "paths": {
-      "@env": ["/node_modules/react-native-dotenv"] // this mapping is relative to "baseUrl"
+      "@env": ["./node_modules/react-native-dotenv"],
     }
   },
   "compileOnSave": true,
-
   "include": [
-    "src"
+    "src",
+    "app.tsx"
   ]
 }

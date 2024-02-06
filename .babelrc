@@ -1,5 +1,14 @@
 {
-    "plugins": [
-      ["module:react-native-dotenv"]
-    ]
-  }
+  "plugins": [
+    ["module:react-native-dotenv", {
+      "allowlist": [
+        "BACK_END_SERVER_URL",
+        "FIREBASE_STORAGE_PUBLIC_URL",
+        "FIRESTORE_PUBLIC_GALLERY_URL"
+      ],
+      "safe": true,
+      "allowUndefined": false
+
+    }]
+  ]
+}

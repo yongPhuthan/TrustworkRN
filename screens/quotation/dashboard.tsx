@@ -1,6 +1,9 @@
 import {BACK_END_SERVER_URL} from '@env';
 import messaging from '@react-native-firebase/messaging';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
+import firebase from '../../firebase';
+import {DrawerActions} from '@react-navigation/native';
+
 import React, {useContext, useEffect, useMemo, useState} from 'react';
 import {
   Alert,
@@ -29,6 +32,7 @@ import {
   ActivityIndicator,
   Dialog,
   Appbar,
+  Button,
 } from 'react-native-paper';
 import {
   checkNotifications,
@@ -194,7 +198,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       const response = await fetch(
         `${BACK_END_SERVER_URL}/api/documents/removeQuotation?id=${encodeURIComponent(
           id,
-        )}`,
+        )}?email=${encodeURIComponent(user.email)}`,
         {
           method: 'DELETE',
           headers: {
@@ -276,15 +280,30 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     );
   }
 
-  if (error) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Error fetching dashboard data</Text>
-        <TouchableOpacity onPress={() => refetch()}>
-          <Text>Try again</Text>
-        </TouchableOpacity>
-      </View>
-    );
+  if (error instanceof Error) {
+    {
+      Alert.alert('seesion หมดอายุ', 'ลงทะเบียนเข้าใช้งานใหม่อีกครั้ง', [
+        {
+          text: 'ตกลง',
+          onPress: () => {
+            firebase
+              .auth()
+              .signOut()
+              .then(() => {
+                navigation.navigate('FirstAppScreen');
+              })
+              .catch(signOutError => {
+                console.error('Sign out error: ', signOutError);
+              });
+          },
+        },
+      ]);
+    }
+  }
+  if (user) {
+    if (companyData === null) {
+      navigation.navigate('CreateCompanyScreen');
+    }
   }
   const handleCreateContract = index => {
     if (companyData && quotationData && quotationData.length > 0) {
@@ -345,6 +364,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       </TouchableOpacity>
     );
   };
+
   const renderItem = ({item, index}) => (
     <>
       {isLoadingAction ? (
@@ -473,28 +493,28 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             <Pressable
               onPress={() => {
                 setShowModal(false);
-                
+
                 navigation.navigate('DocViewScreen', {id: item.id});
               }}>
               <Text style={styles.ModalButtonText}>ดูตัวอย่าง</Text>
             </Pressable>
             {selectedItem?.status === 'APPROVED' && (
-                  <>
-                    <View
-                      style={{
-                        width: '100%',
-                        alignSelf: 'center',
-                        borderBottomWidth: 0.5,
-                        borderBottomColor: '#cccccc',
-                      }}></View>
-                    <Pressable
-                      onPress={() => {
-                        handleModal(item, index);
-                      }}>
-                      <Text style={styles.ModalButtonText}>เริ่มทำสัญญา</Text>
-                    </Pressable>
-                  </>
-                )}
+              <>
+                <View
+                  style={{
+                    width: '100%',
+                    alignSelf: 'center',
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: '#cccccc',
+                  }}></View>
+                <Pressable
+                  onPress={() => {
+                    handleModal(item, index);
+                  }}>
+                  <Text style={styles.ModalButtonText}>เริ่มทำสัญญา</Text>
+                </Pressable>
+              </>
+            )}
             <View
               style={{
                 width: '100%',
@@ -542,7 +562,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                       }}></View>
                   </>
                 )}
-                  
               </>
             )}
           </Modal>
@@ -571,7 +590,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               <Appbar.Action
                 icon={'menu'}
                 onPress={() => {
-                  navigation.openDrawer();
+                  navigation.dispatch(DrawerActions.openDrawer());
                 }}
               />
               <Appbar.Content
@@ -673,35 +692,43 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
           {/* modal popup */}
           <Dialog
-        style={styles.modalContainer}
-        // backdropTransitionOutTiming={100}
-        onDismiss={handleNoResponse}
-        visible={isModalVisible}>
-        <Dialog.Content>
-          <View
-            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-            <Text style={styles.selectedQuotationText}>ทำสัญญากับลูกค้า</Text>
-            <Text style={styles.selectedQuotationText}>
-              {selectedItem?.customer?.name}
-            </Text>
-            <Text style={styles.modalText}>
-              คุณได้นัดเข้าดูพื้นที่หน้างานโครงการนี้เรียบร้อยแล้วหรือไม่ ?
-            </Text>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => handleCreateContract(selectedIndex)}>
-              <Text style={styles.whiteText}> ดูหน้างานแล้ว</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={handleNoResponse}>
-              <Text style={styles.whiteText}>ยังไม่ได้ดูหน้างาน</Text>
-            </TouchableOpacity>
-            <Text style={styles.RedText}>
-              {' '}
-              *จำเป็นต้องดูหน้างานก่อนเริ่มทำสัญญา
-            </Text>
-          </View>
-        </Dialog.Content>
-      </Dialog>
+            style={styles.modalContainer}
+            // backdropTransitionOutTiming={100}
+            onDismiss={handleNoResponse}
+            visible={isModalVisible}>
+            <Dialog.Content>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                <Text style={styles.selectedQuotationText}>
+                  ทำสัญญากับลูกค้า
+                </Text>
+                <Text style={styles.selectedQuotationText}>
+                  {selectedItem?.customer?.name}
+                </Text>
+                <Text style={styles.modalText}>
+                  คุณได้นัดเข้าดูพื้นที่หน้างานโครงการนี้เรียบร้อยแล้วหรือไม่ ?
+                </Text>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => handleCreateContract(selectedIndex)}>
+                  <Text style={styles.whiteText}> ดูหน้างานแล้ว</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={handleNoResponse}>
+                  <Text style={styles.whiteText}>ยังไม่ได้ดูหน้างาน</Text>
+                </TouchableOpacity>
+                <Text style={styles.RedText}>
+                  {' '}
+                  *จำเป็นต้องดูหน้างานก่อนเริ่มทำสัญญา
+                </Text>
+              </View>
+            </Dialog.Content>
+          </Dialog>
         </Portal>
       </PaperProvider>
     </>

@@ -1,13 +1,13 @@
-import { faBell } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import {faBell} from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {createDrawerNavigator} from '@react-navigation/drawer';
 import React from 'react';
-import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import {SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
 import 'react-native-gesture-handler';
-import { Divider, Drawer as PaperDrawer } from 'react-native-paper';
+import {Divider, Drawer as PaperDrawer} from 'react-native-paper';
 import ExistingContract from '../screens/contract/existingContract';
 import Dashboard from '../screens/quotation/dashboard';
-import { ParamListBase } from '../types/navigationType';
+import {ParamListBase} from '../types/navigationType';
 
 const Drawer = createDrawerNavigator<ParamListBase>();
 const commonScreenOptions = {
@@ -26,7 +26,6 @@ function CustomDrawerContent(props) {
   const borderRadius = 3; // Adjust as needed
 
   return (
-    
     <SafeAreaView style={{flex: 1}}>
       <View
         style={{
@@ -37,15 +36,13 @@ function CustomDrawerContent(props) {
           alignItems: 'flex-start',
         }}>
         <Text style={{fontSize: 18, fontWeight: 'bold', color: '#012b20'}}>
-        TRUSTH
+          TRUSTH
         </Text>
       </View>
       <Divider style={{marginBottom: 20}} />
       <PaperDrawer.Section>
         <PaperDrawer.Item
-          label="ใบเสนอราคา"
-          
-          
+          label="เอกสาร"
           icon="file-document"
           active={props.state.index === 0}
           onPress={() => props.navigation.navigate('Dashboard')}
@@ -60,12 +57,12 @@ function CustomDrawerContent(props) {
             },
           }}
         />
-        <PaperDrawer.Item
+        {/* <PaperDrawer.Item
           label="ทำสัญญา"
           icon="file-document"
           active={props.state.index === 1}
           onPress={() => props.navigation.navigate('DashboardContract')}
-        />
+        /> */}
       </PaperDrawer.Section>
       <PaperDrawer.Section style={{marginTop: 'auto'}} showDivider={false}>
         <PaperDrawer.Item
@@ -83,18 +80,16 @@ function DashboardDrawer() {
   return (
     <Drawer.Navigator
       initialRouteName="Dashboard"
-      
       drawerContent={props => <CustomDrawerContent {...props} />}>
       <Drawer.Screen
         name="Dashboard"
         component={Dashboard}
-
         options={{
           ...commonScreenOptions,
           headerShown: false,
-         
+
           title: 'ใบเสนอราคา',
-          
+
           headerRight: () => (
             <TouchableOpacity
               style={{marginRight: 10}}
@@ -107,7 +102,7 @@ function DashboardDrawer() {
           // ... other common options ...
         }}
       />
-     
+
       {/* ... other screens ... */}
     </Drawer.Navigator>
   );

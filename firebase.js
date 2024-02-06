@@ -20,39 +20,23 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-if (__DEV__) {
-  let emulatorHost = 'http://localhost'; 
+// if (__DEV__) {
+//   let emulatorHost = 'http://localhost'; 
 
-  if (Platform.OS === 'android') {
-    emulatorHost = 'http://127.0.0.1'; 
-  }
+//   if (Platform.OS === 'android') {
+//     emulatorHost = 'http://127.0.0.1'; 
+//   }
 
-  // firebase.functions().useEmulator(emulatorHost, 5001);
-  firebase.auth().useEmulator(`${emulatorHost}:9099`);
-  // firebase.firestore().useEmulator(emulatorHost, 8080)
-  // firebase.storage().useEmulator(emulatorHost,9199)
+//   // firebase.functions().useEmulator(emulatorHost, 5001);
+//   firebase.auth().useEmulator(`${emulatorHost}:9099`);
+//   // firebase.firestore().useEmulator(emulatorHost, 8080)
+//   // firebase.storage().useEmulator(emulatorHost,9199)
 
   
-  console.log('Using emulator at ' + emulatorHost);
-}
+//   console.log('Using emulator at ' + emulatorHost);
+// }
 
 console.log('Firebase App name: ', firebase.app().name);
 
-// Testing Firestore Functions
-async function testFirestoreConnection() {
-  try {
-    const doc = await firestore().collection('testCollection').doc('testDoc').get();
-    if (doc.exists) {
-      console.log('Firestore connection successful. Document data:', doc.data());
-    } else {
-      console.log('Firestore connection successful. No such document!');
-    }
-  } catch (error) {
-    console.error('Firestore connection failed:', error);
-  }
-}
-
-// Test Firestore connection
-testFirestoreConnection();
 
 export default firebase;

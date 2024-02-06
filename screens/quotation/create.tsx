@@ -368,6 +368,7 @@ const Quotation = ({navigation}: Props) => {
     methods.setValue('sellerSignature', '', {shouldDirty: true});
   };
 
+
   return (
     <>
       <Appbar.Header

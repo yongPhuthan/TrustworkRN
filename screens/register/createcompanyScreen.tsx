@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
   Platform,
@@ -7,22 +8,22 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import {
   Appbar,
   Button,
   Checkbox,
   ProgressBar,
-  TextInput
+  TextInput,
 } from 'react-native-paper';
 
-import React, { useEffect, useState } from 'react';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import React, {useEffect, useState} from 'react';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
-import { faCloudUpload } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { useMutation } from '@tanstack/react-query';
+import {faCloudUpload} from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {useMutation} from '@tanstack/react-query';
 import {
   Asset,
   ImageLibraryOptions,
@@ -31,16 +32,14 @@ import {
   launchImageLibrary,
 } from 'react-native-image-picker';
 
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import {Controller, useForm, useWatch} from 'react-hook-form';
 
-import {
-  BACK_END_SERVER_URL,
-} from '@env';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { useUser } from '../../providers/UserContext';
-import { ParamListBase } from '../../types/navigationType';
-import { companyValidationSchema } from '../utils/validationSchema';
+import {BACK_END_SERVER_URL} from '@env';
+import {yupResolver} from '@hookform/resolvers/yup';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {useUser} from '../../providers/UserContext';
+import {ParamListBase} from '../../types/navigationType';
+import {companyValidationSchema} from '../utils/validationSchema';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'RegisterScreen'>;
 }
@@ -52,7 +51,6 @@ interface Category {
   key: string;
   value: string;
 }
-
 
 const screenWidth = Dimensions.get('window').width;
 const checkboxStyle = {
@@ -90,9 +88,7 @@ const createCompanySeller = async ({data, token}) => {
   }
 };
 
-
 const CreateCompanyScreen = ({navigation}: Props) => {
-
   const [page, setPage] = useState<number>(1);
   const [isImageUpload, setIsImageUpload] = useState(false);
 
@@ -154,9 +150,10 @@ const CreateCompanyScreen = ({navigation}: Props) => {
   });
   const categoryId = useWatch({
     control,
-    name: 'categoryId'});
+    name: 'categoryId',
+  });
 
-const userPosition = useWatch({
+  const userPosition = useWatch({
     control,
 
     name: 'userPosition',
@@ -176,10 +173,11 @@ const userPosition = useWatch({
 
     name: 'officeTel',
   });
-  const isNextDisabledPage1 = !bizName || !userName || !userLastName || !userPosition || !bizType;
+  const isNextDisabledPage1 =
+    !bizName || !userName || !userLastName || !userPosition || !bizType;
 
   // !bizName || !userName || !userLastName || !selectedCategories.length;
-  const isNextDisabledPage2 = !address || !mobileTel
+  const isNextDisabledPage2 = !address || !mobileTel;
   useEffect(() => {
     setCode(Math.floor(100000 + Math.random() * 900000).toString());
     const API_URL = `${BACK_END_SERVER_URL}/api/company/getCategories`;
@@ -246,7 +244,17 @@ const userPosition = useWatch({
 
   const uploadImageToServer = async (imageUri: string): Promise<void> => {
     setIsImageUpload(true);
+    if (!user || !user.email) {
+      console.error('User or user email is not available');
+      return;
+    }
+    const token = await user.getIdToken(true);
+    if (!token) {
+      // Alert error
+      Alert.alert('Error', 'Unable to get user token');
 
+      return;
+    }
     // Determine storage path based on development or production mode
     const storagePath = __DEV__
       ? `Test/${code}/logo/${imageUri.substring(imageUri.lastIndexOf('/') + 1)}`
@@ -255,10 +263,12 @@ const userPosition = useWatch({
     try {
       // Fetch the signed URL from your backend
       const signedUrlResponse: Response = await fetch(
-        `${BACK_END_SERVER_URL}/api/storage/getSignedUrl`,
+        `${BACK_END_SERVER_URL}/api/upload/getSignedUrl`,
         {
           method: 'POST',
           headers: {
+            Authorization: `Bearer ${token}`,
+
             'Content-Type': 'application/json',
             // Include authentication headers if needed
           },
@@ -299,7 +309,7 @@ const userPosition = useWatch({
         storagePath,
       )}?alt=media`;
 
-      setValue('logo',accessUrl);
+      setValue('logo', accessUrl);
     } catch (error) {
       console.error('Error uploading image:', error);
     } finally {
@@ -407,7 +417,7 @@ const userPosition = useWatch({
 
             <View
               style={{
-                flexDirection: 'row',
+                flexDirection: 'column',
                 justifyContent: 'space-between',
               }}>
               <View style={{flex: 0.45}}>
@@ -536,7 +546,6 @@ const userPosition = useWatch({
                 shouldRasterizeIOS
                 contentStyle={{flexDirection: 'row-reverse'}}
                 icon={'arrow-right'}
-                style={{width: 120}}
                 buttonColor="#1b72e8"
                 disabled={isNextDisabledPage1}
                 onPress={handleNextPage}>
@@ -674,7 +683,6 @@ const userPosition = useWatch({
                 buttonColor="#1b72e8"
                 mode="contained"
                 icon={'arrow-right'}
-                style={{width: 120}}
                 loading={isLoading || userLoading}>
                 ไปต่อ
               </Button>
@@ -683,32 +691,41 @@ const userPosition = useWatch({
         );
       case 3:
         return (
-          <View style={{ paddingHorizontal: 10}}>
-            <Text style={{marginBottom: 10, fontSize: 16, fontWeight:'bold'}}>
-เลือกหมวดหมู่ธุรกิจของคุณ
+          <View style={{paddingHorizontal: 10}}>
+            <Text style={{marginBottom: 10, fontSize: 16, fontWeight: 'bold'}}>
+              เลือกหมวดหมู่ธุรกิจของคุณ
             </Text>
             <View>
-      {categories.map((category:Category, index:number) => (
-        <Controller
-          control={control}
-          name="categoryId"
-          key={index}
-          render={({ field: { onChange, value } }) => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
-              <Checkbox.Android
-                status={value === category.key ? 'checked' : 'unchecked'}
-                onPress={() => {
-                  onChange(category.key);
-                  setValue('categoryId', category.key, { shouldDirty: true });
-                }}
-              />
-              <Text style={{ fontSize: 16 }}>{category.value}</Text>
+              {categories.map((category: Category, index: number) => (
+                <Controller
+                  control={control}
+                  name="categoryId"
+                  key={index}
+                  render={({field: {onChange, value}}) => (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginTop: 20,
+                      }}>
+                      <Checkbox.Android
+                        status={
+                          value === category.key ? 'checked' : 'unchecked'
+                        }
+                        onPress={() => {
+                          onChange(category.key);
+                          setValue('categoryId', category.key, {
+                            shouldDirty: true,
+                          });
+                        }}
+                      />
+                      <Text style={{fontSize: 16}}>{category.value}</Text>
+                    </View>
+                  )}
+                />
+              ))}
             </View>
-          )}
-        />
-      ))}
-    </View>
-           
+
             <View
               style={{
                 flexDirection: 'row',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -7,25 +7,25 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
-import { TextInput } from 'react-native-paper';
+import {TextInput} from 'react-native-paper';
 
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import {Controller, useForm, useWatch} from 'react-hook-form';
 
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import {faArrowLeft} from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { Button } from 'react-native-paper';
+import {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {Button} from 'react-native-paper';
 import firebase from '../../firebase';
-import { ParamListBase } from '../../types/navigationType';
+import {ParamListBase} from '../../types/navigationType';
 
-import { BACK_END_SERVER_URL } from '@env';
-import { yupResolver } from '@hookform/resolvers/yup';
+import {BACK_END_SERVER_URL} from '@env';
+import {yupResolver} from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useUser } from '../../providers/UserContext';
+import {useUser} from '../../providers/UserContext';
 const screenWidth = Dimensions.get('window').width;
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'RegisterScreen'>;
@@ -267,6 +267,7 @@ const RegisterScreen = ({navigation}: Props) => {
   //     setUserLoading(false);
   //   }
   // };
+  // console.log('BACK_END_SERVER_URL', BACK_END_SERVER_URL);
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };

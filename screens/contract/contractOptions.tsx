@@ -215,9 +215,9 @@ const ContractOption = ({navigation}: Props) => {
         total: Number(methods.getValues('allTotal')),
         signAddress: methods.watch('signAddress'),
         quotationId: data.id,
-        sellerId: methods.getValues('sellerId'),
+        sellerId: methods.getValues('sellerId') || '',
         contractID: contract?.id,
-        sellerSignature: methods.getValues('sellerSignature'),
+        sellerSignature: methods.getValues('sellerSignature') || '',
       },
     });
   };
