@@ -109,47 +109,47 @@ export const serviceValidationSchema = yup.object().shape({
 export const defaultContractSchema = yup.object().shape({
   productWarantyYear: yup
     .number()
-    .required('จำเป็น')
+    .required('*')
     .positive('ต้องมากกว่า0')
     .integer(),
   skillWarantyYear: yup
     .number()
-    .required('จำเป็น')
+    .required('*')
     .positive('ต้องมากกว่า0')
     .integer(),
   installingDay: yup
     .number()
-    .required('จำเป็น')
+    .required('*')
     .positive('ต้องมากกว่า0')
     .integer(),
   workAfterGetDeposit: yup
     .number()
-    .required('จำเป็น')
+    .required('*')
     .positive('ต้องมากกว่า0')
     .integer(),
   prepareDay: yup
     .number()
-    .required('จำเป็น')
+    .required('*')
     .positive('ต้องมากกว่า0')
     .integer(),
   finishedDay: yup
     .number()
-    .required('จำเป็น')
+    .required('*')
     .positive('ต้องมากกว่า0')
     .integer(),
   workCheckDay: yup
     .number()
-    .required('จำเป็น')
+    .required('*')
     .positive('ต้องมากกว่า0')
     .integer(),
   workCheckEnd: yup
     .number()
-    .required('จำเป็น')
+    .required('*')
     .positive('ต้องมากกว่า0')
     .integer(),
   adjustPerDay: yup
     .number()
-    .required('จำเป็น')
+    .required('*')
     .positive('ต้องมากกว่า0')
     .integer(),
 });

@@ -5,7 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 import UserContext from './UserContext';
 
 function withAuthCheck<T>(WrappedComponent: ComponentType<T>) {
-  return (props: any) => {
+  return (props: T) => {
     const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
     const [loading, setLoading] = useState(true);
     const [initialRouteName, setInitialRouteName] = useState(''); // Default initial route

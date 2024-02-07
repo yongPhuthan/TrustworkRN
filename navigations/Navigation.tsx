@@ -34,8 +34,6 @@ import Selectworks from '../screens/submit/selectworks';
 import SendWorks from '../screens/submit/sendWorks';
 import Installment from '../screens/utils/installment';
 import TopUpScreen from '../screens/utils/topup';
-import AddNewWorker from '../screens/workers/addNew';
-import ExistingWorkers from '../screens/workers/existing';
 import DashboardDrawer from './dashboardDrawer';
 // import BootSplash from "react-native-bootsplash";
 
@@ -48,7 +46,7 @@ const Theme = {
   },
 };
 
-const Navigation = ({initialRouteName}) => {
+const Navigation = ({initialRouteName}: any) => {
   const Stack = createNativeStackNavigator<ParamListBase>();
   const user = useUser();
 
@@ -247,34 +245,6 @@ const Navigation = ({initialRouteName}) => {
             ...commonScreenOptions,
             headerShown: true,
             title: 'ตั้งค่าสัญญา',
-            headerBackTitleVisible: false,
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-        <Stack.Screen
-          name="ExistingWorkers"
-          component={ExistingWorkers}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'เลือกทีมผู้ติดตั้ง',
-            headerBackTitleVisible: false,
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-        <Stack.Screen
-          name="AddNewWorker"
-          component={AddNewWorker}
-          options={{
-            ...commonScreenOptions,
-            headerShown: true,
-            title: 'เลือกทีมผู้ติดตั้ง',
             headerBackTitleVisible: false,
             headerStyle: {
               backgroundColor: '#ffffff',

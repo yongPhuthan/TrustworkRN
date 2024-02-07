@@ -1,47 +1,25 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import React, { useContext, useState } from 'react';
 import {
-  View,
-  Text,
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
   Image,
   StyleSheet,
-  Dimensions,
+  Text,
   TouchableOpacity,
-  ActivityIndicator,
-  FlatList,
-  Pressable,
+  View
 } from 'react-native';
 
-import {StackNavigationProp} from '@react-navigation/stack';
+import { BACK_END_SERVER_URL } from '@env';
+import { useQuery } from '@tanstack/react-query';
 import {
-  faCloudUpload,
-  faEdit,
-  faExpand,
-  faPlus,
-  faImages,
-  faClose,
-} from '@fortawesome/free-solid-svg-icons';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {RouteProp} from '@react-navigation/native';
-import {useRoute} from '@react-navigation/native';
-import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {CompanyUser, Service, Material} from '../../types/docType';
-import {ParamListBase, ProductItem} from '../../types/navigationType';
-import * as stateAction from '../../redux/actions';
-import Modal from 'react-native-modal';
-import CustomCheckbox from '../../components/CustomCheckbox';
-import {useUser} from '../../providers/UserContext';
-import {Store} from '../../redux/store';
-import AddNewMaterial from './addNew';
-import {
-  useForm,
-  FormProvider,
-  useFormContext,
-  Controller,
-  set,
+  useFormContext
 } from 'react-hook-form';
-import { Button, Text as TextPaper,Checkbox,Appbar } from 'react-native-paper';
+import Modal from 'react-native-modal';
+import { Appbar, Button, Checkbox } from 'react-native-paper';
+import { useUser } from '../../providers/UserContext';
+import { Store } from '../../redux/store';
+import { Material } from '../../types/docType';
 
 interface ExistingModalProps {
   isVisible: boolean;
@@ -94,6 +72,7 @@ const ExistingMaterials = ({
       const data = await response.json();
 
       if (!response.ok) {
+        // console.log('error', data)
         throw new Error('Network response was not ok');
       }
       return data;
@@ -112,7 +91,7 @@ const ExistingMaterials = ({
   const handleSelectMaterial = (material: Material) => {
     const currentMaterials = getValues('materials') || [];
     const materialIndex = currentMaterials.findIndex(
-      materialData => materialData.id === material.id,
+      (materialData:Material) => materialData.id === material.id,
     );
     if (materialIndex !== -1) {
       const updatedMaterials = [...currentMaterials];
@@ -134,13 +113,13 @@ const ExistingMaterials = ({
       </View>
     );
   }
-  if (isError) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>เกิดข้อผิดพลาด Material</Text>
-      </View>
-    );
-  }
+  // if (isError) {
+  //   return (
+  //     <View style={styles.loadingContainer}>
+  //       <Text>เกิดข้อผิดพลาด Material</Text>
+  //     </View>
+  //   );
+  // }
   const handleDonePress = () => {
     if (watch('materials')?.length > 0) {
       onClose();
@@ -149,6 +128,7 @@ const ExistingMaterials = ({
   const handleAddNewProduct = () => {
     setIsOpenModal(true);
   };
+
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
        <Appbar.Header
@@ -174,7 +154,7 @@ const ExistingMaterials = ({
               <TouchableOpacity
                 style={[
                   styles.card,
-                  (watch('materials') || []).some(m => m.id === item.id)
+                  (watch('materials') || []).some((material:Material) => material.id === item.id)
                     ? styles.cardChecked
                     : null,
                 ]}
@@ -182,7 +162,7 @@ const ExistingMaterials = ({
                 <Checkbox.Android
                 
              status={(watch('materials') || []).some(
-              material => material.id === item.id,
+              (material:Material) => material.id === item.id,
             ) ? 'checked' : 'unchecked'}
 
                   
@@ -226,10 +206,10 @@ const ExistingMaterials = ({
         )}
       </View>
 
-      <AddNewMaterial
+      {/* <AddNewMaterial
         isVisible={isOpenModal}
         onClose={() => setIsOpenModal(false)}
-      />
+      /> */}
     </Modal>
   );
 };

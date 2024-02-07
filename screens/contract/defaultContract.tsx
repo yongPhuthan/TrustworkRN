@@ -1,5 +1,5 @@
 import {yupResolver} from '@hookform/resolvers/yup';
-import React, {useState} from 'react';
+import React, {useState,useEffect} from 'react';
 import {
   Alert,
   Dimensions,
@@ -41,13 +41,8 @@ const DefaultContract = ({navigation}: Props) => {
   const route = useRoute();
   const [defaultContractValues, setDefaultContractValues] =
     useState<DefaultContractType>();
-  const id: any = route?.params;
-  const [fcnToken, setFtmToken] = useState('');
   const user = useUser();
-  const [isLoadingMutation, setIsLoadingMutation] = useState(false);
-  const [step, setStep] = useState(1);
   const [contract, setContract] = useState<DefaultContractType>();
-  const [customer, setCustomer] = useState<Customer>();
   const {data: dataProps}: any = route?.params;
   const quotation = dataProps;
   const queryClient = useQueryClient();
@@ -129,7 +124,7 @@ const DefaultContract = ({navigation}: Props) => {
         throw new Error(errorData.message || 'Network response was not ok.');
       }
     } catch (err) {
-      throw new Error(err);
+      throw new Error(err as any);
     }
   };
 
@@ -166,7 +161,7 @@ const DefaultContract = ({navigation}: Props) => {
         throw new Error('Network response was not ok.');
       }
     } catch (err) {
-      throw new Error(err);
+      throw new Error(err as any);
     }
   };
 
@@ -202,13 +197,12 @@ const DefaultContract = ({navigation}: Props) => {
         }
         throw new Error('Network response was not ok.');
       }
-    } catch (err) {
-      throw new Error(err);
+    } catch (err ) {
+      throw new Error(err as any);
     }
   };
 
-  const defaultValues = {
-    warantyTimeWork: 0,
+  const initialValues = {
     workCheckEnd: 0,
     workCheckDay: 0,
     installingDay: 0,
@@ -225,40 +219,39 @@ const DefaultContract = ({navigation}: Props) => {
     watch,
     setValue,
     reset,
-    formState: {errors, isDirty, dirtyFields, isValid},
+    formState: {errors, isDirty, dirtyFields, isValid,defaultValues},
   } = useForm({
     mode: 'onChange',
-    defaultValues,
+    defaultValues: initialValues,
     resolver: yupResolver(defaultContractSchema),
   });
   const {data, isLoading, isError} = useQuery({
     queryKey: ['ContractByEmail'],
     queryFn: fetchContractByEmail,
     enabled: !!user,
-    onSuccess: data => {
-      if (data) {
-        setContract(data as any);
 
-        const defaultValues = {
-          warantyTimeWork: data.warantyTimeWork,
-          workCheckEnd: data.workCheckEnd,
-          workCheckDay: data.workCheckDay,
-          installingDay: data.installingDay,
-          adjustPerDay: data.adjustPerDay,
-          workAfterGetDeposit: data.workAfterGetDeposit,
-          prepareDay: data.prepareDay,
-          finishedDay: data.finishedDay,
-          productWarantyYear: data.productWarantyYear,
-          skillWarantyYear: data.skillWarantyYear,
-        };
-        setDefaultContractValues(defaultValues);
-        reset(defaultValues);
-      }
-    },
   });
+  useEffect(() => {
+    if (data) {
+      const values = {
+        workCheckEnd: data.workCheckEnd,
+        workCheckDay: data.workCheckDay,
+        installingDay: data.installingDay,
+        adjustPerDay: data.adjustPerDay,
+        workAfterGetDeposit: data.workAfterGetDeposit,
+        prepareDay: data.prepareDay,
+        finishedDay: data.finishedDay,
+        productWarantyYear: data.productWarantyYear,
+        skillWarantyYear: data.skillWarantyYear,
+      };
+      reset(values);
+      setDefaultContractValues(values);
+    }
+  }, [data, reset]);
+  
   const adjustPerDay = useWatch({control, name: 'adjustPerDay'});
 
-  const mutationFunction = async apiData => {
+  const mutationFunction = async (apiData :any) => {
     if (!contract) {
       return createContractAndQuotation(apiData);
     } else if (isDirty) {
@@ -272,9 +265,9 @@ const DefaultContract = ({navigation}: Props) => {
     {
       onSuccess: data => {
         queryClient.invalidateQueries(['dashboardData']);
-        console.log('data', data);
+        console.log('data from backend', data);
         // const newId = quotation.id.slice(0, 8);
-        navigation.navigate('DocViewScreen', {id: data.id});
+        navigation.navigate('DocViewScreen', {id: data});
       },
       onError: (error: MyError) => {
         Alert.alert(
@@ -297,22 +290,26 @@ const DefaultContract = ({navigation}: Props) => {
   }, {} as DefaultContractType);
 
   const handleDonePress = async () => {
-    setIsLoadingMutation(true);
 
     try {
       const apiData = {
         data: quotation,
-        contract: isDirty ? dirtyValues : defaultContractValues,
+        contract: defaultContractValues?  isDirty ? dirtyValues : defaultContractValues : watchedValues,
       };
-
-      dynamicMutation(apiData);
-      setIsLoadingMutation(false);
+      console.log('apiData',apiData);
+      // dynamicMutation(apiData);
     } catch (error: Error | MyError | any) {
-      setIsLoadingMutation(false);
+      Alert.alert(
+        'เกิดข้อผิดพลาด',
+        `Server-side user creation failed:, ${error}`,
+        [{text: 'OK'}],
+
+        {cancelable: false},
+      );
     }
   };
 
-  function safeToString(value) {
+  function safeToString(value:string | number | null | undefined) {
     return value !== undefined && value !== null ? value.toString() : '';
   }
 
@@ -330,6 +327,7 @@ const DefaultContract = ({navigation}: Props) => {
       </View>
     );
   }
+console.log('defaultContractValues',defaultContractValues);
 
   const renderWanranty = (
     name: any,
@@ -349,7 +347,11 @@ const DefaultContract = ({navigation}: Props) => {
           control={control}
           rules={{required: 'This field is required'}}
           render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
-            <>
+            <View style={{
+              flexDirection:'column'
+            }}>
+                          {error && <Text style={styles.errorText}>{error.message}</Text>}
+
               <TextInput
                 keyboardType="number-pad"
                 style={{width: Dimensions.get('window').width * 0.3}}
@@ -360,15 +362,17 @@ const DefaultContract = ({navigation}: Props) => {
                 defaultValue={defaultValue}
                 onBlur={onBlur}
                 right={<TextInput.Affix text="เดือน" />}
-                value={value}
+                value={value ? String(value) : '0'}
                 onChangeText={val => {
-                  const numericValue = Number(val);
+                  const numericValue = parseInt(val, 10);
                   if (!isNaN(numericValue)) {
                     onChange(numericValue);
+                  } else {
+                    onChange(0);
                   }
                 }}
               />
-            </>
+            </View>
           )}
           name={name}
         />
@@ -393,7 +397,11 @@ const DefaultContract = ({navigation}: Props) => {
           control={control}
           rules={{required: 'This field is required'}}
           render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
-            <View>
+            <View style={{
+              flexDirection:'column'
+            }}>
+                            {error && <Text style={styles.errorText}>{error.message}</Text>}
+
               <TextInput
                 keyboardType="number-pad"
                 textAlign="center"
@@ -407,15 +415,16 @@ const DefaultContract = ({navigation}: Props) => {
                 defaultValue={defaultValue}
                 onBlur={onBlur}
                 right={<TextInput.Affix text="วัน" />}
-                value={value}
+                value={value ? String(value) : '0'}
                 onChangeText={val => {
-                  const numericValue = Number(val);
+                  const numericValue = parseInt(val, 10);
                   if (!isNaN(numericValue)) {
                     onChange(numericValue);
+                  } else {
+                    onChange(0);
                   }
                 }}
               />
-              {error && <Text style={styles.errorText}>{error.message}</Text>}
             </View>
           )}
           name={name}
@@ -451,7 +460,11 @@ const DefaultContract = ({navigation}: Props) => {
               field: {onChange, onBlur, value},
               fieldState: {error},
             }) => (
-              <>
+              <View style={{
+                flexDirection:'column'
+              }}>
+                            {error && <Text style={styles.errorText}>{error.message}</Text>}
+
                 <TextInput
                   keyboardType="number-pad"
                   textAlign="center"
@@ -462,16 +475,17 @@ const DefaultContract = ({navigation}: Props) => {
                   defaultValue={defaultValue}
                   onBlur={onBlur}
                   right={<TextInput.Affix text="%" />}
-                  value={value}
+                  value={value ? String(value) : '0'}
                   onChangeText={val => {
-                    const numericValue = Number(val);
+                    const numericValue = parseInt(val, 10);
                     if (!isNaN(numericValue)) {
                       onChange(numericValue);
+                    } else {
+                      onChange(0);
                     }
                   }}
                 />
-                {error && <Text style={styles.errorText}>{error.message}</Text>}
-              </>
+              </View>
             )}
             name={name}
           />
@@ -508,9 +522,10 @@ const DefaultContract = ({navigation}: Props) => {
 
         <Controller
           control={control}
-          rules={{required: 'This field is required'}}
+          rules={{required:true}}
           render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
             <>
+                          {error && <Text style={styles.errorText}>{error.message}</Text>}
               <TextInput
                 keyboardType="number-pad"
                 textAlign="center"
@@ -518,18 +533,20 @@ const DefaultContract = ({navigation}: Props) => {
                 error={!!error}
                 mode="outlined"
                 textAlignVertical="center"
-                defaultValue={defaultValue}
+                defaultValue={(defaultValue)}
                 onBlur={onBlur}
                 right={<TextInput.Affix text="วัน" />}
-                value={value}
+                value={value ? String(value) : '0'}
                 onChangeText={val => {
-                  const numericValue = Number(val);
+                  const numericValue = parseInt(val, 10);
                   if (!isNaN(numericValue)) {
                     onChange(numericValue);
+                  } else {
+                    onChange(0);
                   }
                 }}
+                
               />
-              {error && <Text style={styles.errorText}>{error.message}</Text>}
             </>
           )}
           name={name}
@@ -568,7 +585,7 @@ const DefaultContract = ({navigation}: Props) => {
       </Appbar.Header>
       <ProgressBar progress={1} color={'#1b52a7'} />
 
-      <KeyboardAwareScrollView>
+      <KeyboardAwareScrollView contentContainerStyle={{ paddingBottom: 50 }}>
         {contract ? (
           <SafeAreaView style={{flex: 1}}>
             <View style={styles.containerForm}>
@@ -604,14 +621,14 @@ const DefaultContract = ({navigation}: Props) => {
                   'เริ่มทำงานภายในกี่วันหลังได้รับมัดจำ',
                   safeToString(contract.workAfterGetDeposit),
                 )}
-                {/* {renderWanranty(
+                {renderPrepare(
                     'prepareDay',
-                    'ใช้เวลาเตรียมงานกี่วัน',
+                    'ใช้เวลาเตรียมงานกี่วันก่อนติดตั้ง',
                     safeToString(contract.prepareDay),
-                  )} */}
+                  )}
                 {renderPrepare(
                   'finishedDay',
-                  'ใช้เวลาทำงานทั้งหมดกี่วัน',
+                  'รวมใช้เวลาทำงานทั้งหมดกี่วัน',
                   safeToString(contract.finishedDay),
                 )}
               </View>
@@ -650,13 +667,14 @@ const DefaultContract = ({navigation}: Props) => {
         ) : (
           <SafeAreaView style={{flex: 1}}>
             <View style={styles.containerForm}>
-              <TextPaper variant="headlineSmall">การรับประกัน</TextPaper>
+              <TextPaper variant="headlineSmall">การรับประกันน</TextPaper>
               <Divider style={{marginTop: 10}} />
 
               <View style={styles.formInput}>
                 {renderWanranty(
                   'productWarantyYear',
                   'รับประกันวัสดุอุปกรณ์กี่เดือน',
+
                 )}
                 {renderWanranty(
                   'skillWarantyYear',
@@ -678,12 +696,11 @@ const DefaultContract = ({navigation}: Props) => {
                   'workAfterGetDeposit',
                   'เริ่มทำงานภายในกี่วันหลังได้รับมัดจำ',
                 )}
-                {/* {renderWanranty(
+                        {renderPrepare(
                     'prepareDay',
-                    'ใช้เวลาเตรียมงานกี่วัน',
-                    safeToString(contract.prepareDay),
-                  )} */}
-                {renderPrepare('finishedDay', 'ใช้เวลาทำงานทั้งหมดกี่วัน')}
+                    'ใช้เวลาเตรียมงานกี่วันก่อนติดตั้ง',
+                  )}
+                {renderPrepare('finishedDay', 'รวมใช้เวลาทำงานทั้งหมดกี่วัน')}
               </View>
             </View>
             <View style={styles.containerForm}>
@@ -942,7 +959,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: 'red',
-    marginTop: 30,
+
   },
 });
 

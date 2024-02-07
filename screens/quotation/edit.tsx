@@ -120,6 +120,8 @@ const EditQuotation = ({navigation, route}: Props) => {
     name: 'customer',
   });
 
+  console.log('customer', customer);
+
   const workers = useWatch({
     control: methods.control,
     name: 'workers',
@@ -222,7 +224,8 @@ const EditQuotation = ({navigation, route}: Props) => {
       setIsLoadingMutation(false);
     } catch (error) {
       console.error('There was a problem calling the function:', error);
-      console.log(error.response ? error.response : error);
+      throw new Error(error as any);
+      setIsLoadingMutation(false);
     }
   };
 
@@ -276,6 +279,7 @@ const EditQuotation = ({navigation, route}: Props) => {
           <ScrollView style={styles.container}>
             <View style={styles.subContainerHead}>
               <DatePickerButton
+              title='วันที่เสนอราคา'
                 label="วันที่เสนอราคา"
                 date="today"
                 onDateSelected={handleStartDateSelected}
@@ -286,6 +290,7 @@ const EditQuotation = ({navigation, route}: Props) => {
                 value={methods.watch('docNumber')}
               />
               <DatePickerButton
+              title='ยืนราคาถึงวันที่ี'
                 label="ยืนราคาถึงวันที่ี"
                 date="sevenDaysFromNow"
                 onDateSelected={handleEndDateSelected}

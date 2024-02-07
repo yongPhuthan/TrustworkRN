@@ -22,7 +22,7 @@ import CardDashBoard from '../../components/CardDashBoard';
 import {useUser} from '../../providers/UserContext';
 import * as stateAction from '../../redux/actions';
 import {Store} from '../../redux/store';
-import {CompanyUser, Quotation} from '../../types/docType';
+import {CompanyUser, Customer, Quotation, Service} from '../../types/docType';
 import {DashboardScreenProps} from '../../types/navigationType';
 
 import {
@@ -32,7 +32,6 @@ import {
   ActivityIndicator,
   Dialog,
   Appbar,
-  Button,
 } from 'react-native-paper';
 import {
   checkNotifications,
@@ -41,7 +40,6 @@ import {
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(true);
-  const [activeMenu, setActiveMenu] = React.useState('');
   const user = useUser();
   const {width, height} = Dimensions.get('window');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
@@ -49,20 +47,18 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [visible, setVisible] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null) as any;
-  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(null) as any;
   const [originalQuotationData, setOriginalQuotationData] = useState<
     Quotation[] | null
   >(null);
   const [state, setState] = React.useState({open: false});
 
-  const onStateChange = ({open}) => setState({open});
+  const onStateChange = ({open}: any) => setState({open});
 
   const {open} = state;
 
   const {dispatch}: any = useContext(Store);
 
-  const openMenu = () => setVisible(true);
-  const closeMenu = () => setVisible(false);
   const requestNotificationPermission = async () => {
     try {
       const {status} = await requestNotifications(['alert', 'badge', 'sound']);
@@ -83,13 +79,9 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     ALL: 'ทั้งหมด',
     PENDING: 'รออนุมัติ',
     APPROVED: 'รอทำสัญญา',
-  };
+  } as any;
 
   const [filters, setFilters] = useState(['ALL', 'PENDING', 'APPROVED']);
-
-  const handleShowModalClose = () => {
-    setShowModal(false);
-  };
 
   const handleNoResponse = () => {
     setModalVisible(false);
@@ -121,17 +113,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         setQuotationData(filteredData);
       }
     }
-  };
-  const handleYesResponse = index => {
-    if (companyData && quotationData && quotationData.length > 0) {
-      navigation.navigate('ContractOptions', {
-        id: quotationData[index].id,
-        sellerId: companyData.id,
-        allTotal: quotationData[index].allTotal,
-        customerName: quotationData[index].customer?.name as string,
-      });
-    }
-    setModalVisible(false);
   };
 
   async function fetchDashboardData() {
@@ -198,7 +179,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       const response = await fetch(
         `${BACK_END_SERVER_URL}/api/documents/removeQuotation?id=${encodeURIComponent(
           id,
-        )}?email=${encodeURIComponent(user.email)}`,
+        )}&email=${encodeURIComponent(user.email)}`,
         {
           method: 'DELETE',
           headers: {
@@ -208,23 +189,25 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         },
       );
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          const errorData = await response.json();
-          throw new Error(errorData.message);
-        }
-        throw new Error('Network response was not ok.');
-      }
       if (response.ok) {
         queryClient.invalidateQueries(['dashboardData']);
         setIsLoadingAction(false);
+      } else {
+        // It's good practice to handle HTTP error statuses
+        const errorResponse = await response.text(); // or response.json() if the server responds with JSON
+        console.error('Failed to delete quotation:', errorResponse);
+        setIsLoadingAction(false);
+        // Display a more specific error message if possible
+        Alert.alert('Error', 'Failed to delete quotation. Please try again.');
       }
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      throw err;
+      console.error('An error occurred:', err);
+      setIsLoadingAction(false);
+      Alert.alert('เกิดข้อผิดพลาด', 'ไม่สามารถลบใบเสนอราคาได้');
     }
   };
-  const confirmRemoveQuotation = (id, customer) => {
+
+  const confirmRemoveQuotation = (id: string, customer: Customer) => {
     setShowModal(false);
     Alert.alert(
       'ยืนยันลบใบเสนอราคา',
@@ -255,6 +238,11 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       setQuotationData(data[1]);
       setOriginalQuotationData(data[1]);
       dispatch(stateAction.code_company(data[0].code));
+      if (user) {
+        if (data[0] === null) {
+          navigation.navigate('CreateCompanyScreen');
+        }
+      }
     },
   });
   useEffect(() => {
@@ -272,7 +260,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     }
   }, [user]);
 
-  if (isQuery) {
+  if (isQuery || isLoadingAction) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size={'large'} />
@@ -300,12 +288,8 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       ]);
     }
   }
-  if (user) {
-    if (companyData === null) {
-      navigation.navigate('CreateCompanyScreen');
-    }
-  }
-  const handleCreateContract = index => {
+
+  const handleCreateContract = (index: number) => {
     if (companyData && quotationData && quotationData.length > 0) {
       navigation.navigate('ContractOptions', {
         id: quotationData[index].id,
@@ -317,17 +301,13 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     setModalVisible(false);
   };
 
-  const handleModal = (item, index) => {
+  const handleModal = (item: Quotation, index: number) => {
     setSelectedItem(item);
     setSelectedIndex(index);
     setShowModal(false);
     setModalVisible(true);
   };
-  const handleModalOpen = (item, index) => {
-    console.log('item', item);
-    console.log('status', selectedItem?.status);
-
-    console.log('index', index);
+  const handleModalOpen = (item: Quotation, index: number) => {
     setSelectedItem(item);
     setSelectedIndex(index);
     // handleModal(item, index);
@@ -339,10 +319,8 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     setSelectedIndex(null);
     setShowModal(false);
   };
-  const handleFilterClick = filter => {
-    setActiveFilter(filter);
-  };
-  const editQuotation = async (services, customer, quotation) => {
+
+  const editQuotation = async (services: Service[], quotation: Quotation) => {
     setIsLoadingAction(true);
     dispatch(stateAction.get_companyID(data[0].id));
     setIsLoadingAction(false);
@@ -353,7 +331,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       services,
     });
   };
-  const FilterButton = ({filter, isActive, onPress}) => {
+  const FilterButton = ({filter, isActive, onPress}: any) => {
     const displayText = filterLabels[filter] || filter;
     console.log('companyUser', companyData);
     return (
@@ -365,25 +343,19 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     );
   };
 
-  const renderItem = ({item, index}) => (
+  const renderItem = ({item, index}: any) => (
     <>
-      {isLoadingAction ? (
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <ActivityIndicator size="large" />
-        </View>
-      ) : (
-        <View style={{marginTop: 10}}>
-          <CardDashBoard
-            status={item.status}
-            date={item.dateOffer}
-            end={item.dateEnd}
-            price={item.allTotal}
-            customerName={item.customer?.name as string}
-            // onCardPress={()=>handleModal(item, index)}
-            onCardPress={() => handleModalOpen(item, index)}
-          />
-        </View>
-      )}
+      <View style={{marginTop: 10}}>
+        <CardDashBoard
+          status={item.status}
+          date={item.dateOffer}
+          end={item.dateEnd}
+          price={item.allTotal}
+          customerName={item.customer?.name as string}
+          // onCardPress={()=>handleModal(item, index)}
+          onCardPress={() => handleModalOpen(item, index)}
+        />
+      </View>
 
       {selectedIndex === index &&
         (Platform.OS === 'android' ? (
@@ -422,11 +394,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                 <Pressable
                   onPress={() => {
                     setShowModal(false);
-                    editQuotation(
-                      selectedItem.services,
-                      selectedItem.customer,
-                      selectedItem,
-                    );
+                    editQuotation(selectedItem.services, selectedItem);
                   }}>
                   <Text style={styles.ModalButtonText}>แก้ไขใบเสนอราคา</Text>
                 </Pressable>
@@ -527,11 +495,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                 <Pressable
                   onPress={() => {
                     setShowModal(false);
-                    editQuotation(
-                      selectedItem.services,
-                      selectedItem.customer,
-                      selectedItem,
-                    );
+                    editQuotation(selectedItem.services, selectedItem);
                   }}>
                   <Text style={styles.ModalButtonText}>แก้ไขใบเสนอราคา</Text>
                 </Pressable>
@@ -576,119 +540,131 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     // navigation.navigate('GalleryScreen', {code: companyData?.code});
     navigation.navigate('CreateQuotation');
   };
+
   return (
     <>
       <PaperProvider>
         <Portal>
-          <View>
-            <Appbar.Header
-              // elevated
-              mode="center-aligned"
-              style={{
-                backgroundColor: 'white',
-              }}>
-              <Appbar.Action
-                icon={'menu'}
-                onPress={() => {
-                  navigation.dispatch(DrawerActions.openDrawer());
-                }}
-              />
-              <Appbar.Content
-                title={
-                  activeFilter == 'ALL'
-                    ? 'รายการทั้งหมด'
-                    : activeFilter === 'PENDING'
-                    ? 'รายการรออนุมัติ'
-                    : 'รายการรอทำสัญญา'
-                }
-                titleStyle={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  fontFamily: 'Sukhumvit Set Bold',
-                }}
-              />
-              <Appbar.Action
-                icon="bell-outline"
-                // onPress={() => {
-                //   navigation.navigate('SearchScreen');
-                // }}
-              />
-            </Appbar.Header>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={filters}
-              renderItem={({item}) => (
-                <FilterButton
-                  filter={item}
-                  isActive={item === activeFilter}
-                  onPress={() => {
-                    updateContractData(item);
-                  }}
-                />
-              )}
-              keyExtractor={item => item}
+          <Appbar.Header
+            // elevated
+            mode="center-aligned"
+            style={{
+              backgroundColor: 'white',
+            }}>
+            <Appbar.Action
+              icon={'menu'}
+              onPress={() => {
+                navigation.dispatch(DrawerActions.openDrawer());
+              }}
             />
-          </View>
-          {companyData && (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: '#f5f5f5',
-              }}>
-              <FlatList
-                data={filteredQuotationData}
-                renderItem={renderItem}
-                keyExtractor={item => item.id}
-                ListEmptyComponent={
-                  <View
-                    style={{
-                      flex: 1,
-                      justifyContent: 'center',
-                      height: height * 0.5,
-
-                      alignItems: 'center',
-                    }}>
-                    <Text style={{marginTop: 10}}>
-                      กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
-                    </Text>
-                  </View>
-                }
-                contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
-              />
-            </View>
-          )}
-
-          <FAB.Group
-            open={open}
-            visible
-            color="white"
-            fabStyle={{
-              backgroundColor: '#1b52a7',
-            }}
-            icon={open ? 'minus' : 'plus'}
-            actions={[
-              {
-                icon: 'plus',
-                label: 'สร้างใบเสนอราคา',
-
-                onPress: () => createNewQuotation(),
-              },
-              {
-                icon: 'file-document-edit-outline',
-                label: 'ทำสัญญา',
-                onPress: () => setActiveFilter('APPROVED'),
-              },
-            ]}
-            onStateChange={onStateChange}
-            onPress={() => {
-              if (open) {
-                // do something if the speed dial is open
+            <Appbar.Content
+              title={
+                activeFilter == 'ALL'
+                  ? 'รายการทั้งหมด'
+                  : activeFilter === 'PENDING'
+                  ? 'รายการรออนุมัติ'
+                  : 'รายการรอทำสัญญา'
               }
-            }}
-          />
+              titleStyle={{
+                fontSize: 18,
+                fontWeight: 'bold',
+                fontFamily: 'Sukhumvit Set Bold',
+              }}
+            />
+            <Appbar.Action
+              icon="bell-outline"
+              // onPress={() => {
+              //   navigation.navigate('SearchScreen');
+              // }}
+            />
+          </Appbar.Header>
+          {isLoadingAction ? (
+            <View
+              style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+              <ActivityIndicator size="large" />
+            </View>
+          ) : (
+            <>
+              <View>
+                <FlatList
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  data={filters}
+                  renderItem={({item}) => (
+                    <FilterButton
+                      filter={item}
+                      isActive={item === activeFilter}
+                      onPress={() => {
+                        updateContractData(item);
+                      }}
+                    />
+                  )}
+                  keyExtractor={item => item}
+                />
+              </View>
+              {companyData && (
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: '#f5f5f5',
+                  }}>
+                  <FlatList
+                    data={filteredQuotationData}
+                    renderItem={renderItem}
+                    keyExtractor={item => item.id}
+                    ListEmptyComponent={
+                      <View
+                        style={{
+                          flex: 1,
+                          justifyContent: 'center',
+                          height: height * 0.5,
+
+                          alignItems: 'center',
+                        }}>
+                        <Text style={{marginTop: 10}}>
+                          กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
+                        </Text>
+                      </View>
+                    }
+                    contentContainerStyle={
+                      quotationData?.length === 0 && {flex: 1}
+                    }
+                  />
+                </View>
+              )}
+
+              <FAB.Group
+                open={open}
+                visible
+                color="white"
+                fabStyle={{
+                  backgroundColor: '#1b52a7',
+                }}
+                icon={open ? 'minus' : 'plus'}
+                actions={[
+                  {
+                    icon: 'plus',
+                    label: 'สร้างใบเสนอราคา',
+
+                    onPress: () => createNewQuotation(),
+                  },
+                  {
+                    icon: 'file-document-edit-outline',
+                    label: 'ทำสัญญา',
+                    onPress: () => setActiveFilter('APPROVED'),
+                  },
+                ]}
+                onStateChange={onStateChange}
+                onPress={() => {
+                  if (open) {
+                    // do something if the speed dial is open
+                  }
+                }}
+              />
+            </>
+          )}
 
           {/* modal popup */}
           <Dialog

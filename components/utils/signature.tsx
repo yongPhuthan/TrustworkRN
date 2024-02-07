@@ -27,7 +27,6 @@ import {
   View,
 } from 'react-native';
 import Signature from 'react-native-signature-canvas';
-import { useUpdateContract } from '../../hooks/contract/useUpdateContract';
 import { useSlugify } from '../../hooks/utils/useSlugify';
 import { useUser } from '../../providers/UserContext';
 import { Store } from '../../redux/store';
@@ -45,8 +44,7 @@ const SignatureComponent = ({
 }: SignaturePadProps) => {
   const ref = useRef<any>();
   const [isImageUpload, setIsImageUpload] = useState(false);
-  const [image, setImage] = useState<string>('');
-  const {updateContract} = useUpdateContract();
+
   const [createNewSignature, setCreateNewSignature] = useState<boolean>(false);
   const queryClient = useQueryClient();
   const slugify = useSlugify();
@@ -106,7 +104,7 @@ const SignatureComponent = ({
       }
     } catch (err) {
       console.error('Error in updateContractAndQuotation:', err);
-      throw new Error(err);
+      throw new Error(err as any);
     }
   };
 
@@ -135,57 +133,60 @@ const SignatureComponent = ({
     name: 'sellerSignature',
   });
 
-  const uploadFileToFirebase = async (imageUri: string) => {
+  const uploadFileToFirebase = async (imageUri: string): Promise<string | null> => {
     setIsSignatureUpload(true);
-
+  
     if (!user) {
       console.error('User is not authenticated');
       setIsSignatureUpload(false);
-      return;
+      return null;
     }
-
+  
     if (!user.email) {
       console.error('User email is not available');
       setIsSignatureUpload(false);
-      return;
+      return null; 
     }
-
+  
     const filename = `signature${code}.png`;
     const storagePath = __DEV__
       ? `Test/${code}/signature/${filename}`
       : `${code}/signature/${filename}`;
+  
     try {
       const storageRef = firebase.storage().ref(storagePath);
       const base64String = imageUri.split(',')[1];
       console.log('base64String', base64String);
-
+  
       const snapshot = await storageRef.putString(base64String, 'base64', {
         contentType: 'image/png',
       });
-
+  
       if (!snapshot.metadata) {
         console.error('Snapshot metadata is undefined');
-        return;
+        return null; 
       }
-
+  
       console.log('Uploaded a base64 string!', snapshot);
-
+  
       // Construct the download URL manually
       const bucket = snapshot.metadata.bucket;
       const path = encodeURIComponent(snapshot.metadata.fullPath);
       const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${path}?alt=media`;
-
+  
       console.log('File uploaded successfully. URL:', publicUrl);
       return publicUrl;
     } catch (error) {
       console.error('Error uploading file to Firebase:', error);
+      return null; 
     } finally {
       setIsSignatureUpload(false);
     }
   };
+  
 
   const handleUploadNewSignatureAndSave = useCallback(
-    async signature => {
+    async (signature:string) => {
       if (!signature) {
         return;
       }
@@ -202,7 +203,7 @@ const SignatureComponent = ({
         setValue('companyUser.signature', imageUrl, { shouldDirty: true });
         setValue('sellerSignature', imageUrl, { shouldDirty: true });
         setCreateNewSignature(false);
-      } catch (error) {
+      } catch (error:any) {
         Alert.alert(
           'Upload Error',
           `An error occurred during the upload: ${error.message}`,

@@ -1,6 +1,6 @@
 import {faBell} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {createDrawerNavigator} from '@react-navigation/drawer';
+import {createDrawerNavigator,DrawerContentComponentProps} from '@react-navigation/drawer';
 import React from 'react';
 import {SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
 import 'react-native-gesture-handler';
@@ -20,7 +20,7 @@ const commonScreenOptions = {
   },
   headerTintColor: 'black',
 };
-function CustomDrawerContent(props) {
+function CustomDrawerContent(props:DrawerContentComponentProps) {
   const activeTintColor = 'white'; // Replace with your color for active item
   const inactiveTintColor = 'white'; // Replace with your color for inactive item
   const borderRadius = 3; // Adjust as needed

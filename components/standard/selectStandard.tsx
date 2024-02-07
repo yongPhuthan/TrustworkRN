@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -7,27 +7,18 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  View
+  View,
 } from 'react-native';
-import { Store } from '../../redux/store';
+import {Store} from '../../redux/store';
 
-import { BACK_END_SERVER_URL } from '@env';
-import { useQuery } from '@tanstack/react-query';
-import {
-  useFormContext
-} from 'react-hook-form';
-import {
-  Audit,
-  Standard
-} from '../../types/docType';
+import {BACK_END_SERVER_URL} from '@env';
+import {useQuery} from '@tanstack/react-query';
+import {useFormContext} from 'react-hook-form';
+import {Audit, Standard} from '../../types/docType';
 
 import Modal from 'react-native-modal';
-import {
-  Appbar,
-  Button,
-  Checkbox
-} from 'react-native-paper';
-import { useUser } from '../../providers/UserContext';
+import {Appbar, Button, Checkbox} from 'react-native-paper';
+import {useUser} from '../../providers/UserContext';
 
 interface AuditModalProps {
   isVisible: boolean;
@@ -96,17 +87,20 @@ const SelectStandard = ({
   const handleSelectStandard = (standard: Standard) => {
     const currentStandards = getValues('standards') || [];
     const standardIndex = currentStandards.findIndex(
-      standardData => standardData.id === standard.id,
+      (standardData: Standard) => standardData.id === standard.id,
     );
     if (standardIndex !== -1) {
       const updatedStandards = [...currentStandards];
       updatedStandards.splice(standardIndex, 1);
       setValue('standards', updatedStandards, {shouldDirty: true});
     } else {
-      const updatedStandards = [...currentStandards, { 
-        id: standard.id,
-        standardShowTitle: standard.standardShowTitle,
-      }];
+      const updatedStandards = [
+        ...currentStandards,
+        {
+          id: standard.id,
+          standardShowTitle: standard.standardShowTitle,
+        },
+      ];
       setValue('standards', updatedStandards, {shouldDirty: true});
     }
   };
@@ -145,22 +139,20 @@ const SelectStandard = ({
   }
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
-         <Appbar.Header
-          mode="center-aligned"
-          elevated
-          style={{
-            backgroundColor: 'white',
-            width: Dimensions.get('window').width,
-          }}>
-          <Appbar.Action icon={'close'} onPress={() => onClose()} />
-          <Appbar.Content
-            title={`มาตรฐานงานติดตั้ง ${title || ''}`}
-            titleStyle={{fontSize: 16}}
-          />
-        </Appbar.Header>
+      <Appbar.Header
+        mode="center-aligned"
+        elevated
+        style={{
+          backgroundColor: 'white',
+          width: Dimensions.get('window').width,
+        }}>
+        <Appbar.Action icon={'close'} onPress={() => onClose()} />
+        <Appbar.Content
+          title={`มาตรฐานงานติดตั้ง ${title || ''}`}
+          titleStyle={{fontSize: 16}}
+        />
+      </Appbar.Header>
       <SafeAreaView style={styles.container}>
-     
-
         {/* <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <FontAwesomeIcon icon={faClose} size={24} color="gray" />
@@ -185,7 +177,9 @@ const SelectStandard = ({
               <View
                 style={[
                   styles.card,
-                  (watch('standards') || []).some(m => m.id === item.id)
+                  (watch('standards') || []).some(
+                    (standard: Standard) => standard.id === item.id,
+                  )
                     ? styles.cardChecked
                     : null,
                 ]}
@@ -200,21 +194,21 @@ const SelectStandard = ({
                     containerStyle={styles.checkboxContainer}
                     checkedColor="#012b20"
                   /> */}
-                  <View 
-                   style={{
+                <View
+                  style={{
                     flexDirection: 'column',
-                  }}
-                  >
-
-                
-  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  }}>
+                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
                     <Checkbox.Android
                       onPress={() => handleSelectStandard(item)}
                       color="#012b20"
-                      style={{flexDirection: 'row-reverse',alignItems:'flex-start'}}
+                      style={{
+                        flexDirection: 'row-reverse',
+                        alignItems: 'flex-start',
+                      }}
                       status={
                         (watch('standards') || []).some(
-                          standard => standard.id === item.id,
+                          (standard: Standard) => standard.id === item.id,
                         )
                           ? 'checked'
                           : 'unchecked'
@@ -222,20 +216,19 @@ const SelectStandard = ({
                     />
                     <Text>{item.standardShowTitle}</Text>
                   </View>
-                <View
-                  style={{
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                
-                  <Image
-                    source={{uri: item.badStandardImage}}
-                    style={styles.productImage}
-                  />
+                  <View
+                    style={{
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    <Image
+                      source={{uri: item.badStandardImage}}
+                      style={styles.productImage}
+                    />
 
-                  <Text style={styles.description}>{item.content}</Text>
-                </View>
+                    <Text style={styles.description}>{item.content}</Text>
+                  </View>
                 </View>
               </View>
             </>

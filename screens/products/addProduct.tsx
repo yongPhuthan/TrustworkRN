@@ -33,7 +33,6 @@ import GalleryScreen from '../../components/gallery/existing';
 import ExistingMaterials from '../../components/materials/existing';
 import SelectStandard from '../../components/standard/selectStandard';
 import SmallDivider from '../../components/styles/SmallDivider';
-import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
 import {ParamListBase} from '../../types/navigationType';
 import {serviceValidationSchema} from '../utils/validationSchema';
 
@@ -53,10 +52,9 @@ const AddProductForm = ({navigation, route}: Props) => {
   const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
   const [serviceImages, setServiceImages] = useState<string[]>([]);
   const [isModalImagesVisible, setModalImagesVisible] = useState(false);
-  const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
+  // const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
   const [serviceID, setServiceID] = useState<string>('');
-
-  const handleDone = data => {
+  const handleDone = () => {
     onAddService(methods.watch());
     navigation.goBack();
   };
@@ -132,6 +130,7 @@ const AddProductForm = ({navigation, route}: Props) => {
       ''
     );
   }, [standards, materials, title, unitPrice]);
+
   return (
     <>
       <Appbar.Header
@@ -197,10 +196,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                     justifyContent: 'center',
                     alignItems: 'center',
                   }}>
-                  {isImageUpload ? (
-                    <ActivityIndicator size="small" color="#0073BA" />
-                  ) : (
-                    <FlatList
+                  <FlatList
                       data={methods.watch('serviceImages')}
                       horizontal={true}
                       renderItem={({item, index}) => {
@@ -241,13 +237,13 @@ const AddProductForm = ({navigation, route}: Props) => {
                               alignItems: 'center',
                               marginBottom: 20,
                               borderColor: '#0073BA',
-                              borderWidth: imageUrl == null ? 1 : 0,
+                              borderWidth: 1,
                               borderRadius: 5,
                               borderStyle: 'dashed',
                               // marginHorizontal: 100,
                               padding: 10,
-                              height: imageUrl == null ? 100 : 150,
-                              width: imageUrl == null ? 200 : 'auto',
+                              height:  150,
+                              width: 200,
                             }}
                             onPress={() => {
                               setModalImagesVisible(true);
@@ -270,7 +266,6 @@ const AddProductForm = ({navigation, route}: Props) => {
                         </View>
                       }
                     />
-                  )}
                 </View>
                 <Controller
                   control={methods.control}
@@ -539,7 +534,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                         }}>
                         วัสดุอุปกรณ์ที่ใช้
                       </Text>
-                      {methods.watch('materials')?.map((item: any, index) => (
+                      {methods.watch('materials')?.map((item: any, index:number) => (
                         <TouchableOpacity
                           key={index}
                           style={styles.card}

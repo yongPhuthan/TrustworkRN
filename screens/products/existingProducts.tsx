@@ -82,7 +82,8 @@ const ExistingProducts = ({navigation}: Props) => {
     );
   }
   const handleAddNewProduct = () => {
-    navigation.navigate('AddProduct');
+    
+    // navigation.navigate('AddProduct');
   };
   if (isError) {
     return (

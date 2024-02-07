@@ -124,7 +124,7 @@ const ExistingContract = ({navigation}: Props) => {
         throw new Error(errorData.message || 'Network response was not ok.');
       }
     } catch (err) {
-      throw new Error(err);
+      throw new Error(err as any);
     }
   };
   const defaultValues = {
@@ -255,7 +255,7 @@ const ExistingContract = ({navigation}: Props) => {
     createQuotationMutation(apiData);
   };
 
-  function safeToString(value) {
+  function safeToString(value : any) {
     return value !== undefined && value !== null ? value.toString() : '';
   }
 

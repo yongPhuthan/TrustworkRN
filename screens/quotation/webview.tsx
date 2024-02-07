@@ -3,6 +3,8 @@ import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
+  Dimensions,
+  NativeSyntheticEvent, NativeScrollEvent,
   View
 } from 'react-native';
 
@@ -25,11 +27,11 @@ interface Props {
 // ... rest of your DocViewScreen component ...
 
 const DocViewScreen = ({navigation, route}: Props) => {
-  const QuotationWebView = ({url}) => {
+  const QuotationWebView = ({url}: any) => {
     return <WebView source={{uri: url}} />;
   };
 
-  const ContractWebView = ({url}) => {
+  const ContractWebView = ({url} : any) => {
     return (
       <ScrollView onScroll={onScroll}>
         <WebView source={{uri: url}} />
@@ -50,7 +52,7 @@ const DocViewScreen = ({navigation, route}: Props) => {
   );
 
   const [routes] = React.useState([
-    {key: 'quotation', title: 'เพจ', focusedIcon: 'web'},
+    {key: 'quotation', title: 'เว็บเพจ', focusedIcon: 'web'},
     {
       key: 'contracts',
       title: 'เอกสาร',
@@ -63,10 +65,6 @@ const DocViewScreen = ({navigation, route}: Props) => {
     contracts: ContractRoute,
   });
 
-  const handlePress = route => {
-    route.onPress();
-    setIndex(route.findIndex(r => r === route));
-  };
   const [isExtended, setIsExtended] = React.useState(true);
 
   const {id} = route.params;
@@ -94,10 +92,9 @@ const DocViewScreen = ({navigation, route}: Props) => {
     navigation.navigate('DashboardQuotation');
   };
 
-  const onScroll = ({nativeEvent}) => {
-    const currentScrollPosition =
-      Math.floor(nativeEvent?.contentOffset?.y) ?? 0;
-
+  const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollPosition = Math.floor(nativeEvent.contentOffset.y) ?? 0;
+  
     setIsExtended(currentScrollPosition <= 0);
   };
 
@@ -110,13 +107,12 @@ const DocViewScreen = ({navigation, route}: Props) => {
           <Appbar.Header elevated style={{
             backgroundColor:'white'
           }} mode='center-aligned' >
-            <Appbar.BackAction onPress={backHome} />
+            <Appbar.BackAction onPress={backHome}  />
+
             <Appbar.Content  mode='center-aligned' titleStyle={{
               fontSize:18
             }} title={
-              firstPart === 'quotation'
-                ? 'เพจ'
-                : 'เอกสาร'
+              routes[index].title
             } />
           </Appbar.Header>
           <View style={{flex: 1}}>
@@ -130,9 +126,11 @@ const DocViewScreen = ({navigation, route}: Props) => {
             <AnimatedFAB
               icon="navigation-variant"
               label="ส่งให้ลูกค้า"
-              color="white"
+              variant='primary'
+              color='white'
               onPress={handleShare}
               extended={isExtended}
+              
               style={[styles.fabStyle]}
               animateFrom="right"
             />
@@ -143,6 +141,8 @@ const DocViewScreen = ({navigation, route}: Props) => {
     </>
   );
 };
+const { width, height } = Dimensions.get('window');
+
 
 const styles = StyleSheet.create({
   shareButtonContainer: {
@@ -277,10 +277,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   fabStyle: {
-    bottom: 100,
-    right: 20,
+    bottom: height * 0.2, 
+    right: width * 0.05, 
     position: 'absolute',
     backgroundColor: '#1b52a7',
   },
 });
+
 export default DocViewScreen;

@@ -29,7 +29,6 @@ import {
 } from 'react-native-paper';
 import RNPickerSelect from 'react-native-picker-select';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Or another library of your choice
-import { useSignatureUpload } from '../../hooks/utils/image/useSignatureUpload';
 import { useUser } from '../../providers/UserContext';
 import { ParamListBase } from '../../types/navigationType';
 
@@ -49,9 +48,6 @@ const Installment = ({ navigation, route }: Props) => {
   const queryClient = useQueryClient();
   const [pickerVisible, setPickerVisible] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
-
-  const {isSignatureUpload, signatureUrl, handleSignatureUpload} =
-    useSignatureUpload();
 
   const [percentages, setPercentages] = useState<{[key: number]: number}>({});
   const [isPercentagesValid, setIsPercentagesValid] = useState<boolean>(true);
@@ -91,7 +87,7 @@ const Installment = ({ navigation, route }: Props) => {
       const text = await response.text();
       return text ? JSON.parse(text) : {};
     } catch (err) {
-      throw new Error(err);
+      throw new Error(err as any);
     }
   };
   

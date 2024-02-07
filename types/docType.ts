@@ -9,7 +9,6 @@ export type Contract = {
   quotationPageQty: number;
   workCheckDay: number;
   workCheckEnd: number;
-  warantyTimeWork: number;
   workAfterGetDeposit: number;
   prepareDay: number;
   installingDay: number;
@@ -243,7 +242,6 @@ export type EditProductList = {
 };
 
 export type DefaultContractType = {
-  warantyTimeWork: number;
   workCheckEnd: number;
   workCheckDay: number;
   installingDay: number;

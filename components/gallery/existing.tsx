@@ -104,11 +104,12 @@ const GalleryScreen = ({
       throw new Error('User not authenticated');
     } else {
       const idToken = await user.getIdToken(true);
-        console.log('code', code);
-        console.log('idToken', idToken);
+      const filePath = __DEV__
+      ? `Test/${code}/gallery`
+      : `${code}/gallery`;
       try {
-        let url = `${BACK_END_SERVER_URL}/api/services/getGallery?code=${encodeURIComponent(
-          code,
+        let url = `${BACK_END_SERVER_URL}/api/services/getGallery?filePath=${encodeURIComponent(
+          filePath,
         )}`;
         const response = await fetch(url, {
           method: 'GET',
@@ -121,7 +122,6 @@ const GalleryScreen = ({
         if (!response.ok) {
           throw new Error('Server responded with status: ' + response.status);
         }
-        console.log('ok go')
 
         const imageUrls = await response.json();
         return imageUrls;
@@ -306,6 +306,7 @@ const GalleryScreen = ({
       </View>
     );
   }
+
   return (
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       {isImageUpload ? (

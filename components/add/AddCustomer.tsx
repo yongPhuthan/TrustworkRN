@@ -26,8 +26,8 @@ const AddCustomer = ({onClose}: Props) => {
     formState: {errors},
   } = context as any;
 
-  const onSubmit = data => {
-    setValue('customer.id', uuidv4());
+  const onSubmit = () => {
+    // setValue('customer.id', uuidv4());
     onClose();
   };
 

@@ -1,24 +1,23 @@
 // LoginScreen.tsx
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { yupResolver } from '@hookform/resolvers/yup';
+import {faArrowLeft} from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {yupResolver} from '@hookform/resolvers/yup';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
-import { StackNavigationProp } from '@react-navigation/stack';
-import React, { useState } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import {StackNavigationProp} from '@react-navigation/stack';
+import React, {useState} from 'react';
+import {Controller, useForm, useWatch} from 'react-hook-form';
 import {
-  ActivityIndicator,
   Alert,
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
-import { Button, TextInput } from 'react-native-paper';
+import {Button, TextInput, ActivityIndicator} from 'react-native-paper';
 import * as yup from 'yup';
-import { ParamListBase } from '../../types/navigationType';
+import {ParamListBase} from '../../types/navigationType';
 
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'LoginScreen'>;
@@ -138,7 +137,7 @@ const LoginScreen = ({navigation}: Props) => {
           )}
         />
 
-<Button
+        <Button
           mode="contained"
           style={[
             styles.pressable,
@@ -153,7 +152,6 @@ const LoginScreen = ({navigation}: Props) => {
             <Text style={styles.pressableText}>เข้าสู่ระบบ</Text>
           )}
         </Button>
-       
       </View>
     </SafeAreaView>
   );

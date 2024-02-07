@@ -2,19 +2,22 @@
   "compilerOptions": {
     "module": "commonjs",
     "noImplicitReturns": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "outDir": "lib",
     "sourceMap": true,
     "strict": true,
     "target": "es2017",
     "baseUrl": ".",
     "paths": {
-      "@env": ["./node_modules/react-native-dotenv"],
-    }
+      "@env": ["./node_modules/react-native-dotenv"]
+    },
+    "jsx": "react-native", // Ensure this is set correctly for your project
+    "esModuleInterop": true // Add this line
   },
   "compileOnSave": true,
   "include": [
     "src",
-    "app.tsx"
+    "app.tsx",
+    "types", 
   ]
 }

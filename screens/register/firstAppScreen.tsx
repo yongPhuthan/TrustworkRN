@@ -1,12 +1,8 @@
 // screens/FirstAppScreen.tsx
-import React, {useState, useEffect} from 'react';
-import {View, Text, Image, StyleSheet, Pressable} from 'react-native';
-import Navigation from '../../navigations/navigation';
-import firebase from '../../firebase';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Ensure you have this library installed
-import {Button} from 'react-native-paper';
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import React, { useState } from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Button } from 'react-native-paper';
 
 const FirstAppScreen = ({navigation}) => {
   const [loadingUser, setLoadingUser] = useState(true);

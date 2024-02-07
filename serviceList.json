@@ -37,3 +37,90 @@
         "worker": [Object]
     }]
 }
+
+{
+    "contract": undefined,
+    "data": {
+        "FCMToken": "fShcgC08qkXvuC_-dgGp02:APA91bGXqFZDdLi52d3UJdhY8yxo7BKJpYsShl8Bniq4w9U0s8PcQVyX7xD360BBQQ5sDEgf94W12dBzBa0hTRBNGfqd6Q2mrpv1fJgcxOP7rA1YNFYTS4gkXC4Uq32t1OheCRmz1ou2",
+        "allTotal": "44990.00",
+        "companyUser": {
+            "address": "7/44 หมู่ 5 ต. อ้อมใหญ่ อ.สามพราน จ . นครปฐม",
+            "bizName": "Double door engineering",
+            "bizType": "business",
+            "categoryId": "65c0ee6ff76b9b1b27d33190",
+            "code": "477827",
+            "companyTax": "1100800667422",
+            "id": "65c245363b26b43829493ac8",
+            "logo": "https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/Test%2F763132%2Flogo%2F94F031C2-4F28-42FE-A485-49610203B0D2.png?alt=media",
+            "mobileTel": "0959962030",
+            "officeTel": "053306426",
+            "signature": "none",
+            "userEmail": "admin04@email.com",
+            "userLastName": "Kantabusabong",
+            "userName": "Phuthan",
+            "userPosition": "Manager"
+        },
+        "customer": {
+            "address": "873 ถนนพระรามที่ 4 แขวงปทุมวัน, เขตปทุมวัน, กรุงเทพมหานคร, ไทย",
+            "companyId": "",
+            "id": "9b371239-3783-477f-b66d-dced9deabac8",
+            "name": "คุณ ดวงพร ภักดี",
+            "phone": "053234243"
+        },
+        "dateEnd": "14-02-2024",
+        "dateOffer": "07-02-2024",
+        "discountPercentage": 0,
+        "discountType": "PERCENT",
+        "discountValue": "0.00",
+        "docNumber": "20240207227",
+        "id": "2f6f0893-56e8-4eaf-b2f7-f5484331bb1e",
+        "sellerSignature": "",
+        "services": [
+            [Object]
+        ],
+        "summary": "44990.00",
+        "summaryAfterDiscount": "44990.00",
+        "taxType": "NOTAX",
+        "taxValue": "0.00",
+        "vat7": "0.00",
+        "workers": []
+    }
+}
+
+{
+    "data": {
+        "allTotal": "146616.00",
+        "companyUser": {
+            "bizName": "Double door engineering",
+            "code": "477827",
+            "companyTax": "1100800667422",
+            "id": "65c245363b26b43829493ac8",
+            "userLastName": "Kantabusabong",
+            "userName": "Phuthan"
+        },
+        "customer": {
+            "address": "873 ถนนพระรามที่ 4 แขวงปทุมวัน, เขตปทุมวัน, กรุงเทพมหานคร, ไทย",
+            "companyId": "",
+            "name": "คุณ ดวงใจ ภักดี",
+            "phone": "0533062323"
+        },
+        "dateEnd": "14-02-2024",
+        "dateOffer": "07-02-2024",
+        "discountPercentage": 0,
+        "discountType": "PERCENT",
+        "discountValue": "0.00",
+        "docNumber": "20240207534",
+        "id": "65c2f61b19a675c8e6a44dad",
+        "sellerSignature": undefined,
+        "services": [
+            [Object]
+        ],
+        "summary": "146616.00",
+        "summaryAfterDiscount": "146616.00",
+        "taxType": "NOTAX",
+        "taxValue": "0.00",
+        "vat7": "0.00",
+        "workers": ""
+    },
+    "quotationId": "65c2f61b19a675c8e6a44dad"
+}

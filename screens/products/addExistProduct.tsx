@@ -44,9 +44,8 @@ import {RouteProp} from '@react-navigation/native';
 import {v4 as uuidv4} from 'uuid';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import SmallDivider from '../../components/styles/SmallDivider';
-import {FormData, ServiceList, CompanyUser, Audit} from '../../types/docType';
+import {FormData, ServiceList, CompanyUser, Audit, Service} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
-import {useImageUpload} from '../../hooks/utils/image/useImageUpload';
 import SelectStandard from '../../components/standard/selectStandard';
 import ExistingMaterials from '../../components/materials/existing';
 import GalleryScreen from '../../components/gallery/existing';
@@ -81,7 +80,6 @@ const AddProductForm = ({navigation, route}: Props) => {
   const [isModalMaterialsVisible, setIsModalMaterialsVisible] = useState(false);
   const [serviceImages, setServiceImages] = useState<string[]>([]);
   const [isModalImagesVisible, setModalImagesVisible] = useState(false);
-  const {isImageUpload, imageUrl, handleLogoUpload} = useImageUpload();
   const [serviceID, setServiceID] = useState<string>('');
   const {
     state: {serviceList, selectedAudit, code},
@@ -109,7 +107,7 @@ const AddProductForm = ({navigation, route}: Props) => {
   );
 
   const serviceIndex = useMemo(
-    () => serviceList.findIndex(service => service.id === serviceID),
+    () => serviceList.findIndex((service:Service) => service.id === serviceID),
     [serviceList, serviceID],
   );
   const totalCost = useMemo(
@@ -143,10 +141,7 @@ const AddProductForm = ({navigation, route}: Props) => {
           <View style={styles.subContainer}>
             <View
               style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-              {isImageUpload ? (
-                <ActivityIndicator size="small" color="#0073BA" />
-              ) : (
-                <FlatList
+               <FlatList
                   data={serviceImages}
                   horizontal={true}
                   renderItem={({item, index}) => {
@@ -184,13 +179,13 @@ const AddProductForm = ({navigation, route}: Props) => {
                           alignItems: 'center',
                           marginBottom: 20,
                           borderColor: '#0073BA',
-                          borderWidth: imageUrl == null ? 1 : 0,
+                          borderWidth: 1,
                           borderRadius: 5,
                           borderStyle: 'dashed',
                           // marginHorizontal: 100,
                           padding: 10,
-                          height: imageUrl == null ? 100 : 150,
-                          width: imageUrl == null ? 200 : 'auto',
+                          height:  150,
+                          width: 200,
                         }}
                         onPress={() => {
                           setModalImagesVisible(true);
@@ -215,7 +210,6 @@ const AddProductForm = ({navigation, route}: Props) => {
                     </View>
                   }
                 />
-              )}
             </View>
             <Text style={styles.priceTitle}>ชื่อรายการ</Text>
             <Controller
@@ -439,7 +433,7 @@ const AddProductForm = ({navigation, route}: Props) => {
                     วัสดุอุปกรณ์ที่ใช้
                   </Text>
                   {serviceList[serviceIndex]?.materials?.map(
-                    (item: any, index) => (
+                    (item: any, index:number) => (
                       <TouchableOpacity
                         key={index}
                         style={styles.card}
