@@ -1,7 +1,6 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useCallback, useContext, useState } from 'react';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
+import React, {useCallback, useContext, useState} from 'react';
 import {
-  
   Dimensions,
   FlatList,
   Image,
@@ -11,15 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useUser } from '../../providers/UserContext';
+import {useUser} from '../../providers/UserContext';
 import {ActivityIndicator} from 'react-native-paper';
 
-import { BACK_END_SERVER_URL } from '@env';
-import { faCamera, faClose, faExpand } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import {
-  useFormContext
-} from 'react-hook-form';
+import {BACK_END_SERVER_URL} from '@env';
+import {faCamera, faClose, faExpand} from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {useFormContext} from 'react-hook-form';
 import {
   ImageLibraryOptions,
   ImagePickerResponse,
@@ -28,9 +25,9 @@ import {
 } from 'react-native-image-picker';
 import Modal from 'react-native-modal';
 import CustomCheckbox from '../../components/CustomCheckbox';
-import { useUriToBlob } from '../../hooks/utils/image/useUriToBlob';
-import { useSlugify } from '../../hooks/utils/useSlugify';
-import { Store } from '../../redux/store';
+import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
+import {useSlugify} from '../../hooks/utils/useSlugify';
+import {Store} from '../../redux/store';
 type ImageData = {
   id: number;
   url: string;
@@ -67,15 +64,15 @@ const GalleryScreen = ({
   }));
   const [galleryImages, setGalleryImages] =
     useState<ImageData[]>(initialGalleryImages);
-    const context = useFormContext();
-    const {
-      register,
-      control,
-      getValues,
-      setValue,
-      watch,
-      formState: {errors},
-    } = context as any;
+  const context = useFormContext();
+  const {
+    register,
+    control,
+    getValues,
+    setValue,
+    watch,
+    formState: {errors},
+  } = context as any;
   const {
     state: {serviceList, code},
     dispatch,
@@ -104,13 +101,13 @@ const GalleryScreen = ({
       throw new Error('User not authenticated');
     } else {
       const idToken = await user.getIdToken(true);
-      const filePath = __DEV__
-      ? `Test/${code}/gallery`
-      : `${code}/gallery`;
+      const email = user?.email as string;
+      const filePath = __DEV__ ? `Test/${code}/gallery` : `${code}/gallery`;
       try {
         let url = `${BACK_END_SERVER_URL}/api/services/getGallery?filePath=${encodeURIComponent(
           filePath,
-        )}`;
+        )}&email=${encodeURIComponent(email)}`;
+
         const response = await fetch(url, {
           method: 'GET',
           headers: {
@@ -133,31 +130,29 @@ const GalleryScreen = ({
   };
 
   const {data, isLoading, error} = useQuery({
-    queryKey: ['gallery'],
-    enabled: !!code,
+    queryKey: ['gallery',code],
     queryFn: () => getGallery(),
     onSuccess: data => {
-      if (data && Array.isArray(data) ) {
-        if(watch('serviceImages').length > 0){
+      if (data && Array.isArray(data)) {
+        if (watch('serviceImages').length > 0) {
           const imageData = data.map((url, index) => ({
             id: index + 1, // Assigning an ID
             url: url,
             defaultChecked: watch('serviceImages').includes(url), // Check if the URL is in serviceImages
           }));
           setGalleryImages(imageData);
-        }else {
+        } else {
           const imageData = data.map((url, index) => ({
             id: index + 1, // Assigning an ID
             url: url,
-            defaultChecked: false
+            defaultChecked: false,
           }));
           setGalleryImages(imageData);
         }
-
-        } else {
-      console.warn('Data is undefined or not in expected format');
-    }
-  },
+      } else {
+        console.warn('Data is undefined or not in expected format');
+      }
+    },
   });
 
   const handleUploadMoreImages = useCallback(() => {
@@ -171,6 +166,12 @@ const GalleryScreen = ({
         console.log('No image path provided');
         return;
       }
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const idToken = await user.getIdToken(true);
+      const email = user?.email as string;
 
       const name = imagePath.substring(imagePath.lastIndexOf('/') + 1);
       const fileType = imagePath.substring(imagePath.lastIndexOf('.') + 1);
@@ -192,8 +193,8 @@ const GalleryScreen = ({
 
       const blob = (await uriToBlobFunction(imagePath)) as Blob;
       const filePath = __DEV__
-      ? `Test/${code}/gallery/${filename}`
-      : `${code}/gallery/${filename}`;
+        ? `Test/${code}/gallery/${filename}`
+        : `${code}/gallery/${filename}`;
       try {
         const response = await fetch(
           `${BACK_END_SERVER_URL}/api/upload/postGallery`,
@@ -201,12 +202,14 @@ const GalleryScreen = ({
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
             },
             body: JSON.stringify({
               fileName: filename,
               contentType: contentType,
               filePath,
               code,
+              email
             }),
           },
         );
@@ -311,7 +314,7 @@ const GalleryScreen = ({
     <Modal isVisible={isVisible} style={styles.modal} onBackdropPress={onClose}>
       {isImageUpload ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator color='white'/>
+          <ActivityIndicator color="white" />
         </View>
       ) : (
         <SafeAreaView style={styles.container}>
@@ -320,13 +323,12 @@ const GalleryScreen = ({
               <FontAwesomeIcon icon={faClose} size={24} color="gray" />
             </TouchableOpacity>
             {galleryImages && galleryImages.length > 0 && (
-                <TouchableOpacity
+              <TouchableOpacity
                 style={styles.onPlusButton}
                 onPress={handleUploadMoreImages}>
                 <FontAwesomeIcon icon={faCamera} size={24} color="gray" />
               </TouchableOpacity>
             )}
-          
           </View>
           <FlatList
             data={galleryImages}
@@ -390,7 +392,9 @@ const GalleryScreen = ({
                 onPress={() => {
                   if (serviceImages) onClose();
                 }}
-                disabled={!watch('serviceImages') || watch('serviceImages').length === 0}>
+                disabled={
+                  !watch('serviceImages') || watch('serviceImages').length === 0
+                }>
                 <Text style={styles.uploadButtonText}>บันทึก</Text>
               </TouchableOpacity>
             </View>
