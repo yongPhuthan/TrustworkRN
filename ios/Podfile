@@ -59,6 +59,8 @@ target 'Trustwork' do
     inherit! :complete
     pod 'RNCPicker', :path => '../node_modules/@react-native-picker/picker'
     pod 'Firebase/Messaging'
+    pod 'RNPDF', :path => '../node_modules/react-native-view-pdf'
+
 
     # Pods for testing can be added here
   end

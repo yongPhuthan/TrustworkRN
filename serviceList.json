@@ -124,3 +124,62 @@
     },
     "quotationId": "65c2f61b19a675c8e6a44dad"
 }
+
+{
+    "contract": {
+        "adjustPerDay": 1,
+        "finishedDay": 21,
+        "installingDay": 1,
+        "prepareDay": 15,
+        "productWarantyYear": 90203,
+        "skillWarantyYear": 12,
+        "workAfterGetDeposit": 2,
+        "workCheckDay": 7,
+        "workCheckEnd": 7
+    },
+    "data": {
+        "FCMToken": "fPqtCt4Ah6pZoci0VsG-w_:APA91bHDwM6aXbgcfeM4rrP0Y5lOQRqdlYKalMzjAt0JXZtskWuAVQ4VUXUF9YeXuF6FZxVp-5PesaMcEvDQ2rHwBYMdngQr2BVSRLORyEkxIFcnb7jGqsOnOjWl2Cgs8uHqd1dkMzVf",
+        "allTotal": "4444.00",
+        "companyUser": {
+            "address": "7/44 หมู่ 5 ต. อ้อมใหญ่ อ.สามพราน จ . นครปฐม",
+            "bizName": "Double door engineering",
+            "bizType": "business",
+            "categoryId": "65c0ee6ff76b9b1b27d33190",
+            "code": "477827",
+            "companyTax": "1100800667422",
+            "id": "65c245363b26b43829493ac8",
+            "logo": "https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/Test%2F122772%2Fgallery%2Flogodoubledoor.png?alt=media&token=99532632-abd1-4c85-86a2-7b0c3029b952",
+            "mobileTel": "0959962030",
+            "officeTel": "6504992804",
+            "signature": "none",
+            "userEmail": "admin04@email.com",
+            "userLastName": "Kantabusabong",
+            "userName": "Phuthan",
+            "userPosition": "cusmmh"
+        },
+        "customer": {
+            "address": "ADDRESS",
+            "companyId": "",
+            "id": "",
+            "name": "HASHFLOW",
+            "phone": "0959962030"
+        },
+        "dateEnd": "15-02-2024",
+        "dateOffer": "08-02-2024",
+        "discountPercentage": 0,
+        "discountType": "PERCENT",
+        "discountValue": "0.00",
+        "docNumber": "20240208690",
+        "id": "55b41452-c153-416b-aad5-b6c7a4433cf9",
+        "sellerSignature": "",
+        "services": [
+            [Object]
+        ],
+        "summary": "4444.00",
+        "summaryAfterDiscount": "4444.00",
+        "taxType": "NOTAX",
+        "taxValue": "0.00",
+        "vat7": "0.00",
+        "workers": []
+    }
+}

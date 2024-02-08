@@ -7,7 +7,7 @@ type DatePickerButtonProps = {
   label: string;
   onDateSelected: (date: Date) => void;
   date: string;
-  title:string
+  title: string;
 };
 
 const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
@@ -56,24 +56,34 @@ const DatePickerButton: React.FC<DatePickerButtonProps> = ({
           </Text>
         )}
       </TouchableOpacity>
-      {showPicker && (
-        <Portal>
-          <Dialog
-            visible={showPicker}
-            onDismiss={() => setShowPicker(false)}
-            style={{backgroundColor: 'white', padding: 20}}>
-            <Dialog.Title>{title}</Dialog.Title>
-            <DateTimePicker
-              locale="th-TH"
-              value={selectedDate ? selectedDate : new Date()}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'inline' : 'default'}
-              style={{backgroundColor: 'white'}}
-              onChange={handleDateChange}
-            />
-          </Dialog>
-        </Portal>
-      )}
+      {showPicker &&
+        (Platform.OS === 'ios' ? (
+          <Portal>
+            <Dialog
+              visible={showPicker}
+              onDismiss={() => setShowPicker(false)}
+              style={{backgroundColor: 'white', padding: 20}}>
+              <Dialog.Title>{title}</Dialog.Title>
+              <DateTimePicker
+                locale="th-TH"
+                value={selectedDate ? selectedDate : new Date()}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'inline' : 'calendar'}
+                style={{backgroundColor: 'white'}}
+                onChange={handleDateChange}
+              />
+            </Dialog>
+          </Portal>
+        ) : (
+          <DateTimePicker
+            locale="th-TH"
+            value={selectedDate ? selectedDate : new Date()}
+            mode="date"
+            display="default"
+            style={{backgroundColor: 'white'}}
+            onChange={handleDateChange}
+          />
+        ))}
     </View>
   );
 };

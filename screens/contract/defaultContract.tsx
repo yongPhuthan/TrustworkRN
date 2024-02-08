@@ -42,6 +42,7 @@ const DefaultContract = ({navigation}: Props) => {
   const [defaultContractValues, setDefaultContractValues] =
     useState<DefaultContractType>();
   const user = useUser();
+  const email = user?.email;
   const [contract, setContract] = useState<DefaultContractType>();
   const {data: dataProps}: any = route?.params;
   const quotation = dataProps;
@@ -88,8 +89,6 @@ const DefaultContract = ({navigation}: Props) => {
           return dateB.getTime() - dateA.getTime();
         });
       }
-
-      console.log('data after', data);
       return data;
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -115,14 +114,20 @@ const DefaultContract = ({navigation}: Props) => {
           body: JSON.stringify({data}),
         },
       );
-
-      if (response.status === 200) {
-        // Assuming you want to return the response for successful operations
-        return response.json();
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Network response was not ok.');
+      if (!response.ok) {
+        if (response.status === 401) {
+          const errorData = await response.json();
+          if (
+            errorData.message ===
+            'Token has been revoked. Please reauthenticate.'
+          ) {
+          }
+          throw new Error(errorData.message);
+        }
+        throw new Error('Network response was not ok.');
       }
+      return await response.json(); // Return the JSON response if everything is ok
+
     } catch (err) {
       throw new Error(err as any);
     }
@@ -160,6 +165,7 @@ const DefaultContract = ({navigation}: Props) => {
         }
         throw new Error('Network response was not ok.');
       }
+      return await response.json(); 
     } catch (err) {
       throw new Error(err as any);
     }
@@ -197,6 +203,8 @@ const DefaultContract = ({navigation}: Props) => {
         }
         throw new Error('Network response was not ok.');
       }
+      return await response.json(); 
+
     } catch (err ) {
       throw new Error(err as any);
     }
@@ -226,9 +234,9 @@ const DefaultContract = ({navigation}: Props) => {
     resolver: yupResolver(defaultContractSchema),
   });
   const {data, isLoading, isError} = useQuery({
-    queryKey: ['ContractByEmail'],
+    queryKey: ['ContractByEmail',email],
     queryFn: fetchContractByEmail,
-    enabled: !!user,
+    // enabled: !!user,
 
   });
   useEffect(() => {
@@ -252,11 +260,14 @@ const DefaultContract = ({navigation}: Props) => {
   const adjustPerDay = useWatch({control, name: 'adjustPerDay'});
 
   const mutationFunction = async (apiData :any) => {
-    if (!contract) {
+    if (!defaultContractValues) {
+      console.log('createContractAndQuotation',apiData);
       return createContractAndQuotation(apiData);
     } else if (isDirty) {
+      console.log('updateDefaultContractAndCreateQuotation',apiData);
       return updateDefaultContractAndCreateQuotation(apiData);
     } else {
+      console.log('createQuotation',apiData);
       return createQuotation(apiData);
     }
   };
@@ -267,7 +278,7 @@ const DefaultContract = ({navigation}: Props) => {
         queryClient.invalidateQueries(['dashboardData']);
         console.log('data from backend', data);
         // const newId = quotation.id.slice(0, 8);
-        navigation.navigate('DocViewScreen', {id: data});
+        navigation.navigate('DocViewScreen', {id: data.quotationId});
       },
       onError: (error: MyError) => {
         Alert.alert(
@@ -296,8 +307,7 @@ const DefaultContract = ({navigation}: Props) => {
         data: quotation,
         contract: defaultContractValues?  isDirty ? dirtyValues : defaultContractValues : watchedValues,
       };
-      console.log('apiData',apiData);
-      // dynamicMutation(apiData);
+      dynamicMutation(apiData);
     } catch (error: Error | MyError | any) {
       Alert.alert(
         'เกิดข้อผิดพลาด',
@@ -667,7 +677,7 @@ console.log('defaultContractValues',defaultContractValues);
         ) : (
           <SafeAreaView style={{flex: 1}}>
             <View style={styles.containerForm}>
-              <TextPaper variant="headlineSmall">การรับประกันน</TextPaper>
+              <TextPaper variant="headlineSmall">การรับประกัน</TextPaper>
               <Divider style={{marginTop: 10}} />
 
               <View style={styles.formInput}>

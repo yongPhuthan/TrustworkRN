@@ -1,24 +1,22 @@
-import React, { useContext, useState } from 'react';
+import React, {useContext, useState,useEffect} from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
+  SafeAreaView,
   StyleSheet,
   Dimensions,
-  NativeSyntheticEvent, NativeScrollEvent,
-  View
+  Alert,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  View,
 } from 'react-native';
-
-import { RouteProp } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { Share } from 'react-native';
-import {
-  AnimatedFAB,
-  Appbar,
-  BottomNavigation
-} from 'react-native-paper';
-import { WebView } from 'react-native-webview';
-import { Store } from '../../redux/store';
-import { ParamListBase } from '../../types/navigationType';
+import PDFView from 'react-native-view-pdf';
+import {RouteProp} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {Share} from 'react-native';
+import {AnimatedFAB, Appbar, BottomNavigation, FAB} from 'react-native-paper';
+import {WebView} from 'react-native-webview';
+import {Store} from '../../redux/store';
+import {ParamListBase} from '../../types/navigationType';
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'DocViewScreen'>;
   route: RouteProp<ParamListBase, 'DocViewScreen'>;
@@ -28,28 +26,53 @@ interface Props {
 
 const DocViewScreen = ({navigation, route}: Props) => {
   const QuotationWebView = ({url}: any) => {
-    return <WebView source={{uri: url}} />;
-  };
-
-  const ContractWebView = ({url} : any) => {
     return (
-      <ScrollView onScroll={onScroll}>
+      <SafeAreaView style={{flex: 1}}>
         <WebView source={{uri: url}} />
-        {/* Additional content if any */}
-      </ScrollView>
+      </SafeAreaView>
     );
   };
+
+  const ContractWebView = ({url}: any) => {
+    return (
+      <SafeAreaView style={{flex: 1}}>
+        <PDFView
+          resource={url}
+          resourceType={'url'}
+          onLoad={() => console.log(`PDF rendered from URL`)}
+          onError={error => console.log('Cannot render PDF', error)}
+          style={{flex: 1}}
+        />
+      </SafeAreaView>
+    );
+  };
+
   const {
     state: {isEmulator},
     dispatch,
   }: any = useContext(Store);
+
   const [index, setIndex] = React.useState(0);
+  const backHome = () => {
+    navigation.navigate('DashboardQuotation');
+  };
+  
   const QuotationRoute = () => (
     <QuotationWebView url={`https://www.trusth.co/preview/${id}`} />
   );
   const ContractRoute = () => (
     <ContractWebView url={`https://www.trusth.co/preview/doc/${id}`} />
   );
+const HomeRoute = () => {
+  useEffect(() => {
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'DashboardQuotation'}],
+    })  }, [navigation]);
+
+  // Return null หรือ component ว่างๆ เพื่อป้องกัน warning/error ขณะที่ navigation กำลังทำงาน
+  return null;
+};
 
   const [routes] = React.useState([
     {key: 'quotation', title: 'เว็บเพจ', focusedIcon: 'web'},
@@ -58,11 +81,17 @@ const DocViewScreen = ({navigation, route}: Props) => {
       title: 'เอกสาร',
       focusedIcon: 'file-document-outline',
     },
+    {
+      key: 'home',
+      title: 'หน้าหลัก',
+      focusedIcon: 'home',
+    },
   ]);
 
   const renderScene = BottomNavigation.SceneMap({
     quotation: QuotationRoute,
     contracts: ContractRoute,
+    home: HomeRoute,
   });
 
   const [isExtended, setIsExtended] = React.useState(true);
@@ -71,30 +100,28 @@ const DocViewScreen = ({navigation, route}: Props) => {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const firstPart = id?.substring(0, 8);
+  React.useEffect(() => {
+    // กำหนด URL ตาม tab ที่เลือก
+    const baseUrl = 'https://www.trusth.co/preview/';
+    const newUrl = index === 0 ? `${baseUrl}${id}` : `${baseUrl}doc/${id}`;
+    setUrl(newUrl);
+  }, [index, id]);
 
   const handleShare = async () => {
     try {
       const result = await Share.share({
-        message: url,
+        message: `${url}`, // ใช้ URL ที่กำหนดไว้
       });
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-        } else {
-        }
-      } else if (result.action === Share.dismissedAction) {
-        // dismissed
-      }
+      // ตรวจสอบผลลัพธ์ของการแชร์...
     } catch (error) {
-      alert(error || 'เกิดข้อผิดพลาด');
+      console.error(error);
+      Alert.alert('เกิดข้อผิดพลาด', 'ไม่สามารถแชร์ได้');
     }
   };
-  const backHome = () => {
-    navigation.navigate('DashboardQuotation');
-  };
 
-  const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const onScroll = ({nativeEvent}: NativeSyntheticEvent<NativeScrollEvent>) => {
     const currentScrollPosition = Math.floor(nativeEvent.contentOffset.y) ?? 0;
-  
+
     setIsExtended(currentScrollPosition <= 0);
   };
 
@@ -104,7 +131,7 @@ const DocViewScreen = ({navigation, route}: Props) => {
         <ActivityIndicator />
       ) : (
         <>
-          <Appbar.Header elevated style={{
+          {/* <Appbar.Header elevated style={{
             backgroundColor:'white'
           }} mode='center-aligned' >
             <Appbar.BackAction onPress={backHome}  />
@@ -114,35 +141,24 @@ const DocViewScreen = ({navigation, route}: Props) => {
             }} title={
               routes[index].title
             } />
-          </Appbar.Header>
-          <View style={{flex: 1}}>
-            {/* <ScrollView onScroll={onScroll}> */}
-
-            <BottomNavigation
-              navigationState={{index, routes}}
-              onIndexChange={setIndex} // Function to handle changing tabs
-              renderScene={renderScene} // Function to render tab content
-            />
-            <AnimatedFAB
-              icon="navigation-variant"
-              label="ส่งให้ลูกค้า"
-              variant='primary'
-              color='white'
-              onPress={handleShare}
-              extended={isExtended}
-              
-              style={[styles.fabStyle]}
-              animateFrom="right"
-            />
-            {/* </ScrollView> */}
-          </View>
+          </Appbar.Header> */}
+          <BottomNavigation
+            navigationState={{index, routes}}
+            onIndexChange={setIndex} // Function to handle changing tabs
+            renderScene={renderScene} // Function to render tab content
+          />
+          <FAB
+            style={styles.fabStyle}
+            icon="share-variant"
+            onPress={handleShare}
+            color="white"
+          />
         </>
       )}
     </>
   );
 };
-const { width, height } = Dimensions.get('window');
-
+const {width, height} = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   shareButtonContainer: {
@@ -277,8 +293,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   fabStyle: {
-    bottom: height * 0.2, 
-    right: width * 0.05, 
+    bottom: height * 0.2,
+    right: width * 0.05,
     position: 'absolute',
     backgroundColor: '#1b52a7',
   },

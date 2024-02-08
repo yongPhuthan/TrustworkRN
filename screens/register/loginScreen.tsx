@@ -144,13 +144,11 @@ const LoginScreen = ({navigation}: Props) => {
             styles.getStartedButton,
             !isValid && styles.disabledButton,
           ]}
+          loading={isLoading}
           onPress={handleLogin}
-          disabled={!isValid}>
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <Text style={styles.pressableText}>เข้าสู่ระบบ</Text>
-          )}
+          disabled={!isValid || isLoading}>
+                      <Text style={styles.pressableText}>เข้าสู่ระบบ</Text>
+
         </Button>
       </View>
     </SafeAreaView>

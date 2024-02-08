@@ -6395,6 +6395,11 @@ react-native-vector-icons@^10.0.2:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
+react-native-view-pdf@^0.14.0:
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/react-native-view-pdf/-/react-native-view-pdf-0.14.0.tgz"
+  integrity sha512-tW5zamLE0vYIgoEjASLOOCPmW3x1MfJM13GgKar5nPjltU6gWzgpviILmiqeuJB+H7aTCh/UrT81GoYlO0Oedg==
+
 react-native-web@^0.19.7:
   version "0.19.7"
   resolved "https://registry.npmjs.org/react-native-web/-/react-native-web-0.19.7.tgz"

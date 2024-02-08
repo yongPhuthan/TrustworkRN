@@ -5,7 +5,7 @@ import React from 'react';
 import {SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
 import 'react-native-gesture-handler';
 import {Divider, Drawer as PaperDrawer} from 'react-native-paper';
-import ExistingContract from '../screens/contract/existingContract';
+import DashboardContract from '../screens/contract/dashboardContract';
 import Dashboard from '../screens/quotation/dashboard';
 import {ParamListBase} from '../types/navigationType';
 
@@ -57,12 +57,12 @@ function CustomDrawerContent(props:DrawerContentComponentProps) {
             },
           }}
         />
-        {/* <PaperDrawer.Item
-          label="ทำสัญญา"
+        <PaperDrawer.Item
+          label="สัญญา"
           icon="file-document"
           active={props.state.index === 1}
           onPress={() => props.navigation.navigate('DashboardContract')}
-        /> */}
+        />
       </PaperDrawer.Section>
       <PaperDrawer.Section style={{marginTop: 'auto'}} showDivider={false}>
         <PaperDrawer.Item
@@ -102,6 +102,26 @@ function DashboardDrawer() {
           // ... other common options ...
         }}
       />
+      <Drawer.Screen
+        name="DashboardContract"
+        component={DashboardContract}
+        options={{
+          ...commonScreenOptions,
+          headerShown: false,
+          title: 'สัญญา',
+          headerRight: () => (
+            <TouchableOpacity
+              style={{marginRight: 10}}
+              onPress={() => {
+                /* handle press */
+              }}>
+              <FontAwesomeIcon icon={faBell} color="#1f303cff" size={22} />
+            </TouchableOpacity>
+          ),
+          // ... other common options ...
+        }}
+      />
+
 
       {/* ... other screens ... */}
     </Drawer.Navigator>

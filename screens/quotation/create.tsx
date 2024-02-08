@@ -151,13 +151,13 @@ const Quotation = ({navigation}: Props) => {
     unit: 'ชุด',
     serviceImage: '',
     serviceImages: [],
-    quotationId,
+    // quotationId,
     audits: [defaultAudit],
     materials: [defaultMaterial],
   };
 
   const quotationDefaultValues = {
-    id: quotationId,
+    // id: quotationId,
     services: [],
     customer: defalutCustomer,
     companyUser: null,

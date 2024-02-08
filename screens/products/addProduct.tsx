@@ -68,7 +68,7 @@ const AddProductForm = ({navigation, route}: Props) => {
     unit: 'ชุด',
     serviceImage: '',
     serviceImages: [],
-    quotationId,
+    // quotationId,
     standards: [],
     materials: [],
   };

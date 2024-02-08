@@ -23,7 +23,7 @@ const CardDashBoard = (props: Props) => {
     <TouchableOpacity onPress={props.onCardPress} style={styles.subContainer}>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>{props.customerName}</Text>
-        <Text style={styles.summaryPrice}>
+        <Text style={styles.summaryText}>
           {Number(props.price)
             .toFixed(2)
             .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     color: '#19232e',
   },
   summaryPrice: {
-    fontSize: 16,
+    fontSize: 14,
     alignSelf: 'flex-end',
     color: '#19232e',
     

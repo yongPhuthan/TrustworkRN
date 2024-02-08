@@ -247,18 +247,19 @@ const SelectStandard = ({
         />
 
         {watch('standards')?.length > 0 && (
-          <View style={styles.containerBtn}>
             <Button
-              style={{
-                width: '90%',
-                height: 40,
-              }}
-              buttonColor="#1b52a7"
-              mode="contained"
-              onPress={handleDonePress}>
-              {`บันทึก ${watch('standards')?.length} รายการ`}{' '}
-            </Button>
-          </View>
+            style={{
+              width: '90%',
+              height: 40,
+              justifyContent: 'center',
+              alignItems: 'center',
+              alignSelf: 'center',
+            }}
+            buttonColor="#1b52a7"
+            mode="contained"
+            onPress={handleDonePress}>
+            {`บันทึก ${watch('standards')?.length} รายการ`}{' '}
+          </Button>
         )}
       </SafeAreaView>
     </Modal>
@@ -272,7 +273,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
 
-    backgroundColor: '#F7F7F7',
+    backgroundColor: 'white',
     width,
   },
   contentContainer: {
@@ -406,7 +407,6 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 10,
     paddingTop: 30,
-    backgroundColor: '#f5f5f5',
   },
   modal: {
     margin: 0,

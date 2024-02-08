@@ -30,8 +30,10 @@ import {
   Portal,
   PaperProvider,
   ActivityIndicator,
+  List,
   Dialog,
   Appbar,
+  Divider,
 } from 'react-native-paper';
 import {
   checkNotifications,
@@ -123,7 +125,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     try {
       const token = await user.getIdToken(true);
       const response = await fetch(
-        `${BACK_END_SERVER_URL}/api/dashboard?email=${encodeURIComponent(
+        `${BACK_END_SERVER_URL}/api/dashboard/dashboard?email=${encodeURIComponent(
           user.email,
         )}`,
         {
@@ -210,7 +212,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const confirmRemoveQuotation = (id: string, customer: Customer) => {
     setShowModal(false);
     Alert.alert(
-      'ยืนยันลบใบเสนอราคา',
+      'ยืนยันลบเอกสาร',
       `ลูกค้า ${customer}`,
       [
         {
@@ -218,7 +220,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           onPress: () => console.log('Cancel Pressed'),
           style: 'cancel',
         },
-        {text: 'ตกลง', onPress: () => removeQuotation(id)},
+        {text: 'ลบเอกสาร', onPress: () => removeQuotation(id)},
       ],
       {cancelable: false},
     );
@@ -324,7 +326,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     setIsLoadingAction(true);
     dispatch(stateAction.get_companyID(data[0].id));
     setIsLoadingAction(false);
-
+    handleModalClose()
     navigation.navigate('EditQuotation', {
       quotation,
       company: data[0],
@@ -358,178 +360,88 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       </View>
 
       {selectedIndex === index &&
-        (Platform.OS === 'android' ? (
-          <Modal
-            backdropOpacity={0.1}
-            backdropTransitionOutTiming={100}
-            style={styles.modalContainer}
+       <Portal>
+       <PaperProvider>
+         <Modal
+           backdropOpacity={0.1}
+           backdropTransitionOutTiming={100}
+           onBackdropPress={handleModalClose}
             isVisible={showModal}
-            onBackdropPress={handleModalClose}>
-            <Text style={styles.title}>
-              ลูกค้า {selectedItem?.customer?.name}
-            </Text>
-            <View
-              style={{
-                width: '100%',
-                alignSelf: 'center',
-                borderBottomWidth: 0.5,
-                borderBottomColor: '#cccccc',
-              }}></View>
-            <Pressable
-              onPress={() => {
-                setShowModal(false);
-                navigation.navigate('DocViewScreen', {id: item.id});
-              }}>
-              <Text style={styles.ModalButtonText}>ดูตัวอย่าง</Text>
-            </Pressable>
-            <View
-              style={{
-                width: '100%',
-                alignSelf: 'center',
-                borderBottomWidth: 0.5,
-                borderBottomColor: '#cccccc',
-              }}></View>
-            {selectedItem?.status === 'PENDING' && (
-              <>
-                <Pressable
-                  onPress={() => {
-                    setShowModal(false);
-                    editQuotation(selectedItem.services, selectedItem);
-                  }}>
-                  <Text style={styles.ModalButtonText}>แก้ไขใบเสนอราคา</Text>
-                </Pressable>
-                <View
-                  style={{
-                    width: '100%',
-                    alignSelf: 'center',
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#cccccc',
-                  }}></View>
-                <Pressable
-                  onPress={() =>
-                    confirmRemoveQuotation(
-                      item.id,
-                      selectedItem?.customer?.name,
-                    )
-                  }>
-                  <Text style={styles.deleteButtonText}>ลบใบเสนอราคา</Text>
-                </Pressable>
-                {selectedItem?.status === 'APPROVED' && (
-                  <>
-                    <View
-                      style={{
-                        width: '100%',
-                        alignSelf: 'center',
-                        borderBottomWidth: 0.5,
-                        borderBottomColor: '#cccccc',
-                      }}></View>
-                    <Pressable
-                      onPress={() => {
-                        handleModal(item, index);
-                      }}>
-                      <Text style={styles.ModalButtonText}>เริ่มทำสัญญา</Text>
-                    </Pressable>
-                  </>
-                )}
+           style={styles.modalContainer}
+           onDismiss={handleModalClose}>
+           <List.Section
+             style={{
+               width: '100%',
+             }}>
+             <List.Subheader
+               style={{
+                 textAlign: 'center',
+                 fontWeight: 'bold',
+                 fontFamily: 'Sukhumvit Set Bold',
+                 color: 'gray',
+               }}>
+              {item.customer?.name}
+             </List.Subheader>
+             <Divider />
+             <List.Item
+               onPress={() => {
+                handleModalClose()
+                 navigation.navigate('DocViewScreen', {id: item.id});
+               }}
+               centered={true}
+               title="พรีวิวเอกสาร"
+               titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
+        
+             />
 
-                <View
-                  style={{
-                    width: '100%',
-                    alignSelf: 'center',
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#cccccc',
-                  }}></View>
-              </>
-            )}
-          </Modal>
-        ) : (
-          <Modal
-            style={styles.modalContainer}
-            isVisible={showModal}
-            onBackdropPress={() => setShowModal(false)}
+             <Divider />
 
-            // onBackdropPress={handleModalClose}
-          >
-            <Text style={styles.title}>ลูกค้า {item.customer?.name}</Text>
-            <View
-              style={{
-                width: '100%',
-                alignSelf: 'center',
-                borderBottomWidth: 0.5,
-                borderBottomColor: '#cccccc',
-              }}></View>
-            <Pressable
-              onPress={() => {
-                setShowModal(false);
+             {selectedItem?.status === 'PENDING' && (
+               <>
+                 <List.Item
+                   onPress={() => {
+                     setShowModal(false);
+                     editQuotation(selectedItem.services, selectedItem);
+                   }}
+                   title="แก้ไขเอกสาร"
+                   titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
+              
+                 />
 
-                navigation.navigate('DocViewScreen', {id: item.id});
-              }}>
-              <Text style={styles.ModalButtonText}>ดูตัวอย่าง</Text>
-            </Pressable>
-            {selectedItem?.status === 'APPROVED' && (
-              <>
-                <View
-                  style={{
-                    width: '100%',
-                    alignSelf: 'center',
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#cccccc',
-                  }}></View>
-                <Pressable
-                  onPress={() => {
-                    handleModal(item, index);
-                  }}>
-                  <Text style={styles.ModalButtonText}>เริ่มทำสัญญา</Text>
-                </Pressable>
-              </>
-            )}
-            <View
-              style={{
-                width: '100%',
-                alignSelf: 'center',
-                borderBottomWidth: 0.5,
-                borderBottomColor: '#cccccc',
-              }}></View>
-            {selectedItem?.status === 'PENDING' && (
-              <>
-                <Pressable
-                  onPress={() => {
-                    setShowModal(false);
-                    editQuotation(selectedItem.services, selectedItem);
-                  }}>
-                  <Text style={styles.ModalButtonText}>แก้ไขใบเสนอราคา</Text>
-                </Pressable>
-                <View
-                  style={{
-                    width: '100%',
-                    alignSelf: 'center',
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#cccccc',
-                  }}></View>
-                {selectedItem?.status === 'PENDING' && (
-                  <>
-                    <Pressable
-                      onPress={() =>
-                        confirmRemoveQuotation(
-                          item.id,
-                          selectedItem?.customer?.name,
-                        )
-                      }>
-                      <Text style={styles.deleteButtonText}>ลบใบเสนอราคา</Text>
-                    </Pressable>
-                    <View
-                      style={{
-                        width: '100%',
-                        alignSelf: 'center',
-                        borderBottomWidth: 0.5,
-                        borderBottomColor: '#cccccc',
-                      }}></View>
-                  </>
-                )}
-              </>
-            )}
-          </Modal>
-        ))}
+                 <Divider />
+                 <List.Item
+                   onPress={() =>
+                     confirmRemoveQuotation(
+                       item.id,
+                       selectedItem?.customer?.name,
+                     )
+                   }
+                   title="ลบเอกสาร"
+                   titleStyle={{textAlign: 'center', color: 'red'}} // จัดให้ข้อความอยู่ตรงกลาง
+                 />
+
+                 <Divider />
+
+                 {selectedItem?.status === 'APPROVED' && (
+                   <>
+                     <Divider />
+                     <Pressable
+                       onPress={() => {
+                         handleModal(item, index);
+                       }}>
+                       <Text style={styles.ModalButtonText}>
+                         เริ่มทำสัญญา
+                       </Text>
+                     </Pressable>
+                   </>
+                 )}
+               </>
+             )}
+           </List.Section>
+         </Modal>
+       </PaperProvider>
+     </Portal>
+        }
     </>
   );
 
@@ -634,8 +546,14 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                   />
                 </View>
               )}
+               <FAB
+            style={styles.fabStyle}
+            icon="plus"
+            onPress={ () => createNewQuotation()}
+            color="white"
+          />
 
-              <FAB.Group
+              {/* <FAB.Group
                 open={open}
                 visible
                 color="white"
@@ -646,12 +564,15 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                 actions={[
                   {
                     icon: 'plus',
+                    size: "medium",
                     label: 'สร้างใบเสนอราคา',
 
                     onPress: () => createNewQuotation(),
                   },
                   {
                     icon: 'file-document-edit-outline',
+                    size: "medium",
+
                     label: 'ทำสัญญา',
                     onPress: () => setActiveFilter('APPROVED'),
                   },
@@ -662,7 +583,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
                     // do something if the speed dial is open
                   }
                 }}
-              />
+              /> */}
             </>
           )}
 
@@ -671,6 +592,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
             style={styles.modalContainer}
             // backdropTransitionOutTiming={100}
             onDismiss={handleNoResponse}
+            
             visible={isModalVisible}>
             <Dialog.Content>
               <View
@@ -712,16 +634,18 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 };
 
 export default Dashboard;
+const {width, height} = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
     // padding: 30,
   },
   fabStyle: {
-    bottom: 20,
-    right: 20,
+    bottom: height * 0.1,
+    right: width * 0.05,
     position: 'absolute',
-    color: 'white',
+    backgroundColor: '#1b52a7',
+
   },
   fab: {
     position: 'absolute',
