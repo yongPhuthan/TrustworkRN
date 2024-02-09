@@ -42,15 +42,15 @@ function CustomDrawerContent(props:DrawerContentComponentProps) {
       <Divider style={{marginBottom: 20}} />
       <PaperDrawer.Section>
         <PaperDrawer.Item
-          label="เอกสาร"
+          label="ใบเสนอราคา"
           icon="file-document"
           active={props.state.index === 0}
           onPress={() => props.navigation.navigate('Dashboard')}
-          style={
-            props.state.index === 0
-              ? {backgroundColor: activeTintColor, borderRadius: borderRadius}
-              : {}
-          }
+          // style={
+          //   props.state.index === 0
+          //     ? {backgroundColor: activeTintColor, borderRadius: borderRadius}
+          //     : {}
+          // }
           theme={{
             colors: {
               text: props.state.index === 0 ? 'white' : inactiveTintColor,

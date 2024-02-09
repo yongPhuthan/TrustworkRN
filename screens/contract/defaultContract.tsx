@@ -261,13 +261,10 @@ const DefaultContract = ({navigation}: Props) => {
 
   const mutationFunction = async (apiData :any) => {
     if (!defaultContractValues) {
-      console.log('createContractAndQuotation',apiData);
       return createContractAndQuotation(apiData);
     } else if (isDirty) {
-      console.log('updateDefaultContractAndCreateQuotation',apiData);
       return updateDefaultContractAndCreateQuotation(apiData);
     } else {
-      console.log('createQuotation',apiData);
       return createQuotation(apiData);
     }
   };
@@ -275,7 +272,7 @@ const DefaultContract = ({navigation}: Props) => {
     mutationFunction,
     {
       onSuccess: data => {
-        queryClient.invalidateQueries(['dashboardData']);
+        queryClient.invalidateQueries(['dashboardQuotation',email]);
         console.log('data from backend', data);
         // const newId = quotation.id.slice(0, 8);
         navigation.navigate('DocViewScreen', {id: data.quotationId});

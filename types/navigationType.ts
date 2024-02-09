@@ -76,6 +76,8 @@ export type ParamListBase = {
   SettingsScreen: undefined;
   WebViewScreen: {id: string};
   DocViewScreen: {id: any};
+  ContractViewScreen: {id: string};
+
   EditSetting: {company: CompanyUser};
   SignUpScreen: undefined;
   LoginScreen: undefined;

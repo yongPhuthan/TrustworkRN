@@ -43,11 +43,12 @@ import {
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(true);
   const user = useUser();
+  const email = user?.email;
   const {width, height} = Dimensions.get('window');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const queryClient = useQueryClient();
   const [visible, setVisible] = useState(false);
-  const [isModalVisible, setModalVisible] = useState(false);
+  const [isModalSignContract, setIsModalSignContract] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null) as any;
   const [selectedIndex, setSelectedIndex] = useState(null) as any;
   const [originalQuotationData, setOriginalQuotationData] = useState<
@@ -86,7 +87,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [filters, setFilters] = useState(['ALL', 'PENDING', 'APPROVED']);
 
   const handleNoResponse = () => {
-    setModalVisible(false);
+    setIsModalSignContract(false);
   };
   const [activeFilter, setActiveFilter] = useState('ALL');
   const filteredQuotationData = useMemo(() => {
@@ -98,7 +99,9 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       (q: Quotation) => q.status === activeFilter,
     );
   }, [originalQuotationData, activeFilter]);
-
+const status =  quotationData?.filter(
+  (quotation: Quotation) => quotation.discountType,
+);
   const updateContractData = (filter: string) => {
     setActiveFilter(filter);
     if (quotationData) {
@@ -118,7 +121,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
 
   async function fetchDashboardData() {
-    if (!user || !user.email) {
+    if (!user || !email) {
       console.error('User or user email is not available');
       return;
     }
@@ -126,7 +129,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       const token = await user.getIdToken(true);
       const response = await fetch(
         `${BACK_END_SERVER_URL}/api/dashboard/dashboard?email=${encodeURIComponent(
-          user.email,
+          email,
         )}`,
         {
           method: 'GET',
@@ -172,7 +175,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const removeQuotation = async (id: string) => {
     handleModalClose();
     setIsLoadingAction(true);
-    if (!user || !user.email) {
+    if (!user || !email) {
       console.error('User or user email is not available');
       return;
     }
@@ -181,7 +184,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       const response = await fetch(
         `${BACK_END_SERVER_URL}/api/documents/removeQuotation?id=${encodeURIComponent(
           id,
-        )}&email=${encodeURIComponent(user.email)}`,
+        )}&email=${encodeURIComponent(email)}`,
         {
           method: 'DELETE',
           headers: {
@@ -192,7 +195,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       );
 
       if (response.ok) {
-        queryClient.invalidateQueries(['dashboardData']);
+        queryClient.invalidateQueries(['dashboardQuotation',email]);
         setIsLoadingAction(false);
       } else {
         // It's good practice to handle HTTP error statuses
@@ -232,10 +235,11 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     data,
     refetch,
   } = useQuery({
-    queryKey: ['dashboardData'],
+    queryKey: ['dashboardQuotation',email],
     queryFn: fetchDashboardData,
     // enabled: !!user,
     onSuccess: data => {
+      console.log('data', data);
       setCompanyData(data[0]);
       setQuotationData(data[1]);
       setOriginalQuotationData(data[1]);
@@ -246,6 +250,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         }
       }
     },
+    
   });
   useEffect(() => {
     requestNotificationPermission();
@@ -290,24 +295,25 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       ]);
     }
   }
+  console.log('status', status);
 
   const handleCreateContract = (index: number) => {
     if (companyData && quotationData && quotationData.length > 0) {
+      console.log('quotationSelected', selectedItem);
       navigation.navigate('ContractOptions', {
-        id: quotationData[index].id,
-        sellerId: companyData.id,
-        allTotal: quotationData[index].allTotal,
-        customerName: quotationData[index].customer?.name as string,
+        id: selectedItem.id,
+        sellerId: selectedItem.id,
+        allTotal: selectedItem.allTotal,
+        customerName: selectedItem.customer?.name as string,
       });
     }
-    setModalVisible(false);
+    setIsModalSignContract(false);
   };
-
-  const handleModal = (item: Quotation, index: number) => {
+  const handleSignContractModal = (item: Quotation, index: number) => {
     setSelectedItem(item);
     setSelectedIndex(index);
     setShowModal(false);
-    setModalVisible(true);
+    setIsModalSignContract(true);
   };
   const handleModalOpen = (item: Quotation, index: number) => {
     setSelectedItem(item);
@@ -317,7 +323,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
 
   const handleModalClose = () => {
-    setSelectedItem(null);
+    // setSelectedItem(null);
     setSelectedIndex(null);
     setShowModal(false);
   };
@@ -422,21 +428,22 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
                  <Divider />
 
-                 {selectedItem?.status === 'APPROVED' && (
-                   <>
-                     <Divider />
-                     <Pressable
-                       onPress={() => {
-                         handleModal(item, index);
-                       }}>
-                       <Text style={styles.ModalButtonText}>
-                         เริ่มทำสัญญา
-                       </Text>
-                     </Pressable>
-                   </>
-                 )}
+                
                </>
              )}
+                      {selectedItem?.status === 'APPROVED' && (
+                  <>
+                    <Divider />
+                    <List.Item
+                      onPress={() => {
+                        handleSignContractModal(selectedItem, index);
+                      }}
+                      centered={true}
+                      title="เริ่มทำสัญญา"
+                      titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
+                    />
+                  </>
+                )}
            </List.Section>
          </Modal>
        </PaperProvider>
@@ -586,14 +593,12 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               /> */}
             </>
           )}
-
-          {/* modal popup */}
-          <Dialog
+ {/* modal popup */}
+ <Dialog
             style={styles.modalContainer}
             // backdropTransitionOutTiming={100}
             onDismiss={handleNoResponse}
-            
-            visible={isModalVisible}>
+            visible={isModalSignContract}>
             <Dialog.Content>
               <View
                 style={{
@@ -627,6 +632,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               </View>
             </Dialog.Content>
           </Dialog>
+        
         </Portal>
       </PaperProvider>
     </>

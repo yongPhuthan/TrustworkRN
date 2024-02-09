@@ -139,11 +139,14 @@ const LoginScreen = ({navigation}: Props) => {
 
         <Button
           mode="contained"
-          style={[
-            styles.pressable,
-            styles.getStartedButton,
-            !isValid && styles.disabledButton,
-          ]}
+          style={{
+            marginTop: 20,
+          }}
+          // style={[
+          //   styles.pressable,
+          //   styles.getStartedButton,
+          //   !isValid && styles.disabledButton,
+          // ]}
           loading={isLoading}
           onPress={handleLogin}
           disabled={!isValid || isLoading}>

@@ -183,3 +183,46 @@
         "workers": []
     }
 }
+LOG quotationData[{
+    "allTotal": 97740,
+    "customer": {
+        "address": "7/44 หมู่5 ต.สามพราน อ้อมใหญ่",
+        "companyId": "",
+        "name": "คุณ สุกัญญา ยาคำ",
+        "phone": "053306426"
+    },
+    "dateEnd": "15-02-2024",
+    "dateOffer": "08-02-2024",
+    "discountType": "PERCENT",
+    "discountValue": 0,
+    "docNumber": "20240208178",
+    "id": "65c49bddbaeff0d2df1c02e1",
+    "services": [
+        [Object]
+    ],
+    "summaryAfterDiscount": 97740,
+    "taxType": "NOTAX",
+    "taxValue": 0,
+    "vat7": 0
+}, {
+    "allTotal": 56840,
+    "customer": {
+        "address": "ถนน แก้วนวรัฐ ตำบล.อ้อมใหญ่ อ.สามพราน",
+        "companyId": "",
+        "name": "คุณ ณัฐวรา พงษ์ชัย",
+        "phone": "053306426"
+    },
+    "dateEnd": "15-02-2024",
+    "dateOffer": "08-02-2024",
+    "discountType": "PERCENT",
+    "discountValue": 0,
+    "docNumber": "20240208123",
+    "id": "65c4fd27baeff0d2df1c02e7",
+    "services": [
+        [Object]
+    ],
+    "summaryAfterDiscount": 56840,
+    "taxType": "NOTAX",
+    "taxValue": 0,
+    "vat7": 0
+}]

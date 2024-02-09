@@ -36,6 +36,7 @@ import Installment from '../screens/utils/installment';
 import TopUpScreen from '../screens/utils/topup';
 import DashboardDrawer from './dashboardDrawer';
 // import BootSplash from "react-native-bootsplash";
+import ContractViewScreen from '../screens/contract/webview';
 
 
 const Theme = {
@@ -98,6 +99,20 @@ const Navigation = ({initialRouteName}: any) => {
             headerShown: false,
             title: 'สร้างใบเสนอราคา',
             headerBackTitle: '',
+
+            headerStyle: {
+              backgroundColor: '#ffffff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+                <Stack.Screen
+          name="ContractViewScreen"
+          component={ContractViewScreen}
+          options={{
+            ...commonScreenOptions,
+            headerShown: false,
+           
 
             headerStyle: {
               backgroundColor: '#ffffff',

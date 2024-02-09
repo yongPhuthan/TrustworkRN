@@ -4,7 +4,6 @@ import {
   SafeAreaView,
   StyleSheet,
   Dimensions,
-  Platform,
   Alert,
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -19,41 +18,25 @@ import {WebView} from 'react-native-webview';
 import {Store} from '../../redux/store';
 import {ParamListBase} from '../../types/navigationType';
 interface Props {
-  navigation: StackNavigationProp<ParamListBase, 'DocViewScreen'>;
-  route: RouteProp<ParamListBase, 'DocViewScreen'>;
+  navigation: StackNavigationProp<ParamListBase, 'ContractViewScreen'>;
+  route: RouteProp<ParamListBase, 'ContractViewScreen'>;
 }
 
 // ... rest of your DocViewScreen component ...
 
-const DocViewScreen = ({navigation, route}: Props) => {
-  const QuotationWebView = ({url}: any) => {
+const ContractViewScreen = ({navigation, route}: Props) => {
+
+
+  const ContractWebView = ({url}: any) => {
     return (
       <SafeAreaView style={{flex: 1}}>
-        <WebView source={{uri: url}} />
-      </SafeAreaView>
-    );
-  };
-
-  const ContractWebView = ({ url }: any) => {
-    // เลือกคอมโพเนนต์ตามแพลตฟอร์ม
-    const Content = Platform.select({
-      ios: () => (
         <PDFView
           resource={url}
           resourceType={'url'}
           onLoad={() => console.log(`PDF rendered from URL`)}
-          onError={(error) => console.log('Cannot render PDF', error)}
-          style={{ flex: 1 }}
+          onError={error => console.log('Cannot render PDF', error)}
+          style={{flex: 1}}
         />
-      ),
-      android: () => (
-        <WebView source={{ uri: url }} style={{ flex: 1 }} />
-      ),
-    });
-  
-    return (
-      <SafeAreaView style={{ flex: 1 }}>
-        {Content ? <Content /> : null}
       </SafeAreaView>
     );
   };
@@ -68,11 +51,9 @@ const DocViewScreen = ({navigation, route}: Props) => {
     navigation.navigate('DashboardQuotation');
   };
   
-  const QuotationRoute = () => (
-    <QuotationWebView url={`https://www.trusth.co/preview/${id}`} />
-  );
+
   const ContractRoute = () => (
-    <ContractWebView url={`https://www.trusth.co/preview/doc/${id}`} />
+    <ContractWebView url={`https://www.trusth.co/doc/${id}`} />
   );
 const HomeRoute = () => {
   useEffect(() => {
@@ -86,10 +67,9 @@ const HomeRoute = () => {
 };
 
   const [routes] = React.useState([
-    {key: 'quotation', title: 'เว็บเพจ', focusedIcon: 'web'},
     {
       key: 'contracts',
-      title: 'เอกสาร',
+      title: 'สัญญา',
       focusedIcon: 'file-document-outline',
     },
     {
@@ -100,7 +80,7 @@ const HomeRoute = () => {
   ]);
 
   const renderScene = BottomNavigation.SceneMap({
-    quotation: QuotationRoute,
+   
     contracts: ContractRoute,
     home: HomeRoute,
   });
@@ -113,7 +93,7 @@ const HomeRoute = () => {
   const firstPart = id?.substring(0, 8);
   React.useEffect(() => {
     // กำหนด URL ตาม tab ที่เลือก
-    const baseUrl = 'https://www.trusth.co/preview/';
+    const baseUrl = 'https://www.trusth.co/';
     const newUrl = index === 0 ? `${baseUrl}${id}` : `${baseUrl}doc/${id}`;
     setUrl(newUrl);
   }, [index, id]);
@@ -311,4 +291,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DocViewScreen;
+export default ContractViewScreen;

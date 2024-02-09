@@ -46,8 +46,9 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
   const {width, height} = Dimensions.get('window');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const queryClient = useQueryClient();
+  const email = user?.email;
   const [visible, setVisible] = useState(false);
-  const [isModalVisible, setModalVisible] = useState(false);
+  const [isModalSignContract, setIsModalSignContract] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null) as any;
   const [selectedIndex, setSelectedIndex] = useState(null) as any;
   const [originalQuotationData, setOriginalQuotationData] = useState<
@@ -83,12 +84,15 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
 
     CONTRACT: 'ทำสัญญาแล้ว',
   } as any;
-
+  const approvedQuotation = useMemo(() => {
+    return quotationData?.filter(quotation => quotation.status === 'APPROVED');
+  }, [quotationData]);
   const [filters, setFilters] = useState(['ALL', 'APPROVED', 'CONTRACT']);
 
   const handleNoResponse = () => {
-    setModalVisible(false);
+    setIsModalSignContract(false);
   };
+
   const [activeFilter, setActiveFilter] = useState('ALL');
   const filteredQuotationData = useMemo(() => {
     if (!originalQuotationData) return null;
@@ -118,16 +122,16 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
     }
   };
 
-  async function fetchDashboardData() {
-    if (!user || !user.email) {
+  async function fetchDashboardContract() {
+    if (!user || !email) {
       console.error('User or user email is not available');
       return;
     }
     try {
       const token = await user.getIdToken(true);
       const response = await fetch(
-        `${BACK_END_SERVER_URL}/api/dashboard/queryContractDashboard?email=${encodeURIComponent(
-          user.email,
+        `${BACK_END_SERVER_URL}/api/dashboard/contractDashboard?email=${encodeURIComponent(
+          email,
         )}`,
         {
           method: 'GET',
@@ -150,7 +154,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
           }
           throw new Error(errorData.message);
         }
-        throw new Error('Network response was not ok.');
+        throw new Error(`Network response was not ok., ${response.status}`);
       }
 
       const data = await response.json();
@@ -233,8 +237,8 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
     data,
     refetch,
   } = useQuery({
-    queryKey: ['dashboardData'],
-    queryFn: fetchDashboardData,
+    queryKey: ['dashboardContract', email],
+    queryFn: fetchDashboardContract,
     // enabled: !!user,
     onSuccess: data => {
       setCompanyData(data[0]);
@@ -281,7 +285,10 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
               .auth()
               .signOut()
               .then(() => {
-                navigation.navigate('FirstAppScreen');
+                navigation.reset({
+                  index: 0,
+                  routes: [{name: 'FirstAppScreen'}],
+                });
               })
               .catch(signOutError => {
                 console.error('Sign out error: ', signOutError);
@@ -294,21 +301,23 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
 
   const handleCreateContract = (index: number) => {
     if (companyData && quotationData && quotationData.length > 0) {
+      console.log('quotationSelected', selectedItem);
       navigation.navigate('ContractOptions', {
-        id: quotationData[index].id,
-        sellerId: companyData.id,
-        allTotal: quotationData[index].allTotal,
-        customerName: quotationData[index].customer?.name as string,
+        id: selectedItem.id,
+        sellerId: selectedItem.id,
+        allTotal: selectedItem.allTotal,
+        customerName: selectedItem.customer?.name as string,
       });
     }
-    setModalVisible(false);
+    setIsModalSignContract(false);
   };
+  
 
-  const handleModal = (item: Quotation, index: number) => {
+  const handleSignContractModal = (item: Quotation, index: number) => {
     setSelectedItem(item);
     setSelectedIndex(index);
     setShowModal(false);
-    setModalVisible(true);
+    setIsModalSignContract(true);
   };
   const handleModalOpen = (item: Quotation, index: number) => {
     setSelectedItem(item);
@@ -318,7 +327,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
   };
 
   const handleModalClose = () => {
-    setSelectedItem(null);
+    // setSelectedItem(null);
     setSelectedIndex(null);
     setShowModal(false);
   };
@@ -327,7 +336,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
     setIsLoadingAction(true);
     dispatch(stateAction.get_companyID(data[0].id));
     setIsLoadingAction(false);
-    handleModalClose()
+    handleModalClose();
     navigation.navigate('EditQuotation', {
       quotation,
       company: data[0],
@@ -336,7 +345,6 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
   };
   const FilterButton = ({filter, isActive, onPress}: any) => {
     const displayText = filterLabels[filter] || filter;
-    console.log('companyUser', companyData);
     return (
       <TouchableOpacity
         style={[styles.filterButton, isActive ? styles.activeFilter : null]}
@@ -345,12 +353,11 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
       </TouchableOpacity>
     );
   };
-
   const renderItem = ({item, index}: any) => (
     <>
-   <View style={{marginTop: 10}}>
+      <View style={{marginTop: 10}}>
         <CardDashBoard
-          status={item.status  }
+          status={item.status}
           date={item.dateOffer}
           end={item.dateEnd}
           price={item.allTotal}
@@ -359,91 +366,63 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
           onCardPress={() => handleModalOpen(item, index)}
         />
       </View>
-    
 
-      {selectedIndex === index &&
-       <Portal>
-       <PaperProvider>
-         <Modal
-           backdropOpacity={0.1}
-           backdropTransitionOutTiming={100}
-           onBackdropPress={handleModalClose}
-            isVisible={showModal}
-           style={styles.modalContainer}
-           onDismiss={handleModalClose}>
-           <List.Section
-             style={{
-               width: '100%',
-             }}>
-             <List.Subheader
-               style={{
-                 textAlign: 'center',
-                 fontWeight: 'bold',
-                 fontFamily: 'Sukhumvit Set Bold',
-                 color: 'gray',
-               }}>
-              {item.customer?.name}
-             </List.Subheader>
-             <Divider />
-             <List.Item
-               onPress={() => {
-                handleModalClose()
-                 navigation.navigate('DocViewScreen', {id: item.id});
-               }}
-               centered={true}
-               title="พรีวิวเอกสาร"
-               titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
-        
-             />
-
-             <Divider />
-
-             {selectedItem?.status === 'PENDING' && (
-               <>
-                 <List.Item
-                   onPress={() => {
-                     setShowModal(false);
-                     editQuotation(selectedItem.services, selectedItem);
-                   }}
-                   title="แก้ไขเอกสาร"
-                   titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
+      {selectedIndex === index && (
+        <Portal>
+          <PaperProvider>
+            <Modal
+              backdropOpacity={0.1}
+              backdropTransitionOutTiming={100}
+              onBackdropPress={handleModalClose}
+              isVisible={showModal}
+              style={styles.modalContainer}
+              onDismiss={handleModalClose}>
+              <List.Section
+                style={{
+                  width: '100%',
+                }}>
+                <List.Subheader
+                  style={{
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    fontFamily: 'Sukhumvit Set Bold',
+                    color: 'gray',
+                  }}>
+                  {item.customer?.name}
+                </List.Subheader>
+                <Divider />
+                {selectedItem?.status === 'APPROVED' && (
+                  <>
               
-                 />
+                    <List.Item
+                      onPress={() => {
+                        handleSignContractModal(selectedItem, index);
+                      }}
+                      centered={true}
+                      title="เริ่มทำสัญญา"
+                      titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
+                    />
+                          <Divider />
+                  </>
+                )}
+                <List.Item
+                  onPress={() => {
+                    handleModalClose();
+                    navigation.navigate('DocViewScreen', {id: item.id});
+                  }}
+                  centered={true}
+                  title="พรีวิวเอกสาร"
+                  titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
+                />
 
-                 <Divider />
-                 <List.Item
-                   onPress={() =>
-                     confirmRemoveQuotation(
-                       item.id,
-                       selectedItem?.customer?.name,
-                     )
-                   }
-                   title="ลบเอกสาร"
-                   titleStyle={{textAlign: 'center', color: 'red'}} // จัดให้ข้อความอยู่ตรงกลาง
-                 />
+                <Divider />
 
-                 <Divider />
-
-                 {selectedItem?.status === 'APPROVED' && (
-                   <>
-                     <Divider />
-                     <Pressable
-                       onPress={() => {
-                         handleModal(item, index);
-                       }}>
-                       <Text style={styles.ModalButtonText}>
-                         เริ่มทำสัญญา
-                       </Text>
-                     </Pressable>
-                   </>
-                 )}
-               </>
-             )}
-           </List.Section>
-         </Modal>
-       </PaperProvider>
-     </Portal>
-        }
+               
+              </List.Section>
+            </Modal>
+          </PaperProvider>
+        </Portal>
+      )}
     </>
   );
 
@@ -454,6 +433,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
     // navigation.navigate('GalleryScreen', {code: companyData?.code});
     navigation.navigate('CreateQuotation');
   };
+
 
   return (
     <>
@@ -474,10 +454,10 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
             <Appbar.Content
               title={
                 activeFilter == 'ALL'
-                  ? 'สัญญาทั้งหมด'
+                  ? 'รายการทั้งหมด'
                   : activeFilter === 'APPROVED'
-                  ? 'รายการรอทำสัญญา'
-                  : 'รายการอนุมัติสัญญาแล้ว'
+                  ? 'รอทำสัญญาทั้งหมด'
+                  : 'ทำสัญญาแล้วทั้งหมด'
               }
               titleStyle={{
                 fontSize: 18,
@@ -485,6 +465,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                 fontFamily: 'Sukhumvit Set Bold',
               }}
             />
+
             <Appbar.Action
               icon="bell-outline"
               // onPress={() => {
@@ -524,6 +505,19 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                     alignItems: 'center',
                     backgroundColor: '#f5f5f5',
                   }}>
+                  {activeFilter === 'APPROVED' &&
+                    approvedQuotation &&
+                    approvedQuotation.length > 0 && (
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontFamily: 'Sukhumvit Set',
+                          marginTop: 10,
+                        }}>
+                        เลือกรายการเพื่อทำสัญญา
+                      </Text>
+                    )}
+
                   <FlatList
                     data={filteredQuotationData}
                     renderItem={renderItem}
@@ -538,7 +532,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                           alignItems: 'center',
                         }}>
                         <Text style={{marginTop: 10}}>
-                          กดปุ่ม + ด้านล่างเพื่อสร้างใบเสนอราคา
+                          ลูกค้าอนุมัติใบเสนอราคาก่อนเริ่มทำสัญญา
                         </Text>
                       </View>
                     }
@@ -548,12 +542,12 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                   />
                 </View>
               )}
- <FAB
-            style={styles.fabStyle}
-            icon="file-document-edit-outline"
-            // onPress={handleShare}
-            color="white"
-          />
+              {/* <FAB
+                style={styles.fabStyle}
+                icon="file-document-edit-outline"
+                onPress= {() => setActiveFilter('APPROVED')}
+                color="white"
+              /> */}
               {/* <FAB.Group
                 open={open}
                 visible
@@ -593,8 +587,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
             style={styles.modalContainer}
             // backdropTransitionOutTiming={100}
             onDismiss={handleNoResponse}
-            
-            visible={isModalVisible}>
+            visible={isModalSignContract}>
             <Dialog.Content>
               <View
                 style={{
@@ -602,8 +595,8 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}>
-                <Text style={styles.selectedQuotationText}>
-                  ทำสัญญากับลูกค้า
+                <Text >
+                  เริ่มทำสัญญากับลูกค้า
                 </Text>
                 <Text style={styles.selectedQuotationText}>
                   {selectedItem?.customer?.name}
@@ -646,7 +639,6 @@ const styles = StyleSheet.create({
     right: width * 0.05,
     position: 'absolute',
     backgroundColor: '#1b52a7',
-
   },
   fab: {
     position: 'absolute',

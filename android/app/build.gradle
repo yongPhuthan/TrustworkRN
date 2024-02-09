@@ -118,8 +118,7 @@ dependencies {
     implementation project(':react-native-vector-icons')
 implementation 'com.google.android.play:integrity:1.3.0'
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
-    compile project(':react-native-view-pdf')
-
+    // compile project(':react-native-view-pdf')
     debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
         exclude group:'com.squareup.okhttp3', module:'okhttp'
     }

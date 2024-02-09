@@ -45,6 +45,7 @@ const Installment = ({ navigation, route }: Props) => {
   const totalPrice = dataProps.total;
   const [installments, setInstallments] = useState<number>(0);
   const user = useUser();
+  const email = user?.email;
   const queryClient = useQueryClient();
   const [pickerVisible, setPickerVisible] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
@@ -126,8 +127,8 @@ const Installment = ({ navigation, route }: Props) => {
     mutationFn: updateQuotation,
     onSuccess: data => {
       const newId = dataProps.quotationId.slice(0, 8);
-      queryClient.invalidateQueries(['contractDashboard']);
-      navigation.navigate('DocViewScreen', {
+      queryClient.invalidateQueries(['dashboardContract',email]);
+      navigation.navigate('ContractViewScreen', {
         id: newId,
       });
     },
@@ -233,7 +234,6 @@ const Installment = ({ navigation, route }: Props) => {
       </View>
     );
   }
-console.log('dataProps.projectName', dataProps)
   const renderItem = ({item, index}: {item: any; index: number}) => (
     <Card
       mode="outlined"
@@ -337,7 +337,7 @@ console.log('dataProps.projectName', dataProps)
           }}
         />
         <Appbar.Content
-          title="แบ่งงวดชำระ"
+          title="การแบ่งงวดชำระ"
           titleStyle={{
             fontSize: 18,
             fontWeight: 'bold',
@@ -350,7 +350,7 @@ console.log('dataProps.projectName', dataProps)
           mode="contained"
           buttonColor={'#1b72e8'}
           onPress={handleSave}>
-          {'ไปต่อ'}
+          {'บันทึก'}
         </Button>
       </Appbar.Header>
       <SafeAreaView style={{flex: 1}}>
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     marginVertical: 10,
   },
   cardContent: {
