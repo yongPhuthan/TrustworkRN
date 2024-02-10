@@ -1,37 +1,32 @@
-import React, {useState, useCallback, useContext} from 'react';
+import { BACK_END_SERVER_URL } from '@env';
+import { faCamera, faClose } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useContext, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  StyleSheet,
   Text,
 
   TouchableOpacity,
-  ActivityIndicator,
-  SafeAreaView,
-  Dimensions,
-  Alert,
-  Image,
-  StyleSheet,
+  View
 } from 'react-native';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {Checkbox,TextInput} from 'react-native-paper';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faCamera, faClose} from '@fortawesome/free-solid-svg-icons';
-import {ParamListBase, ProductItem} from '../../types/navigationType';
-import {RouteProp} from '@react-navigation/native';
-import {useForm, useWatch, Controller, set} from 'react-hook-form';
-import firebase from '../../firebase';
-import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
-import {Store} from '../../redux/store';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {BACK_END_SERVER_URL} from '@env';
-import {useUser} from '../../providers/UserContext';
-import {useSlugify} from '../../hooks/utils/useSlugify';
-import {StackNavigationProp} from '@react-navigation/stack';
 import {
-  launchImageLibrary,
-  MediaType,
   ImageLibraryOptions,
   ImagePickerResponse,
+  MediaType,
+  launchImageLibrary,
 } from 'react-native-image-picker';
+import { Checkbox, TextInput } from 'react-native-paper';
+import firebase from '../../firebase';
+import { useUriToBlob } from '../../hooks/utils/image/useUriToBlob';
+import { useSlugify } from '../../hooks/utils/useSlugify';
+import { useUser } from '../../providers/UserContext';
+import { Store } from '../../redux/store';
 import SaveButton from '../ui/Button/SaveButton';
 
 interface ExistingModalProps {
@@ -73,7 +68,7 @@ const AddNewWorker = ({isVisible, onClose}: ExistingModalProps) => {
     dispatch,
   }: any = useContext(Store);
   const slugify = useSlugify();
-  const pickImage = async onChange => {
+  const pickImage = async (onChange:any) => {
     const options: ImageLibraryOptions = {
       mediaType: 'photo' as MediaType,
     };

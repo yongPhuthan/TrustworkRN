@@ -4,7 +4,15 @@
       "allowlist": [
         "BACK_END_SERVER_URL",
         "FIREBASE_STORAGE_PUBLIC_URL",
-        "FIRESTORE_PUBLIC_GALLERY_URL"
+        "FIRESTORE_PUBLIC_GALLERY_URL",
+        "FIREBASE_AUTH_DOMAIN",
+        "FIREBASE_API_KEY",
+        "FIREBASE_PROJECT_ID",
+        "FIREBASE_STORAGE_BUCKET",
+        "FIREBASE_MESSAGING_SENDER_ID",
+        "FIREBASE_APP_ID",
+        "FIREBASE_MEASUREMENT_ID",
+        
       ],
       "safe": true,
       "allowUndefined": false

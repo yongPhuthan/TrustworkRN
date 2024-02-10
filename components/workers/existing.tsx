@@ -1,48 +1,26 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import { BACK_END_SERVER_URL } from '@env';
+import { useRoute } from '@react-navigation/native';
+import { useQuery } from '@tanstack/react-query';
+import React, { useContext, useState } from 'react';
 import {
-  View,
-  Text,
+  useFormContext,
+  useWatch
+} from 'react-hook-form';
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
   Image,
   StyleSheet,
-  Dimensions,
-  SafeAreaView, 
+  Text,
   TouchableOpacity,
-  ActivityIndicator,
-  FlatList,
-  Pressable,
+  View
 } from 'react-native';
-import {Checkbox} from 'react-native-paper';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {
-  faCloudUpload,
-  faEdit,
-  faExpand,
-  faPlus,
-  faCamera,
-  faClose,
-  faCirclePlus,
-} from '@fortawesome/free-solid-svg-icons';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {RouteProp} from '@react-navigation/native';
-import {useRoute} from '@react-navigation/native';
-import {HOST_URL, PROJECT_FIREBASE, BACK_END_SERVER_URL} from '@env';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {CompanyUser, Service, Material, Workers} from '../../types/docType';
-import {ParamListBase, ProductItem} from '../../types/navigationType';
-import * as stateAction from '../../redux/actions';
 import Modal from 'react-native-modal';
-import CustomCheckbox from '../../components/CustomCheckbox';
-import {useUser} from '../../providers/UserContext';
-import {Store} from '../../redux/store';
-import {
-  useForm,
-  FormProvider,
-  useWatch,
-  useFormContext,
-  Controller,
-  set,
-} from 'react-hook-form';
+import { Checkbox } from 'react-native-paper';
+import { useUser } from '../../providers/UserContext';
+import { Store } from '../../redux/store';
+import { Workers } from '../../types/docType';
 import AddNewWorker from './addNew';
 interface ExistingModalProps {
   isVisible: boolean;
@@ -116,7 +94,7 @@ console.log(data)
   });
 
   const handleSelectWorker = (workers: Workers) => {
-    const workerIndex = currentWorkers.findIndex(worker => worker.id === workers.id);
+    const workerIndex = currentWorkers.findIndex((worker:any) => worker.id === workers.id);
     if (workerIndex !== -1) {
       const updatedWorkers = [...currentWorkers];
       updatedWorkers.splice(workerIndex, 1);
@@ -161,14 +139,14 @@ console.log(data)
               <TouchableOpacity
                 style={[
                   styles.card,
-                  currentWorkers.some(m => m.id === item.id)
+                  currentWorkers.some((m:any) => m.id === item.id)
                     ? styles.cardChecked
                     : null,
                 ]}
                 onPress={() => handleSelectWorker(item)}>
                 <Checkbox.Android
                   
-                  status={currentWorkers.some( worker => worker.id === item.id) ? 'checked' : 'unchecked'}
+                  status={currentWorkers.some( (worker:any) => worker.id === item.id) ? 'checked' : 'unchecked'}
                   onPress={() => handleSelectWorker(item)}
                   style={styles.checkboxContainer}
                 />

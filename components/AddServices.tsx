@@ -1,20 +1,10 @@
-import {View, Text, TouchableOpacity, Image, StyleSheet} from 'react-native';
-import React, {useState, useContext, useEffect, useRef} from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import CardProject from './CardProject';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
-  faBell,
-  faCog,
-  faCogs,
-  faPlugCirclePlus,
-  faPlus,
-  faPlusCircle,
-  faPlusMinus,
-  faSheetPlastic,
-  faUserCog,
+  faPlusCircle
 } from '@fortawesome/free-solid-svg-icons';
-import {Store} from '../redux/store';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import React, { useContext } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Store } from '../redux/store';
 type Props = {
   handleAddProductFrom: Function;
 };
