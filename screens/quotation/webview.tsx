@@ -59,7 +59,7 @@ const DocViewScreen = ({navigation, route}: Props) => {
   };
 
   const {
-    state: {isEmulator},
+    state: {isEmulator,code},
     dispatch,
   }: any = useContext(Store);
 
@@ -69,10 +69,10 @@ const DocViewScreen = ({navigation, route}: Props) => {
   };
   
   const QuotationRoute = () => (
-    <QuotationWebView url={`https://www.trusth.co/preview/${id}`} />
+    <QuotationWebView url={`https://www.trusth.co/preview/${id}?seller=${code}`} />
   );
   const ContractRoute = () => (
-    <ContractWebView url={`https://www.trusth.co/preview/doc/${id}`} />
+    <ContractWebView url={`https://www.trusth.co/preview/doc/${id}?seller=${code}`} />
   );
 const HomeRoute = () => {
   useEffect(() => {
