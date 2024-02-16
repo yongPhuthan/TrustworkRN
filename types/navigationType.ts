@@ -63,7 +63,7 @@ export type ParamListBase = {
   };
   DashboardQuotation: undefined;
   DashboardContract: undefined;
-
+  DashboardSubmit: undefined;
   SelectContract: {id: string};
   EditProductForm: {
     index: number;

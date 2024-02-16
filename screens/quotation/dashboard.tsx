@@ -1,49 +1,56 @@
-import {BACK_END_SERVER_URL} from '@env';
+import { BACK_END_SERVER_URL } from '@env';
 import messaging from '@react-native-firebase/messaging';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
-import firebase from '../../firebase';
-import {DrawerActions} from '@react-navigation/native';
-
-import React, {useContext, useEffect, useMemo, useState} from 'react';
+import { DrawerActions } from '@react-navigation/native';
+import { useQueryClient } from '@tanstack/react-query';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Dimensions,
   FlatList,
-  Platform,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import Modal from 'react-native-modal';
-
+import { FilterButton } from '../../components/ui/Dashboard/FilterButton'; // Adjust the import path as necessary
+import firebase from '../../firebase';
+import { useActiveFilter } from '../../hooks/dashboard/useActiveFilter';
+import { useFilteredData } from '../../hooks/dashboard/useFilteredData';
+import { useRemoveQuotation } from '../../hooks/quotation/dashboard/useRemoveQuotation';
 import CardDashBoard from '../../components/CardDashBoard';
-import {useUser} from '../../providers/UserContext';
+import { useUser } from '../../providers/UserContext';
 import * as stateAction from '../../redux/actions';
-import {Store} from '../../redux/store';
-import {CompanyUser, Customer, Quotation, Service} from '../../types/docType';
-import {DashboardScreenProps} from '../../types/navigationType';
+import { Store } from '../../redux/store';
+import { CompanyUser, Customer, Quotation, Service } from '../../types/docType';
+import { DashboardScreenProps } from '../../types/navigationType';
 
 import {
-  FAB,
-  Portal,
-  PaperProvider,
   ActivityIndicator,
-  List,
-  Dialog,
   Appbar,
+  Dialog,
   Divider,
+  FAB,
+  List,
+  PaperProvider,
+  Portal,
 } from 'react-native-paper';
 import {
-  checkNotifications,
-  requestNotifications,
+  requestNotifications
 } from 'react-native-permissions';
+import useFetchDashboard from '../../hooks/quotation/dashboard/useFetchDashboard'; // adjust the path as needed
+import {
+  QuotationStatus,
+  QuotationStatusKey
+} from '../../models/QuotationStatus';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [showModal, setShowModal] = useState(true);
   const user = useUser();
   const email = user?.email;
+  const {data, isLoading, isError, error} = useFetchDashboard();
+  const { activeFilter, updateActiveFilter } = useActiveFilter();
+
   const {width, height} = Dimensions.get('window');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const queryClient = useQueryClient();
@@ -51,17 +58,18 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [isModalSignContract, setIsModalSignContract] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null) as any;
   const [selectedIndex, setSelectedIndex] = useState(null) as any;
-  const [originalQuotationData, setOriginalQuotationData] = useState<
+  const [originalData, setOriginalData] = useState<
     Quotation[] | null
   >(null);
-  const [state, setState] = React.useState({open: false});
-
-  const onStateChange = ({open}: any) => setState({open});
-
-  const {open} = state;
-
   const {dispatch}: any = useContext(Store);
+  const filteredData = useFilteredData(originalData, activeFilter);
 
+
+  const [companyData, setCompanyData] = useState<CompanyUser | null>(null);
+  const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
+  const handleNoResponse = () => {
+    setIsModalSignContract(false);
+  };
   const requestNotificationPermission = async () => {
     try {
       const {status} = await requestNotifications(['alert', 'badge', 'sound']);
@@ -70,107 +78,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       console.error('Error requesting notifications permission:', error);
     }
   };
-
-  const checkNotificationPermission = async () => {
-    const {status, settings} = await checkNotifications();
-    console.log('Notification permission status:', status);
-    console.log('Notification settings:', settings);
-  };
-  const [companyData, setCompanyData] = useState<CompanyUser | null>(null);
-  const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
-  const filterLabels = {
-    ALL: 'ทั้งหมด',
-    PENDING: 'รออนุมัติ',
-    APPROVED: 'รอทำสัญญา',
-  } as any;
-
-  const [filters, setFilters] = useState(['ALL', 'PENDING', 'APPROVED']);
-
-  const handleNoResponse = () => {
-    setIsModalSignContract(false);
-  };
-  const [activeFilter, setActiveFilter] = useState('ALL');
-  const filteredQuotationData = useMemo(() => {
-    if (!originalQuotationData) return null;
-
-    if (activeFilter === 'ALL') return originalQuotationData;
-
-    return originalQuotationData.filter(
-      (q: Quotation) => q.status === activeFilter,
-    );
-  }, [originalQuotationData, activeFilter]);
-const status =  quotationData?.filter(
-  (quotation: Quotation) => quotation.discountType,
-);
-  const updateContractData = (filter: string) => {
-    setActiveFilter(filter);
-    if (quotationData) {
-      let filteredData = quotationData;
-
-      if (filter !== 'ALL') {
-        filteredData = quotationData.filter(
-          (quotation: Quotation) => quotation.status === filter,
-          setQuotationData(filteredData),
-        );
-      } else {
-        console.log('FILTER', filter);
-        filteredData = quotationData;
-        setQuotationData(filteredData);
-      }
-    }
-  };
-
-  async function fetchDashboardData() {
-    if (!user || !email) {
-      console.error('User or user email is not available');
-      return;
-    }
-    try {
-      const token = await user.getIdToken(true);
-      const response = await fetch(
-        `${BACK_END_SERVER_URL}/api/dashboard/dashboard?email=${encodeURIComponent(
-          email,
-        )}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          const errorData = await response.json();
-          if (
-            errorData.message ===
-            'Token has been revoked. Please reauthenticate.'
-          ) {
-            // Decide how you want to handle reauthentication
-            // Possibly recall fetchDashboardData or handle reauthentication differently
-          }
-          throw new Error(errorData.message);
-        }
-        throw new Error('Network response was not ok.');
-      }
-
-      const data = await response.json();
-      if (data && Array.isArray(data[1])) {
-        data[1].sort((a, b) => {
-          const dateA = new Date(a.dateOffer);
-          const dateB = new Date(b.dateOffer);
-          return dateB.getTime() - dateA.getTime();
-        });
-      }
-
-      console.log('data after', data);
-      return data;
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      throw err;
-    }
-  }
 
   const removeQuotation = async (id: string) => {
     handleModalClose();
@@ -195,7 +102,7 @@ const status =  quotationData?.filter(
       );
 
       if (response.ok) {
-        queryClient.invalidateQueries(['dashboardQuotation',email]);
+        queryClient.invalidateQueries(['dashboardQuotation', email]);
         setIsLoadingAction(false);
       } else {
         // It's good practice to handle HTTP error statuses
@@ -228,30 +135,21 @@ const status =  quotationData?.filter(
       {cancelable: false},
     );
   };
-
-  const {
-    isLoading: isQuery,
-    error,
-    data,
-    refetch,
-  } = useQuery({
-    queryKey: ['dashboardQuotation',email],
-    queryFn: fetchDashboardData,
-    // enabled: !!user,
-    onSuccess: data => {
-      console.log('data', data);
+  useEffect(() => {
+    if (data) {
+      console.log('customer', data[1][0].services);
       setCompanyData(data[0]);
       setQuotationData(data[1]);
-      setOriginalQuotationData(data[1]);
+      setOriginalData(data[1]);
       dispatch(stateAction.code_company(data[0].code));
       if (user) {
         if (data[0] === null) {
           navigation.navigate('CreateCompanyScreen');
         }
       }
-    },
-    
-  });
+    }
+  }, [data]);
+
   useEffect(() => {
     requestNotificationPermission();
   }, []);
@@ -267,7 +165,7 @@ const status =  quotationData?.filter(
     }
   }, [user]);
 
-  if (isQuery || isLoadingAction) {
+  if (isLoading || isLoadingAction) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size={'large'} />
@@ -280,12 +178,15 @@ const status =  quotationData?.filter(
       Alert.alert('seesion หมดอายุ', 'ลงทะเบียนเข้าใช้งานใหม่อีกครั้ง', [
         {
           text: 'ตกลง',
-          onPress: () => {
-            firebase
+          onPress: async () => {
+            await firebase
               .auth()
               .signOut()
               .then(() => {
-                navigation.navigate('FirstAppScreen');
+                navigation.reset({
+                  index: 0,
+                  routes: [{name: 'FirstAppScreen'}],
+                });
               })
               .catch(signOutError => {
                 console.error('Sign out error: ', signOutError);
@@ -295,8 +196,13 @@ const status =  quotationData?.filter(
       ]);
     }
   }
-  console.log('status', status);
-
+  const filtersToShow: QuotationStatusKey[] = [
+    QuotationStatus.ALL,
+    QuotationStatus.PENDING,
+    QuotationStatus.APPROVED,
+    QuotationStatus.CONTRACT,
+    QuotationStatus.ONPROCESS,
+  ];
   const handleCreateContract = (index: number) => {
     if (companyData && quotationData && quotationData.length > 0) {
       console.log('quotationSelected', selectedItem);
@@ -332,24 +238,14 @@ const status =  quotationData?.filter(
     setIsLoadingAction(true);
     dispatch(stateAction.get_companyID(data[0].id));
     setIsLoadingAction(false);
-    handleModalClose()
+    handleModalClose();
     navigation.navigate('EditQuotation', {
       quotation,
       company: data[0],
       services,
     });
   };
-  const FilterButton = ({filter, isActive, onPress}: any) => {
-    const displayText = filterLabels[filter] || filter;
-    console.log('companyUser', companyData);
-    return (
-      <TouchableOpacity
-        style={[styles.filterButton, isActive ? styles.activeFilter : null]}
-        onPress={onPress}>
-        <Text style={isActive ? {color: 'white'} : null}>{displayText}</Text>
-      </TouchableOpacity>
-    );
-  };
+
 
   const renderItem = ({item, index}: any) => (
     <>
@@ -365,73 +261,69 @@ const status =  quotationData?.filter(
         />
       </View>
 
-      {selectedIndex === index &&
-       <Portal>
-       <PaperProvider>
-         <Modal
-           backdropOpacity={0.1}
-           backdropTransitionOutTiming={100}
-           onBackdropPress={handleModalClose}
-            isVisible={showModal}
-           style={styles.modalContainer}
-           onDismiss={handleModalClose}>
-           <List.Section
-             style={{
-               width: '100%',
-             }}>
-             <List.Subheader
-               style={{
-                 textAlign: 'center',
-                 fontWeight: 'bold',
-                 fontFamily: 'Sukhumvit Set Bold',
-                 color: 'gray',
-               }}>
-              {item.customer?.name}
-             </List.Subheader>
-             <Divider />
-             <List.Item
-               onPress={() => {
-                handleModalClose()
-                 navigation.navigate('DocViewScreen', {id: item.id});
-               }}
-               centered={true}
-               title="พรีวิวเอกสาร"
-               titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
-        
-             />
+      {selectedIndex === index && (
+        <Portal>
+          <PaperProvider>
+            <Modal
+              backdropOpacity={0.1}
+              backdropTransitionOutTiming={100}
+              onBackdropPress={handleModalClose}
+              isVisible={showModal}
+              style={styles.modalContainer}
+              onDismiss={handleModalClose}>
+              <List.Section
+                style={{
+                  width: '100%',
+                }}>
+                <List.Subheader
+                  style={{
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    fontFamily: 'Sukhumvit Set Bold',
+                    color: 'gray',
+                  }}>
+                  {item.customer?.name}
+                </List.Subheader>
+                <Divider />
+                <List.Item
+                  onPress={() => {
+                    handleModalClose();
+                    navigation.navigate('DocViewScreen', {id: item.id});
+                  }}
+                  centered={true}
+                  title="พรีวิวเอกสาร"
+                  titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
+                />
 
-             <Divider />
+                <Divider />
 
-             {selectedItem?.status === 'PENDING' && (
-               <>
-                 <List.Item
-                   onPress={() => {
-                     setShowModal(false);
-                     editQuotation(selectedItem.services, selectedItem);
-                   }}
-                   title="แก้ไขเอกสาร"
-                   titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
-              
-                 />
+                {selectedItem?.status === QuotationStatus.PENDING && (
+                  <>
+                    <List.Item
+                      onPress={() => {
+                        setShowModal(false);
+                        editQuotation(selectedItem.services, selectedItem);
+                      }}
+                      title="แก้ไขเอกสาร"
+                      titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
+                    />
 
-                 <Divider />
-                 <List.Item
-                   onPress={() =>
-                     confirmRemoveQuotation(
-                       item.id,
-                       selectedItem?.customer?.name,
-                     )
-                   }
-                   title="ลบเอกสาร"
-                   titleStyle={{textAlign: 'center', color: 'red'}} // จัดให้ข้อความอยู่ตรงกลาง
-                 />
+                    <Divider />
+                    <List.Item
+                      onPress={() =>
+                        confirmRemoveQuotation(
+                          item.id,
+                          selectedItem?.customer?.name,
+                        )
+                      }
+                      title="ลบเอกสาร"
+                      titleStyle={{textAlign: 'center', color: 'red'}} // จัดให้ข้อความอยู่ตรงกลาง
+                    />
 
-                 <Divider />
-
-                
-               </>
-             )}
-                      {selectedItem?.status === 'APPROVED' && (
+                    <Divider />
+                  </>
+                )}
+                {selectedItem?.status === QuotationStatus.APPROVED && (
                   <>
                     <Divider />
                     <List.Item
@@ -444,11 +336,11 @@ const status =  quotationData?.filter(
                     />
                   </>
                 )}
-           </List.Section>
-         </Modal>
-       </PaperProvider>
-     </Portal>
-        }
+              </List.Section>
+            </Modal>
+          </PaperProvider>
+        </Portal>
+      )}
     </>
   );
 
@@ -478,11 +370,17 @@ const status =  quotationData?.filter(
             />
             <Appbar.Content
               title={
-                activeFilter == 'ALL'
+                activeFilter == QuotationStatus.ALL
                   ? 'รายการทั้งหมด'
-                  : activeFilter === 'PENDING'
+                  : activeFilter === QuotationStatus.PENDING
                   ? 'รายการรออนุมัติ'
-                  : 'รายการรอทำสัญญา'
+                  : activeFilter === QuotationStatus.APPROVED
+                  ? 'รายการรอทำสัญญา'
+                  : activeFilter === QuotationStatus.CONTRACT
+                  ? 'รายการทำสัญญาแล้ว'
+                  : activeFilter === QuotationStatus.ONPROCESS
+                  ? 'รายการกำลังดำเนินการ'
+                  : ''
               }
               titleStyle={{
                 fontSize: 18,
@@ -508,13 +406,13 @@ const status =  quotationData?.filter(
                 <FlatList
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  data={filters}
+                  data={filtersToShow}
                   renderItem={({item}) => (
                     <FilterButton
                       filter={item}
                       isActive={item === activeFilter}
                       onPress={() => {
-                        updateContractData(item);
+                        updateActiveFilter(item);
                       }}
                     />
                   )}
@@ -530,7 +428,7 @@ const status =  quotationData?.filter(
                     backgroundColor: '#f5f5f5',
                   }}>
                   <FlatList
-                    data={filteredQuotationData}
+                    data={filteredData}
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
                     ListEmptyComponent={
@@ -553,12 +451,12 @@ const status =  quotationData?.filter(
                   />
                 </View>
               )}
-               <FAB
-            style={styles.fabStyle}
-            icon="plus"
-            onPress={ () => createNewQuotation()}
-            color="white"
-          />
+              <FAB
+                style={styles.fabStyle}
+                icon="plus"
+                onPress={() => createNewQuotation()}
+                color="white"
+              />
 
               {/* <FAB.Group
                 open={open}
@@ -593,8 +491,8 @@ const status =  quotationData?.filter(
               /> */}
             </>
           )}
- {/* modal popup */}
- <Dialog
+          {/* modal popup */}
+          <Dialog
             style={styles.modalContainer}
             // backdropTransitionOutTiming={100}
             onDismiss={handleNoResponse}
@@ -632,7 +530,6 @@ const status =  quotationData?.filter(
               </View>
             </Dialog.Content>
           </Dialog>
-        
         </Portal>
       </PaperProvider>
     </>
@@ -651,7 +548,6 @@ const styles = StyleSheet.create({
     right: width * 0.05,
     position: 'absolute',
     backgroundColor: '#1b52a7',
-
   },
   fab: {
     position: 'absolute',

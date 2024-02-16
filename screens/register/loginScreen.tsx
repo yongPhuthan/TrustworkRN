@@ -141,7 +141,9 @@ const LoginScreen = ({navigation}: Props) => {
           mode="contained"
           style={{
             marginTop: 20,
+            borderRadius: 4,
           }}
+          
           // style={[
           //   styles.pressable,
           //   styles.getStartedButton,

@@ -17,6 +17,7 @@ import {
 import { Text as TextPaper } from 'react-native-paper';
 import RNPickerSelect from 'react-native-picker-select';
 import SmallDivider from './styles/SmallDivider';
+import { Service } from 'types/docType';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -95,7 +96,7 @@ const Summary = ({vat7Props, taxProps, pickerTaxProps}: Props) => {
     name: 'taxValue',
   });  
   useEffect(() => {
-    const sum = services.reduce((acc, curr) => {
+    const sum = services.reduce((acc:number, curr:Service) => {
       const total = curr.total ? new Decimal(curr.total) : new Decimal(0);
       return new Decimal(acc).plus(total);
     }, new Decimal(0));
@@ -273,6 +274,7 @@ const Summary = ({vat7Props, taxProps, pickerTaxProps}: Props) => {
           </Text>
         </View>
       )}
+      
       <View style={styles.summaryTotal}>
         <TextPaper variant="headlineMedium">รวม</TextPaper>
         <TextPaper variant="headlineMedium">

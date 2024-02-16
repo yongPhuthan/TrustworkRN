@@ -226,3 +226,33 @@ LOG quotationData[{
     "taxValue": 0,
     "vat7": 0
 }]
+
+
+
+
+
+
+///// Happy LOG
+[{
+    "bizName": "Double door engineering",
+    "code": "477827",
+    "companyTax": "1100800667422",
+    "id": "65c245363b26b43829493ac8",
+    "userLastName": "Kantabusabong",
+    "userName": "Phuthan"
+}, [{
+    "allTotal": 97740,
+    "customer": [Object],
+    "dateEnd": "15-02-2024",
+    "dateOffer": "08-02-2024",
+    "discountType": "PERCENT",
+    "discountValue": 0,
+    "docNumber": "20240208178",
+    "id": "65c49bddbaeff0d2df1c02e1",
+    "services": [Array],
+    "status": "APPROVED",
+    "summaryAfterDiscount": 97740,
+    "taxType": "NOTAX",
+    "taxValue": 0,
+    "vat7": 0
+}]]

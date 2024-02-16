@@ -2,9 +2,9 @@
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import React, { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button } from 'react-native-paper';
+import {Button, TextInput, ActivityIndicator} from 'react-native-paper';
 
-const FirstAppScreen = ({navigation}) => {
+const FirstAppScreen = ({navigation}: any) => {
   const [loadingUser, setLoadingUser] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
 
@@ -51,11 +51,15 @@ const FirstAppScreen = ({navigation}) => {
           marginBottom: 20,
           gap: 10,
         }}>
-        <Pressable
-          style={[styles.pressable, styles.getStartedButton]}
+        <Button
+          mode="contained"
+          style={{
+            width: '90%',
+            borderRadius: 4,
+          }}
           onPress={handleRegister}>
           <Text style={styles.pressableText}>ลงทะเบียนใช้งาน</Text>
-        </Pressable>
+        </Button>
         <Button
           mode="outlined"
           style={{

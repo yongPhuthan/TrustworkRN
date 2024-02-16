@@ -141,7 +141,7 @@ const Navigation = ({initialRouteName}: any) => {
           component={Selectworks}
           options={{
             ...commonScreenOptions,
-            headerShown: true,
+            headerShown: false,
             title: 'แจ้งส่งงานลูกค้า',
             headerBackTitleVisible: false,
             headerStyle: {
@@ -169,7 +169,7 @@ const Navigation = ({initialRouteName}: any) => {
           component={SendWorks}
           options={{
             ...commonScreenOptions,
-            headerShown: true,
+            headerShown: false,
             title: 'แจ้งส่งงานลูกค้า',
             headerBackTitleVisible: false,
             headerStyle: {

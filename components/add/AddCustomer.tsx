@@ -57,6 +57,7 @@ const AddCustomer = ({onClose}: Props) => {
               fieldState: {error},
             }) => (
               <TextInput
+              testID='customer-name-input'
                 label={'ชื่อลูกค้า'}
                 style={{
                   marginTop: 10,
@@ -166,6 +167,7 @@ const AddCustomer = ({onClose}: Props) => {
           <Text style={styles.buttonText}>{`บันทึก`}</Text>
         </TouchableOpacity> */}
         <Button
+        testID="submit-button"
           // loading={postLoading}
           disabled={!watch('customer.name') || !watch('customer.address')}
           mode="contained"

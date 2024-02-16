@@ -18,14 +18,12 @@ import {
   ActivityIndicator,
   
 } from 'react-native-paper';
-
-import {BACK_END_SERVER_URL} from '@env';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {useQuery} from '@tanstack/react-query';
-import React, {useContext, useMemo, useState} from 'react';
+import React, {useContext, useMemo, useState,useEffect} from 'react';
 import {FormProvider, useFieldArray, useForm, useWatch} from 'react-hook-form';
 import Modal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -50,6 +48,9 @@ import {Store} from '../../redux/store';
 import {CompanyUser, Service} from '../../types/docType';
 import {ParamListBase} from '../../types/navigationType';
 import {quotationsValidationSchema} from '../utils/validationSchema';
+import useFetchCompanyUser from '../../hooks/quotation/create/useFetchCompanyUser'; // adjust the path as needed
+import  useSelectedDates  from '../../hooks/quotation/create/useSelectDates'
+
 interface Props {
   navigation: StackNavigationProp<ParamListBase, 'Quotation'>;
 }
@@ -59,11 +60,13 @@ const Quotation = ({navigation}: Props) => {
   // const { data, isLoading } = useQuery('data', fetchData);
   const [email, setEmail] = useState('');
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
+  const { data, isLoading, isError, error } = useFetchCompanyUser();
 
   const [total, setTotal] = useState(0);
   const [companyUser, setCompanyUser] = useState<CompanyUser>();
 
   const [addCustomerModal, setAddCustomerModal] = useState(false);
+  const { initialDocnumber, initialDateOffer, initialDateEnd } = useSelectedDates();
 
   const thaiDateFormatter = useThaiDateFormatter();
   const user = useUser();
@@ -84,53 +87,6 @@ const Quotation = ({navigation}: Props) => {
   const [visibleModalIndex, setVisibleModalIndex] = useState<number | null>(
     null,
   );
-  const dataSignature = {};
-
-  const {
-    docnumber: initialDocnumber,
-    initialDateOffer,
-    initialDateEnd,
-  } = useMemo(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const randomNum = Math.floor(Math.random() * 900) + 100;
-    const docnumber = `${year}${month}${day}${randomNum}`;
-
-    const dateOffer = `${day}-${month}-${year}`;
-
-    const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const endYear = endDate.getFullYear();
-    const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
-    const endDay = String(endDate.getDate()).padStart(2, '0');
-    const dateEnd = `${endDay}-${endMonth}-${endYear}`;
-
-    return {initialDateOffer: dateOffer, initialDateEnd: dateEnd, docnumber};
-  }, []) as any;
-  const defaultAudit = {
-    AuditData: {
-      id: 0,
-      number: 0,
-      image: '',
-      title: '',
-      content: '',
-      auditEffectDescription: '',
-      auditEffectImage: '',
-      auditShowTitle: '',
-      category: '',
-      subCategory: '',
-      defaultChecked: false,
-    },
-  };
-  const defaultMaterial = {
-    materialData: {
-      id: 0,
-      name: '',
-      description: '',
-      image: '',
-    },
-  };
 
   const defalutCustomer = {
     id: '',
@@ -140,24 +96,7 @@ const Quotation = ({navigation}: Props) => {
     phone: '',
   };
 
-  const defaultService = {
-    id: '',
-    title: '',
-    description: '',
-    unitPrice: 0,
-    qty: 1,
-    discountPercent: 0,
-    total: 0,
-    unit: 'ชุด',
-    serviceImage: '',
-    serviceImages: [],
-    // quotationId,
-    audits: [defaultAudit],
-    materials: [defaultMaterial],
-  };
-
   const quotationDefaultValues = {
-    // id: quotationId,
     services: [],
     customer: defalutCustomer,
     companyUser: null,
@@ -188,45 +127,7 @@ const Quotation = ({navigation}: Props) => {
     name: 'services',
   });
 
-  const fetchCompanyUser = async () => {
-    if (!user) {
-      throw new Error('User not authenticated');
-    } else {
-      const idToken = await user.getIdToken(true);
-      const {email} = user;
-      if (!email) {
-        throw new Error('Email not found');
-      }
 
-      let url = `${BACK_END_SERVER_URL}/api/company/getCompanySeller?email=${encodeURIComponent(
-        email,
-      )}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-
-      // Register the device for remote messages
-      await firebase.messaging().requestPermission();
-
-      // Now, get the FCM token
-      const fcmToken = await firebase.messaging().getToken();
-      if (fcmToken) {
-        methods.setValue('FCMToken', fcmToken);
-      }
-
-      return data;
-    }
-  };
 
   const customer = useWatch({
     control: methods.control,
@@ -247,21 +148,15 @@ const Quotation = ({navigation}: Props) => {
 
   const isDisabled = !customer.name || services.length === 0;
 
-  const {data, isLoading, isError} = useQuery(
-    // ['companyUser', email],
 
-    {
-      queryKey: ['companyUser', email],
-      queryFn: fetchCompanyUser,
-
-      onSuccess: data => {
-        setCompanyUser(data);
-        methods.setValue('companyUser', data.user);
-        dispatch(stateAction.get_companyID(data.user.id));
-      },
-    },
-  );
-
+  useEffect(() => {
+    if (data?.user) {
+      setCompanyUser(data); // แก้ไขจาก data เดิมที่คุณให้มา
+      methods.setValue('companyUser', data.user);
+      dispatch(stateAction.get_companyID(data.user.id));
+      methods.setValue('FCMToken', fcmToken); // Update FCMToken
+    }
+  }, [data]);
   const useSignature = () => {
     // Toggle the state of the picker and accordingly set the modal visibility
     setPickerVisible(prevPickerVisible => {
@@ -393,6 +288,7 @@ const Quotation = ({navigation}: Props) => {
         <Button
           // loading={postLoading}
           disabled={isDisabled}
+          testID='submited-button'
           mode="contained"
           icon={'arrow-right'}
           contentStyle={{
@@ -405,7 +301,7 @@ const Quotation = ({navigation}: Props) => {
       </Appbar.Header>
       <ProgressBar progress={0.5} color={'#1b52a7'} />
 
-      <FormProvider {...methods}>
+      <FormProvider {...methods} >
         <View style={{flex: 1}}>
           <ScrollView style={styles.container}>
             <View style={styles.subContainerHead}>

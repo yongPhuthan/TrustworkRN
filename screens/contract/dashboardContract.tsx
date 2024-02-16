@@ -1,43 +1,45 @@
-import {BACK_END_SERVER_URL} from '@env';
+import { BACK_END_SERVER_URL } from '@env';
 import messaging from '@react-native-firebase/messaging';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
-import firebase from '../../firebase';
-import {DrawerActions} from '@react-navigation/native';
-
-import React, {useContext, useEffect, useMemo, useState} from 'react';
+import { DrawerActions } from '@react-navigation/native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Dimensions,
   FlatList,
-  Platform,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import Modal from 'react-native-modal';
+import { FilterButton } from '../../components/ui/Dashboard/FilterButton'; // Adjust the import path as necessary
+import firebase from '../../firebase';
+import { useActiveFilter } from '../../hooks/dashboard/useActiveFilter';
+import { useFilteredData } from '../../hooks/dashboard/useFilteredData';
+import {
+  QuotationStatus,
+  QuotationStatusKey
+} from '../../models/QuotationStatus';
 
 import CardDashBoard from '../../components/CardDashBoard';
-import {useUser} from '../../providers/UserContext';
+import { useUser } from '../../providers/UserContext';
 import * as stateAction from '../../redux/actions';
-import {Store} from '../../redux/store';
-import {CompanyUser, Customer, Quotation, Service} from '../../types/docType';
-import {DashboardScreenProps} from '../../types/navigationType';
+import { Store } from '../../redux/store';
+import { CompanyUser, Quotation } from '../../types/docType';
+import { DashboardScreenProps } from '../../types/navigationType';
 
 import {
-  FAB,
-  Portal,
-  PaperProvider,
   ActivityIndicator,
-  List,
-  Dialog,
   Appbar,
+  Dialog,
   Divider,
+  List,
+  PaperProvider,
+  Portal
 } from 'react-native-paper';
 import {
-  checkNotifications,
-  requestNotifications,
+  requestNotifications
 } from 'react-native-permissions';
 
 const DashboardContract = ({navigation}: DashboardScreenProps) => {
@@ -45,20 +47,15 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
   const user = useUser();
   const {width, height} = Dimensions.get('window');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
-  const queryClient = useQueryClient();
   const email = user?.email;
-  const [visible, setVisible] = useState(false);
+
   const [isModalSignContract, setIsModalSignContract] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null) as any;
   const [selectedIndex, setSelectedIndex] = useState(null) as any;
-  const [originalQuotationData, setOriginalQuotationData] = useState<
-    Quotation[] | null
-  >(null);
-  const [state, setState] = React.useState({open: false});
+  const [originalData, setOriginalData] = useState<Quotation[] | null>(null);
+  const {activeFilter, updateActiveFilter} = useActiveFilter();
 
-  const onStateChange = ({open}: any) => setState({open});
-
-  const {open} = state;
+  const filteredData = useFilteredData(originalData, activeFilter);
 
   const {dispatch}: any = useContext(Store);
 
@@ -71,55 +68,23 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
     }
   };
 
-  const checkNotificationPermission = async () => {
-    const {status, settings} = await checkNotifications();
-    console.log('Notification permission status:', status);
-    console.log('Notification settings:', settings);
-  };
   const [companyData, setCompanyData] = useState<CompanyUser | null>(null);
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
-  const filterLabels = {
-    ALL: 'ทั้งหมด',
-    APPROVED: 'รอทำสัญญา',
 
-    CONTRACT: 'ทำสัญญาแล้ว',
-  } as any;
   const approvedQuotation = useMemo(() => {
-    return quotationData?.filter(quotation => quotation.status === 'APPROVED');
+    return quotationData?.filter(
+      quotation => quotation.status === QuotationStatus.APPROVED,
+    );
   }, [quotationData]);
-  const [filters, setFilters] = useState(['ALL', 'APPROVED', 'CONTRACT']);
 
+  const filtersToShow: QuotationStatusKey[] = [
+    QuotationStatus.ALL,
+    QuotationStatus.APPROVED,
+    QuotationStatus.CONTRACT,
+    QuotationStatus.ONPROCESS,
+  ];
   const handleNoResponse = () => {
     setIsModalSignContract(false);
-  };
-
-  const [activeFilter, setActiveFilter] = useState('ALL');
-  const filteredQuotationData = useMemo(() => {
-    if (!originalQuotationData) return null;
-
-    if (activeFilter === 'ALL') return originalQuotationData;
-
-    return originalQuotationData.filter(
-      (q: Quotation) => q.status === activeFilter,
-    );
-  }, [originalQuotationData, activeFilter]);
-
-  const updateContractData = (filter: string) => {
-    setActiveFilter(filter);
-    if (quotationData) {
-      let filteredData = quotationData;
-
-      if (filter !== 'ALL') {
-        filteredData = quotationData.filter(
-          (quotation: Quotation) => quotation.status === filter,
-          setQuotationData(filteredData),
-        );
-      } else {
-        console.log('FILTER', filter);
-        filteredData = quotationData;
-        setQuotationData(filteredData);
-      }
-    }
   };
 
   async function fetchDashboardContract() {
@@ -174,63 +139,6 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
     }
   }
 
-  const removeQuotation = async (id: string) => {
-    handleModalClose();
-    setIsLoadingAction(true);
-    if (!user || !user.email) {
-      console.error('User or user email is not available');
-      return;
-    }
-    try {
-      const token = await user.getIdToken(true);
-      const response = await fetch(
-        `${BACK_END_SERVER_URL}/api/documents/removeQuotation?id=${encodeURIComponent(
-          id,
-        )}&email=${encodeURIComponent(user.email)}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      if (response.ok) {
-        queryClient.invalidateQueries(['dashboardData']);
-        setIsLoadingAction(false);
-      } else {
-        // It's good practice to handle HTTP error statuses
-        const errorResponse = await response.text(); // or response.json() if the server responds with JSON
-        console.error('Failed to delete quotation:', errorResponse);
-        setIsLoadingAction(false);
-        // Display a more specific error message if possible
-        Alert.alert('Error', 'Failed to delete quotation. Please try again.');
-      }
-    } catch (err) {
-      console.error('An error occurred:', err);
-      setIsLoadingAction(false);
-      Alert.alert('เกิดข้อผิดพลาด', 'ไม่สามารถลบใบเสนอราคาได้');
-    }
-  };
-
-  const confirmRemoveQuotation = (id: string, customer: Customer) => {
-    setShowModal(false);
-    Alert.alert(
-      'ยืนยันลบเอกสาร',
-      `ลูกค้า ${customer}`,
-      [
-        {
-          text: 'ยกเลิก',
-          onPress: () => console.log('Cancel Pressed'),
-          style: 'cancel',
-        },
-        {text: 'ลบเอกสาร', onPress: () => removeQuotation(id)},
-      ],
-      {cancelable: false},
-    );
-  };
-
   const {
     isLoading: isQuery,
     error,
@@ -243,7 +151,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
     onSuccess: data => {
       setCompanyData(data[0]);
       setQuotationData(data[1]);
-      setOriginalQuotationData(data[1]);
+      setOriginalData(data[1]);
       dispatch(stateAction.code_company(data[0].code));
       if (user) {
         if (data[0] === null) {
@@ -301,7 +209,6 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
 
   const handleCreateContract = (index: number) => {
     if (companyData && quotationData && quotationData.length > 0) {
-      console.log('quotationSelected', selectedItem);
       navigation.navigate('ContractOptions', {
         id: selectedItem.id,
         sellerId: selectedItem.id,
@@ -311,7 +218,6 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
     }
     setIsModalSignContract(false);
   };
-  
 
   const handleSignContractModal = (item: Quotation, index: number) => {
     setSelectedItem(item);
@@ -332,27 +238,6 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
     setShowModal(false);
   };
 
-  const editQuotation = async (services: Service[], quotation: Quotation) => {
-    setIsLoadingAction(true);
-    dispatch(stateAction.get_companyID(data[0].id));
-    setIsLoadingAction(false);
-    handleModalClose();
-    navigation.navigate('EditQuotation', {
-      quotation,
-      company: data[0],
-      services,
-    });
-  };
-  const FilterButton = ({filter, isActive, onPress}: any) => {
-    const displayText = filterLabels[filter] || filter;
-    return (
-      <TouchableOpacity
-        style={[styles.filterButton, isActive ? styles.activeFilter : null]}
-        onPress={onPress}>
-        <Text style={isActive ? {color: 'white'} : null}>{displayText}</Text>
-      </TouchableOpacity>
-    );
-  };
   const renderItem = ({item, index}: any) => (
     <>
       <View style={{marginTop: 10}}>
@@ -391,9 +276,8 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                   {item.customer?.name}
                 </List.Subheader>
                 <Divider />
-                {selectedItem?.status === 'APPROVED' && (
+                {selectedItem?.status === QuotationStatus.APPROVED && (
                   <>
-              
                     <List.Item
                       onPress={() => {
                         handleSignContractModal(selectedItem, index);
@@ -402,7 +286,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                       title="เริ่มทำสัญญา"
                       titleStyle={{textAlign: 'center', color: 'black'}} // จัดให้ข้อความอยู่ตรงกลาง
                     />
-                          <Divider />
+                    <Divider />
                   </>
                 )}
                 <List.Item
@@ -416,8 +300,6 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                 />
 
                 <Divider />
-
-               
               </List.Section>
             </Modal>
           </PaperProvider>
@@ -425,15 +307,6 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
       )}
     </>
   );
-
-  const createNewQuotation = () => {
-    if (!companyData) {
-      navigation.navigate('CreateCompanyScreen');
-    }
-    // navigation.navigate('GalleryScreen', {code: companyData?.code});
-    navigation.navigate('CreateQuotation');
-  };
-
 
   return (
     <>
@@ -453,11 +326,15 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
             />
             <Appbar.Content
               title={
-                activeFilter == 'ALL'
+                activeFilter == QuotationStatus.ALL
                   ? 'รายการทั้งหมด'
-                  : activeFilter === 'APPROVED'
+                  : activeFilter === QuotationStatus.APPROVED
                   ? 'รอทำสัญญาทั้งหมด'
-                  : 'ทำสัญญาแล้วทั้งหมด'
+                  : activeFilter === QuotationStatus.CONTRACT
+                  ? 'ทำสัญญาแล้วทั้งหมด'
+                  : activeFilter === QuotationStatus.ONPROCESS
+                  ? 'รายการกำลังดำเนินการ'
+                  : ''
               }
               titleStyle={{
                 fontSize: 18,
@@ -484,13 +361,13 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                 <FlatList
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  data={filters}
+                  data={filtersToShow}
                   renderItem={({item}) => (
                     <FilterButton
-                      filter={item}
+                      filter={item as QuotationStatusKey}
                       isActive={item === activeFilter}
                       onPress={() => {
-                        updateContractData(item);
+                        updateActiveFilter(item);
                       }}
                     />
                   )}
@@ -505,7 +382,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                     alignItems: 'center',
                     backgroundColor: '#f5f5f5',
                   }}>
-                  {activeFilter === 'APPROVED' &&
+                  {activeFilter === QuotationStatus.APPROVED &&
                     approvedQuotation &&
                     approvedQuotation.length > 0 && (
                       <Text
@@ -519,7 +396,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                     )}
 
                   <FlatList
-                    data={filteredQuotationData}
+                    data={filteredData}
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
                     ListEmptyComponent={
@@ -595,9 +472,7 @@ const DashboardContract = ({navigation}: DashboardScreenProps) => {
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}>
-                <Text >
-                  เริ่มทำสัญญากับลูกค้า
-                </Text>
+                <Text>เริ่มทำสัญญากับลูกค้า</Text>
                 <Text style={styles.selectedQuotationText}>
                   {selectedItem?.customer?.name}
                 </Text>

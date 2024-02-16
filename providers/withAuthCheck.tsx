@@ -1,7 +1,7 @@
 // withAuthCheck.tsx
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import React, { ComponentType, useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import React, {ComponentType, useEffect, useState} from 'react';
+import {ActivityIndicator, View} from 'react-native';
 import UserContext from './UserContext';
 
 function withAuthCheck<T>(WrappedComponent: ComponentType<T>) {
@@ -11,31 +11,27 @@ function withAuthCheck<T>(WrappedComponent: ComponentType<T>) {
     const [initialRouteName, setInitialRouteName] = useState(''); // Default initial route
 
     useEffect(() => {
-        console.log("Setting up auth state listener");
-        const unsubscribe = auth().onAuthStateChanged(currentUser => {
-          console.log('Auth State Changed: ', currentUser);
-          if(currentUser){
-            setUser(currentUser);
-            setLoading(false);
-            // setInitialRouteName(currentUser ? 'CreateCompanyScreen' : 'FirstAppScreen');
+      console.log('Setting up auth state listener');
+      const unsubscribe = auth().onAuthStateChanged(currentUser => {
+        if (currentUser) {
+          setUser(currentUser);
+          setLoading(false);
+          // setInitialRouteName(currentUser ? 'CreateCompanyScreen' : 'FirstAppScreen');
 
-            setInitialRouteName(currentUser ? 'DashboardQuotation' : 'FirstAppScreen');
-          }
-          else{
-            setUser(null);
-            setInitialRouteName('FirstAppScreen');
-            setLoading(false);
+          setInitialRouteName(
+            currentUser ? 'DashboardQuotation' : 'FirstAppScreen',
+          );
+        } else {
+          setUser(null);
+          setInitialRouteName('FirstAppScreen');
+          setLoading(false);
+        }
+      });
 
-          }
-     
-        });
-      
-        return () => {
-          console.log("Cleaning up auth state listener");
-          unsubscribe();
-        };
-      }, []);
-      
+      return () => {
+        unsubscribe();
+      };
+    }, []);
 
     if (loading) {
       return (

@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import {Divider, TextInput} from 'react-native-paper';
 import {defaultContractSchema} from '../utils/validationSchema';
-
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {
   ActivityIndicator,

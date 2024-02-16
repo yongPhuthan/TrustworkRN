@@ -1,9 +1,9 @@
-import { BACK_END_SERVER_URL } from '@env';
-import { RouteProp } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { useQuery } from '@tanstack/react-query';
-import React, { useContext, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import {BACK_END_SERVER_URL} from '@env';
+import {RouteProp} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {useQuery} from '@tanstack/react-query';
+import React, {useContext, useState} from 'react';
+import {useForm} from 'react-hook-form';
 import {
   ActivityIndicator,
   Dimensions,
@@ -11,13 +11,15 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
-import { useUser } from '../../providers/UserContext';
-import { Store } from '../../redux/store';
-import { ParamListBase } from '../../types/navigationType';
+import {useUser} from '../../providers/UserContext';
+import {Store} from '../../redux/store';
+import {ParamListBase} from '../../types/navigationType';
 
-import { Checkbox, Divider } from 'react-native-paper';
+import {Checkbox, Divider,   Appbar,
+  Button,
+  ProgressBar,} from 'react-native-paper';
 type Props = {
   navigation: StackNavigationProp<ParamListBase>;
   route: RouteProp<ParamListBase, 'SelectWorks'>;
@@ -53,15 +55,13 @@ const Selectworks = (props: Props) => {
       projectName: '',
       signAddress: '',
       companyUserId: '',
-      customerId : '',
+      customerId: '',
       customerName: '',
       workStatus: '',
       periodPercent: [],
-    
     },
   });
   async function fetchContractByQuotation() {
-
     if (!user || !user.email) {
       console.error('User or user email is not available');
       return;
@@ -97,7 +97,6 @@ const Selectworks = (props: Props) => {
 
       const data = await response.json();
 
-      console.log('data after QUEERYY', data);
       return data;
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -111,7 +110,7 @@ const Selectworks = (props: Props) => {
     refetch,
   } = useQuery({
     queryFn: fetchContractByQuotation,
-    queryKey: ['quotation', quotationId],
+    queryKey: ['quotation-submit', quotationId],
     enabled: !!user,
     onSuccess: data => {
       reset({
@@ -121,8 +120,7 @@ const Selectworks = (props: Props) => {
         customerName: data.customer.name,
         periodPercent: data.periodPercent,
         companyUserId: data.companyUser.id,
-        customerId : data.customer.id,
-        
+        customerId: data.customer.id,
       });
     },
   });
@@ -147,7 +145,8 @@ const Selectworks = (props: Props) => {
     const modifyData = {
       ...data,
       services: selectedServices,
-      workStatus:selectedServices.length === watch('services').length ? 'ALL' : 'PERIOD' ,
+      workStatus:
+        selectedServices.length === watch('services').length ? 'ALL' : 'PERIOD',
     };
     console.log('modifyData', modifyData);
 
@@ -173,13 +172,57 @@ const Selectworks = (props: Props) => {
 
   return (
     <>
+      <Appbar.Header
+        elevated
+        mode="center-aligned"
+        style={{
+          backgroundColor: 'white',
+        }}>
+        <Appbar.BackAction
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
+        <Appbar.Content
+          title="แจ้งส่งงานลูกค้า"
+          titleStyle={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            fontFamily: 'Sukhumvit Set Bold',
+          }}
+        />
+        <Button
+          // loading={postLoading}
+          disabled={!selectedServices.length}
+          testID='submited-button'
+          mode="contained"
+          icon={'arrow-right'}
+          contentStyle={{
+            flexDirection: 'row-reverse',
+          }}
+          buttonColor={'#1b72e8'}
+          onPress={handleDonePress}>
+          {'ไปต่อ'}
+        </Button>
+      </Appbar.Header>
+      <ProgressBar progress={0.5} color={'#1b52a7'} />
       <View style={styles.container}>
-        <Text style={styles.titleText}>
-          โครงการติดตั้ง : {getValues('projectName')}
+      <Text style={{
+        marginVertical: 10,
+        color: 'black',
+        fontSize: 16,
+      }}>
+          {getValues('projectName')}
         </Text>
-        <Text style={styles.titleText}>
-          ลูกค้า : {getValues('customerName')}
-        </Text>
+        <Text  style={{
+            marginVertical: 10,
+            color: 'black',
+            fontSize: 16,
+        }}>
+      {getValues('customerName')}
+        </Text>  
+
+
         <View style={{marginTop: 10}}></View>
         {/* <TouchableOpacity
           style={[styles.card, selectedAll ? styles.cardChecked : null]}
@@ -195,7 +238,7 @@ const Selectworks = (props: Props) => {
             <Text style={styles.productTitle}>ส่งงานทั้งหมด</Text>
           </View>
         </TouchableOpacity> */}
-        <Divider style={{marginVertical: 10}} />
+        <Divider style={{marginTop: 20, marginBottom:10}} />
         <Text style={styles.titleText}>เลือกรายการที่ต้องการส่งงาน</Text>
 
         <FlatList
@@ -211,7 +254,11 @@ const Selectworks = (props: Props) => {
                 ]}
                 onPress={() => handleSelectedService(item)}>
                 <Checkbox.Android
-                  status={selectedServices.some(m => m.id === item.id ) ? 'checked' : 'unchecked'}
+                  status={
+                    selectedServices.some(m => m.id === item.id)
+                      ? 'checked'
+                      : 'unchecked'
+                  }
                   onPress={() => handleSelectedService(item)}
                   // containerStyle={styles.checkboxContainer}
                   color="#012b20"
@@ -228,18 +275,6 @@ const Selectworks = (props: Props) => {
           keyExtractor={item => item.id}
         />
       </View>
-      <View style={styles.modal}>
-        <TouchableOpacity
-          onPress={handleDonePress}
-          style={
-            !selectedServices.length
-              ? [styles.saveButton, styles.disabledButton]
-              : styles.saveButton
-          }
-          disabled={!selectedServices.length}>
-          <Text style={styles.saveText}>ไปต่อ</Text>
-        </TouchableOpacity>
-      </View>
     </>
   );
 };
@@ -250,12 +285,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#F7F7F7',
+    backgroundColor: '#FFFFFF',
     width: 'auto',
   },
   titleText: {
     fontSize: 16,
-    //   fontWeight: 'bold',
+      fontWeight: 'bold',
     textAlign: 'left',
     marginBottom: 16,
     color: '#012b20',
@@ -410,7 +445,7 @@ const styles = StyleSheet.create({
   },
   productTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     color: 'black',
   },
   description: {

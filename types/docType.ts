@@ -57,7 +57,6 @@ export type Quotation = {
   discountType : string;
   discountPercentage : number;
   workers : Workers[];
-  // ...other fields as per your schema
 };
 
 
@@ -160,11 +159,8 @@ export type CompanyUser = {
   companyNumber: string;
   user: User | null;
   userEmail: string | null;
-  wallet: Wallet;
-  walletId: string;
   rules: string[];
   quotation: Quotation[];
-  bankaccount: any; // You can replace 'any' with a more specific type based on your requirements
   customers: Customer[];
   services: Service[];
   contracts: Contract[];

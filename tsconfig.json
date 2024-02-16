@@ -11,13 +11,16 @@
     "paths": {
       "@env": ["./node_modules/react-native-dotenv"]
     },
-    "jsx": "react-native", // Ensure this is set correctly for your project
-    "esModuleInterop": true // Add this line
+    "jsx": "react-native",
+    "esModuleInterop": true
   },
   "compileOnSave": true,
   "include": [
     "src",
-    "app.tsx",
-    "types", 
+    "App.tsx",
+    "types",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "jest.setup.ts"
   ]
 }

@@ -1,58 +1,53 @@
+import { yupResolver } from '@hookform/resolvers/yup';
 import React, {
-  useState,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useState,
 } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
+import { BACK_END_SERVER_URL } from '@env';
+import { faClose, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import {
-  Button,
-  SafeAreaView,
-  StyleSheet,
-  FlatList,
-  TextInput,
-  Text,
   Alert,
+  Dimensions,
+  FlatList,
   Image,
   Platform,
-  View,
-  ActivityIndicator,
-  Dimensions,
-  KeyboardAvoidingView,
   ScrollView,
+  StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
-import {useUser} from '../../providers/UserContext';
-import SmallDivider from '../../components/styles/SmallDivider';
-import DatePickerButton from '../../components/styles/DatePicker';
-import {useForm, Controller, set} from 'react-hook-form';
-import {ParamListBase, ProductItem} from '../../types/navigationType';
-import {RouteProp} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {Store} from '../../redux/store';
-import {BACK_END_SERVER_URL} from '@env';
-import {useSlugify} from '../../hooks/utils/useSlugify';
-import {useUriToBlob} from '../../hooks/utils/image/useUriToBlob';
 import {
-  launchImageLibrary,
-  MediaType,
   ImageLibraryOptions,
   ImagePickerResponse,
+  MediaType,
+  launchImageLibrary,
 } from 'react-native-image-picker';
 import {
-  faCloudUpload,
-  faEdit,
-  faExpand,
-  faPlus,
-  faImages,
-  faClose,
-  faClosedCaptioning,
-} from '@fortawesome/free-solid-svg-icons';
-import {Divider,} from 'react-native-paper';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import SaveButton from '../../components/ui/Button/SaveButton';
-import {useImageUpload} from '../../hooks/utils/image/useUploadToFirebase';
+  Appbar,
+  Button,
+  Divider,
+  ProgressBar,
+  TextInput
+} from 'react-native-paper';
+import DatePickerButton from '../../components/styles/DatePicker';
+import SmallDivider from '../../components/styles/SmallDivider';
+import { useUriToBlob } from '../../hooks/utils/image/useUriToBlob';
+import { useSlugify } from '../../hooks/utils/useSlugify';
+import { useUser } from '../../providers/UserContext';
+import { Store } from '../../redux/store';
+import { ParamListBase } from '../../types/navigationType';
+import { sendWorkValidationSchema } from '../utils/validationSchema';
 type Props = {
   navigation: StackNavigationProp<ParamListBase>;
   route: RouteProp<ParamListBase, 'SendWorks'>;
@@ -69,13 +64,7 @@ const SendWorks = (props: Props) => {
 
   const {id, services, title, companyUser, customer, workStatus, contract} =
     route.params;
-  const {control, getValues} = useForm({
-    defaultValues: {
-      installationAddress: contract.signAddress,
-      workDescription: '',
-    },
-  });
-  const [selectedImage, setSelectedImage] = useState<string>('');
+
   const [isImageUpload, setIsImageUpload] = useState(false);
   const slugify = useSlugify();
   const queryClient = useQueryClient();
@@ -87,7 +76,6 @@ const SendWorks = (props: Props) => {
     state: {code},
     dispatch,
   }: any = useContext(Store);
-  console.log('route.params', route.params);
   const createWorkDelivery = async (data: any) => {
     if (!user || !user.email) {
       throw new Error('User or user email is not available');
@@ -197,7 +185,39 @@ const SendWorks = (props: Props) => {
       console.error('There was a problem with the fetch operation:', error);
     }
   };
+  const {initialDateOffer} = useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
 
+    const dateOffer = `${day}-${month}-${year}`;
+
+    return {initialDateOffer: dateOffer};
+  }, []) as any;
+  const {
+    control,
+    getValues,
+    setValue,
+    watch,
+    formState: {isValid, errors},
+  } = useForm({
+    mode: 'all',
+    defaultValues: {
+      installationAddress: contract.signAddress,
+      workDescription: '',
+      dateOffer: initialDateOffer,
+      services: services,
+      serviceImages: [],
+    },
+    resolver: yupResolver(sendWorkValidationSchema),
+  });
+
+  const dateOffer = useWatch({control, name: 'dateOffer'});
+  useEffect(() => {
+   setValue('dateOffer', dateOffer, {shouldValidate: true, shouldDirty: true});
+  }, [])
+  
   const handleUploadMoreImages = useCallback(() => {
     setIsImageUpload(true);
 
@@ -217,20 +237,18 @@ const SendWorks = (props: Props) => {
         if (source.uri) {
           // Directly add the URI to serviceImages without uploading
           setServiceImages([...serviceImages, source.uri]);
+          setValue('serviceImages', [...serviceImages, source.uri], {shouldDirty: true, shouldValidate: true});
           setIsImageUpload(false);
         }
-    
       }
     });
-    
   }, [setServiceImages, serviceImages]);
-  const {mutate, isLoading } = useMutation({
+  const {mutate, isLoading} = useMutation({
     mutationFn: createWorkDelivery,
 
     onSuccess: () => {
       queryClient.invalidateQueries(['dashboardData']);
       const newId = id.slice(0, 8) as string;
-      console.log('SUCCESS');
       navigation.navigate('DocViewScreen', {id: newId});
     },
     onError: (error: any) => {
@@ -248,260 +266,272 @@ const SendWorks = (props: Props) => {
   });
 
   const removeImage = useCallback(
-    uri => {
-      setServiceImages(serviceImages.filter(image => image !== uri));
+    (uri: string) => {
+      // Filter out the image URI from the current state
+      const updatedImages = serviceImages.filter(image => image !== uri);
+      
+      // Update the local state with the filtered images
+      setServiceImages(updatedImages);
+      
+      // Update the form state to reflect the change and optionally re-validate
+      setValue('serviceImages', updatedImages, { shouldValidate: true });
     },
-    [serviceImages],
+    [serviceImages, setValue],
   );
+  
   const handleDone = useCallback(async () => {
-    // let uploadedImageUrls: string[] = [];
+    let uploadedImageUrls: string[] = [];
 
-    // for (const imageUri of serviceImages) {
-    //   const uploadedUrl = await uploadImageToFbStorage(imageUri);
-    //   if (uploadedUrl) {
-    //     uploadedImageUrls.push(uploadedUrl);
-    //   }
-    // }
-    // setServiceImages(uploadedImageUrls);
+    for (const imageUri of serviceImages) {
+      const uploadedUrl = await uploadImageToFbStorage(imageUri);
+      if (uploadedUrl) {
+        uploadedImageUrls.push(uploadedUrl);
+      }
+    }
+    setServiceImages(uploadedImageUrls);
+    
     const modifiedData = {
       id,
       workStatus,
       companyUserId: companyUser.id,
       customerId: customer.id,
       description: getValues('workDescription'),
-      dateOffer,
-      services,
+      dateOffer : getValues('dateOffer'),
+      services : getValues('services'),
       installationAddress: getValues('installationAddress'),
-      serviceImages: [
-        'https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/Test%2F122772%2Fprojects%2F88bb5838-98eb-43bb-91d0-c895a44a7030%2Fworkdelivery%2F3c7ec00a-0f6d-4ebe-9cf7-e66ac5b76a61-png?alt=media',
-        'https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/Test%2F122772%2Fprojects%2F88bb5838-98eb-43bb-91d0-c895a44a7030%2Fworkdelivery%2Fc89f6dd6-efd5-4a0e-bc30-1acf6e96051c-jpg?alt=media',
-        'https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/Test%2F122772%2Fprojects%2F88bb5838-98eb-43bb-91d0-c895a44a7030%2Fworkdelivery%2Ffef5e1ba-1759-4eb9-b689-c552936b88a0-png?alt=media'
-      ],
+      serviceImages:uploadedImageUrls,
       // serviceImages: uploadedImageUrls,
     };
-    console.log('All data  updated', modifiedData);
     await mutate(modifiedData);
   }, [serviceImages, uploadImageToFbStorage]);
-  const {initialDateOffer} = useMemo(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
 
-    const dateOffer = `${day}-${month}-${year}`;
 
-    return {initialDateOffer: dateOffer};
-  }, []) as any;
 
-  const [dateOffer, setDateOffer] = useState<String>(initialDateOffer);
-
-  useEffect(() => {
-    setDateOffer(dateOffer);
-  }, [dateOffer]);
   const handleDateSigne = (date: Date) => {
     const formattedDate = thaiDateFormatter.format(date);
-    setDateOffer(formattedDate);
+    setValue('dateOffer', formattedDate, {shouldValidate: true, shouldDirty: true});
   };
 
-  if(isLoading || isImageUpload) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" color="#0073BA" />
-      </View>
-    );
-  }
-  console.log('route.params', route.params)
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <View style={styles.container}>
-        <KeyboardAvoidingView
-          style={{flex: 1}}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={
-            Platform.OS === 'ios' ? 0 : -Dimensions.get('window').height
-          }>
-          <ScrollView>
-            <View style={styles.card}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'flex-start',
-                  width: '100%',
-                  marginVertical: 15,
-                }}>
-                <Text style={styles.title}>โครงการ: </Text>
-                <Text style={{marginTop: 2, marginLeft: 10}}>
-                  {contract.projectName}
-                </Text>
-              </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'flex-start',
-                  width: '100%',
-                  marginVertical: 15,
-                }}>
-                <Text style={styles.title}>ลูกค้า: </Text>
-                <Text style={{marginTop: 2, marginLeft: 10}}>
-                  {customer.name}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.stepContainer} />
-            <SmallDivider />
+    <>
+      <Appbar.Header
+        elevated
+        mode="center-aligned"
+        style={{
+          backgroundColor: 'white',
+        }}>
+        <Appbar.BackAction
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
+        <Appbar.Content
+          title="แจ้งส่งงานลูกค้า"
+          titleStyle={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            fontFamily: 'Sukhumvit Set Bold',
+          }}
+        />
+        <Button
+          loading={isLoading}
+          disabled={!isValid}
+          mode="contained"
+          buttonColor={'#1b72e8'}
+          onPress={handleDone}>
+          {'บันทึก'}
+        </Button>
+      </Appbar.Header>
+      <ProgressBar progress={1} color={'#1b52a7'} />
+      <KeyboardAwareScrollView>
+        <ScrollView
+          style={{
+            backgroundColor: '#FFFFFF',
+            marginBottom: 100,
+            paddingHorizontal: 20,
+          }}>
+          <View style={styles.card}>
             <View
               style={{
                 flexDirection: 'row',
                 justifyContent: 'flex-start',
-                width: '70%',
+                width: '100%',
+                marginVertical: 15,
               }}>
-              <Text style={styles.titleDate}>วันที่ส่งงาน:</Text>
-              <View style={{marginTop: 10, marginLeft: 10}}>
-                <DatePickerButton
-                  label=""
-                  date="today"
-                  onDateSelected={handleDateSigne}
-                />
-              </View>
+              <Text style={styles.title}>โครงการ: </Text>
+              <Text style={{marginTop: 2, marginLeft: 10, height: 'auto'}}>
+                {contract.projectName}
+              </Text>
             </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'flex-start',
+                width: '100%',
+                marginVertical: 15,
+              }}>
+              <Text style={styles.title}>ลูกค้า: </Text>
+              <Text style={{marginTop: 2, marginLeft: 10}}>
+                {customer.name}
+              </Text>
+            </View>
+          </View>
 
-            <View style={{marginTop: 10}}></View>
-            <SmallDivider />
-            <View style={{alignSelf: 'flex-start', marginVertical: 10}}>
-              <Text style={styles.title}>หนังสือส่งงานทำขึ้นที่:</Text>
-              <Controller
-                control={control}
-                name="installationAddress"
-                render={({field: {onChange, onBlur, value}}) => (
-                  <TextInput
-                    multiline
-                    numberOfLines={4}
-                    style={styles.input}
-                    placeholder="เช่นบ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด"
-                    onBlur={onBlur}
-                    keyboardType="default"
-                    onChangeText={onChange}
-                    value={value}
-                  />
-                )}
+          <View style={styles.stepContainer} />
+          <SmallDivider />
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-start',
+              width: '70%',
+            }}>
+            <Text style={styles.titleDate}>วันที่ส่งงาน:</Text>
+            <View style={{marginTop: 10, marginLeft: 10}}>
+              <DatePickerButton
+                title="วันที่ส่งงาน"
+                label=""
+                date="today"
+                onDateSelected={handleDateSigne}
               />
             </View>
-            <Divider style={{marginVertical: 20}} />
+          </View>
 
-            <View>
-              <Text style={styles.title}>งานที่แจ้งส่ง</Text>
-              {services.map((service, index) => (
-                <View key={`service-${service.id || index}`}>
-                  <Text style={styles.listTitle}>
-                    {index + 1}. {service.title}
-                  </Text>
-                  <Text style={styles.listDescription}>
-                    {service.description}
-                  </Text>
+          <SmallDivider />
+          <View style={{alignSelf: 'flex-start', marginVertical: 10}}>
+            <Text style={styles.title}>หนังสือส่งงานทำขึ้นที่:</Text>
+            <Controller
+              control={control}
+              name="installationAddress"
+              rules={{required: true}}
+              render={({
+                field: {onChange, onBlur, value},
+                fieldState: {error},
+              }) => (
+                <View>
+                  <TextInput
+                    multiline
+                    error={!!error}
+                    mode="outlined"
+                    numberOfLines={4}
+                    placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด...."
+                    onBlur={onBlur}
+                    placeholderTextColor={'#A6A6A6'}
+                    keyboardType="default"
+                    onChangeText={onChange}
+                    textAlignVertical="top"
+                    value={value}
+                  />
+                  {error && (
+                    <Text style={{color: 'red', marginTop: 5}}>
+                      {error.message}
+                    </Text>
+                  )}
                 </View>
-              ))}
-            </View>
-            <View style={{marginVertical: 20}}></View>
+              )}
+            />
+          </View>
+          <Divider style={{marginVertical: 20}} />
 
-            {/* <Divider style={{marginVertical: 20}} /> */}
-            <View>
-              <Text style={styles.title}>รูปผลงานที่ส่งมอบ</Text>
-              {services.map((service, index) => (
-                <>
-                  {/* Image Card section */}
-                  <FlatList
-                    key={service.id}
-                    data={serviceImages}
-                    horizontal={true}
-                    renderItem={({item, index}) => {
-                      return (
-                        <View key={index} style={styles.imageContainer}>
-                          <Image source={{uri: item}} style={styles.image} />
-                          <TouchableOpacity
-                            style={styles.closeIcon}
-                            onPress={() => removeImage(item)}>
-                            <FontAwesomeIcon
-                              icon={faClose}
-                              size={15}
-                              color="white"
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      );
-                    }}
-                    keyExtractor={(item, index) => index.toString()}
-                    ListFooterComponent={
-                      serviceImages.length > 0 ? (
+          <View>
+            <Text style={styles.title}>งานที่แจ้งส่ง</Text>
+            {services.map((service, index) => (
+              <View key={index}>
+                <Text style={styles.listTitle}>
+                  {index + 1}. {service.title}
+                </Text>
+                <Text style={styles.listDescription}>
+                  {service.description}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <Divider style={{marginVertical: 20}} />
+          <View>
+            <Text style={styles.title}>เพิ่มรูปผลงาน</Text>
+            {services.map((service, index) => (
+             
+                <FlatList
+                  key={service.id}
+                  data={serviceImages}
+                  horizontal={true}
+                  renderItem={({item, index}) => {
+                    return (
+                      <View key={index} style={styles.imageContainer}>
+                        <Image source={{uri: item}} style={styles.image} />
                         <TouchableOpacity
-                          style={styles.addButtonContainer}
-                          onPress={() => {
-                            handleUploadMoreImages();
-
-                            // navigation.navigate('GalleryScreen', {code});
-                          }}>
+                          style={styles.closeIcon}
+                          onPress={() => removeImage(item)}>
                           <FontAwesomeIcon
-                            icon={faPlus}
-                            size={32}
-                            color="#0073BA"
-                          />
-                        </TouchableOpacity>
-                      ) : null
-                    }
-                    ListEmptyComponent={
-                      <View>
-                        <TouchableOpacity
-                          style={{
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            marginTop: 20,
-
-                            marginBottom: 20,
-                            borderColor: '#0073BA',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                            borderStyle: 'dashed',
-                            // marginHorizontal: 100,
-                            padding: 20,
-                            height: 50,
-                            width: 'auto',
-                          }}
-                          onPress={() => {
-                            handleUploadMoreImages();
-                          }}>
-                          <FontAwesomeIcon
-                            icon={faImages}
-                            style={{marginVertical: 15, marginHorizontal: 10}}
-                            size={24}
-                            color="#0073BA"
+                            icon={faClose}
+                            size={15}
+                            color="white"
                           />
                         </TouchableOpacity>
                       </View>
-                    }
-                  />
-                </>
-              ))}
-            </View>
-            <View style={{alignSelf: 'flex-start', marginVertical: 10}}>
-              <Text style={styles.title}>รายละเอียดงานที่ส่ง:</Text>
-              <Controller
-                control={control}
-                name="workDescription"
-                render={({field: {onChange, onBlur, value}}) => (
-                  <TextInput
-                    multiline
-                    numberOfLines={4}
-                    style={styles.input}
-                    placeholder="อธิบายภาพรวมของงานที่ส่งมอบ เช่นคุณได้ทำอะไรบ้างในงวดงานนี้.."
-                    onBlur={onBlur}
-                    keyboardType="default"
-                    onChangeText={onChange}
-                    value={value}
-                  />
-                )}
-              />
-            </View>
-            <Divider style={{marginVertical: 20}} />
+                    );
+                  }}
+                  keyExtractor={(item, index) => index.toString()}
+                  ListFooterComponent={
+                    serviceImages.length > 0 ? (
+                      <TouchableOpacity
+                        style={styles.addButtonContainer}
+                        onPress={() => {
+                          handleUploadMoreImages(); // navigation.navigate('GalleryScreen', {code});
+                        }}>
+                        <FontAwesomeIcon
+                          icon={faPlus}
+                          size={32}
+                          // color="#0073BA"
+                        />
+                      </TouchableOpacity>
+                    ) : null
+                  }
+                  ListEmptyComponent={
+                    <TouchableOpacity
+                    style={styles.addButtonContainer}
+                    onPress={() => {
+                      handleUploadMoreImages(); // navigation.navigate('GalleryScreen', {code});
+                    }}>
+                    <FontAwesomeIcon
+                      icon={faPlus}
+                      size={32}
+                      // color="#0073BA"
+                    />
+                  </TouchableOpacity>
+                  }
+                />
+       
+            ))}
+          </View>
+          <Divider style={{marginVertical: 10}} />
+
+          <View style={{alignSelf: 'flex-start', marginVertical: 10}}>
+            <Text style={styles.title}>รายละเอียดงานที่ส่ง:</Text>
+            <Controller
+              control={control}
+              rules={{required: true}}
+              name="workDescription"
+              render={({
+                field: {onChange, onBlur, value},
+                fieldState: {error},
+              }) => (
+                <TextInput
+                  error={!!error}
+                  multiline
+                  numberOfLines={4}
+                  mode="outlined"
+                  placeholder="อธิบายภาพรวมของงานที่ส่งมอบ เช่นคุณได้ทำอะไรบ้างในงวดงานนี้.."
+                  onBlur={onBlur}
+                  keyboardType="default"
+                  onChangeText={onChange}
+                  value={value}
+                  placeholderTextColor={'#A6A6A6'}
+                />
+              )}
+            />
+          </View>
+          {/* <Divider style={{marginVertical: 20}} />
             <View
               style={{
                 width: '100%',
@@ -511,11 +541,10 @@ const SendWorks = (props: Props) => {
                 justifyContent: 'center',
               }}>
               <SaveButton onPress={handleDone} disabled={false} />
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </View>
-    </SafeAreaView>
+            </View> */}
+        </ScrollView>
+      </KeyboardAwareScrollView>
+    </>
   );
 };
 
@@ -525,12 +554,10 @@ const {width} = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   containerForm: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 5,
   },
   container: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
   },
@@ -766,6 +793,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#19232e',
   },
   listTitle: {
     fontSize: 16,
@@ -792,5 +820,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginVertical: 20,
+    color: '#19232e',
   },
 });

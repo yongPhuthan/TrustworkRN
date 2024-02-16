@@ -130,7 +130,7 @@ const GalleryScreen = ({
   };
 
   const {data, isLoading, error} = useQuery({
-    queryKey: ['gallery',code],
+    queryKey: ['gallery', code],
     queryFn: () => getGallery(),
     onSuccess: data => {
       if (data && Array.isArray(data)) {
@@ -209,7 +209,7 @@ const GalleryScreen = ({
               contentType: contentType,
               filePath,
               code,
-              email
+              email,
             }),
           },
         );

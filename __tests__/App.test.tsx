@@ -1,17 +1,12 @@
-/**
- * @format
- */
-
-import 'react-native';
+// App.test.tsx
 import React from 'react';
+import {render} from '@testing-library/react-native';
 import App from '../App';
 
-// Note: import explicitly to use the types shiped with jest.
-import {it} from '@jest/globals';
-
-// Note: test renderer must be required after react-native.
-import renderer from 'react-test-renderer';
-
-it('renders correctly', () => {
-  renderer.create(<App />);
+describe('<App />', () => {
+  it('renders correctly', () => {
+    const {getByText} = render(<App />);
+    // Perform your tests here. For example, you can check if navigation is rendered
+    // expect(getByText('Your Navigation Text Here')).toBeDefined();
+  });
 });

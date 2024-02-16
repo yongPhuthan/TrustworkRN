@@ -254,6 +254,15 @@ const SettingsScreen = ({navigation}: SettingScreenProps) => {
                 }}>
                 {company?.companyNumber}
               </Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  marginBottom: 10,
+                  fontWeight: '600',
+                  color: '#333',
+                }}>
+                รหัสลูกค้า : {company?.code}
+              </Text>
             </View>
           </View>
           {/* Business Name and Address */}

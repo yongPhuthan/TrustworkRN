@@ -183,3 +183,18 @@ export const installmentValidationSchema = yup.object().shape({
     })
   ),
 });
+export const servicesForSendWorkSchema = yup.object().shape({
+  id: yup.string().required(),
+  title: yup.string().required(),
+  description: yup.string().required(),
+});
+
+export const sendWorkValidationSchema  = yup.object().shape({
+  dateOffer: yup.string().required("เลือกวันที่ส่งงาน"),
+  installationAddress: yup.string().required("ระบุที่อยู่จัดทำหนังสือหนังสือส่งงาน"),
+  workDescription:yup.string().required('ระบุรายละเอียดงานที่ส่ง'),
+  serviceImages:yup.array().required('อัพโหลดรูปภาพผลงานนuh').min(1, 'อย่างน้อย 1 รูป'),
+  services: yup.array().of(servicesForSendWorkSchema).required('เลือกบริการอย่างน้อย 1 รายการ'),
+});
+
+

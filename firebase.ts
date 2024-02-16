@@ -8,7 +8,8 @@ import {
   FIREBASE_MEASUREMENT_ID,
   FIREBASE_STORAGE_BUCKET,
 } from '@env';
-
+import {Platform} from 'react-native';
+import '@react-native-firebase/auth';
 const firebaseConfig = {
   apiKey: FIREBASE_API_KEY,
   authDomain: FIREBASE_AUTH_DOMAIN,
@@ -23,20 +24,20 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-// if (__DEV__) {
-//   let emulatorHost = 'http://localhost';
+if (__DEV__) {
+  let emulatorHost = 'http://localhost';
 
-//   if (Platform.OS === 'android') {
-//     emulatorHost = 'http://127.0.0.1';
-//   }
+  if (Platform.OS === 'android') {
+    emulatorHost = 'http://127.0.0.1';
+  }
 
-//   // firebase.functions().useEmulator(emulatorHost, 5001);
-//   firebase.auth().useEmulator(`${emulatorHost}:9099`);
-//   // firebase.firestore().useEmulator(emulatorHost, 8080)
-//   // firebase.storage().useEmulator(emulatorHost,9199)
+  // firebase.functions().useEmulator(emulatorHost, 5001);
+  firebase.auth().useEmulator(`${emulatorHost}:9099`);
+  // firebase.firestore().useEmulator(emulatorHost, 8080)
+  // firebase.storage().useEmulator(emulatorHost,9199)
 
-//   console.log('Using emulator at ' + emulatorHost);
-// }
+  console.log('Using emulator at ' + emulatorHost);
+}
 
 console.log('Firebase App name: ', firebase.app().name);
 

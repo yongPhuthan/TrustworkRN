@@ -1,4 +1,5 @@
 import React from 'react';
+import {QuotationStatus} from '../models/QuotationStatus';
 import {
   Dimensions,
   StyleSheet,
@@ -10,10 +11,9 @@ type Props = {
   customerName: string;
   price: number;
   date: string;
-  end:string;
+  end: string;
   status: string;
-  onCardPress?: () => void; 
-
+  onCardPress?: () => void;
 };
 
 const windowWidth = Dimensions.get('window').width;
@@ -34,12 +34,16 @@ const CardDashBoard = (props: Props) => {
       <View
         style={{
           backgroundColor:
-            props.status === 'PENDING'
+            props.status === QuotationStatus.PENDING &&
+            QuotationStatus.WAITING_FOR_CUSTOMER_APPROVAL
               ? '#ccc'
-              : props.status === 'APPROVED'
+              : props.status === QuotationStatus.APPROVED &&
+                QuotationStatus.SIGNED_CONTRACT
               ? '#43a047'
-              : props.status === 'CONTRACT'
+              : props.status === QuotationStatus.CONTRACT
               ? '#1079ae'
+              : props.status === QuotationStatus.ONPROCESS
+              ? 'orange'
               : '#ccc',
           borderRadius: 4,
           paddingHorizontal: 8,
@@ -49,25 +53,34 @@ const CardDashBoard = (props: Props) => {
         }}>
         <Text
           style={{
-            color: props.status === 'pending' ? '#000' : '#fff',
+            color: props.status === QuotationStatus.PENDING ? '#000' : '#fff',
             fontSize: 12,
             fontWeight: 'bold',
             textTransform: 'uppercase',
           }}>
-          {props.status === 'PENDING'
+          {props.status === QuotationStatus.PENDING
             ? 'รออนุมัติ'
-            : props.status === 'APPROVED'
+            : props.status === QuotationStatus.APPROVED
             ? 'อนุมัติแล้ว'
-            : props.status === 'CONTRACT'
+            : props.status === QuotationStatus.CONTRACT
             ? 'ทำสัญญาแล้ว'
-            : props.status === 'signed'
+            : props.status === QuotationStatus.SIGNED_CONTRACT
             ? 'เซ็นเอกสารแล้ว'
-            : 'รออนุมัติ'}
+            : props.status === QuotationStatus.ONPROCESS
+            ? 'กำลังทำงาน'
+            : props.status === QuotationStatus.WAITING_FOR_CUSTOMER_APPROVAL
+            ? 'ส่งงานแล้ว-รอลูกค้าตรวจงาน'
+            : props.status === QuotationStatus.CUSTOMER_APPROVAL_SOMECOMPLETED
+            ? 'ลูกค้าอนุมัติงานบางส่วน-รอแก้ไขเพิ่มเติม'
+            : props.status === QuotationStatus.CUSTOMER_NOTAPPROVAL
+            ? 'ลูกค้าไม่อนุมัติงาน-แก้ไขงานใหม่และส่งงานอีกครั้ง'
+            : props.status === QuotationStatus.CUSTOMER_APPROVAL_ALLCOMPLETED
+            ? 'ลูกค้าอนุมัติงานทั้งหมดเรียบร้อย'
+            : ''}
         </Text>
       </View>
-     
+
       <View style={styles.telAndTax}>
-    
         <Text style={styles.summaryPrice}>เสนอราคา {props.date}</Text>
         <Text style={styles.summaryPrice}>สิ้นสุด {props.end}</Text>
       </View>
@@ -83,7 +96,7 @@ const styles = StyleSheet.create({
 
     height: 'auto',
     borderColor: '#ccc',
-    width:windowWidth,
+    width: windowWidth,
     paddingHorizontal: 20,
     paddingVertical: 15,
     shadowColor: '#000',
@@ -119,7 +132,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     color: '#19232e',
-
   },
   summaryText: {
     fontSize: 16,
@@ -130,9 +142,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     alignSelf: 'flex-end',
     color: '#19232e',
-    
-
-
   },
   icon: {
     width: '10%',
