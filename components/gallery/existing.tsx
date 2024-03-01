@@ -1,4 +1,5 @@
 import {useQuery, useQueryClient} from '@tanstack/react-query';
+import firebase from '../../firebase';
 import React, {useCallback, useContext, useState} from 'react';
 import {
   Dimensions,
@@ -11,7 +12,14 @@ import {
   View,
 } from 'react-native';
 import {useUser} from '../../providers/UserContext';
-import {ActivityIndicator} from 'react-native-paper';
+import {
+  Appbar,
+  Button,
+  List,
+  Checkbox,
+  Divider,
+  ActivityIndicator,
+} from 'react-native-paper';
 
 import {BACK_END_SERVER_URL} from '@env';
 import {faCamera, faClose, faExpand} from '@fortawesome/free-solid-svg-icons';
@@ -96,36 +104,54 @@ const GalleryScreen = ({
     // setServiceImages(urls);
     setValue('serviceImages', urls);
   };
+  // const getGallery = async () => {
+  //   if (!user) {
+  //     throw new Error('User not authenticated');
+  //   } else {
+  //     const idToken = await user.getIdToken(true);
+  //     const email = user?.email as string;
+  //     const filePath =  `${code}/gallery`;
+  //     try {
+  //       let url = `${BACK_END_SERVER_URL}/api/services/getGallery?filePath=${encodeURIComponent(
+  //         filePath,
+  //       )}&email=${encodeURIComponent(email)}`;
+
+  //       const response = await fetch(url, {
+  //         method: 'GET',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           Authorization: `Bearer ${idToken}`,
+  //         },
+  //       });
+
+  //       if (!response.ok) {
+  //         throw new Error('Server responded with status: ' + response.status);
+  //       }
+
+  //       const imageUrls = await response.json();
+  //       return imageUrls;
+  //     } catch (error) {
+  //       console.error('Error fetching images:', error);
+  //       return [];
+  //     }
+  //   }
+  // };
   const getGallery = async () => {
-    if (!user) {
-      throw new Error('User not authenticated');
-    } else {
-      const idToken = await user.getIdToken(true);
-      const email = user?.email as string;
-      const filePath = __DEV__ ? `Test/${code}/gallery` : `${code}/gallery`;
-      try {
-        let url = `${BACK_END_SERVER_URL}/api/services/getGallery?filePath=${encodeURIComponent(
-          filePath,
-        )}&email=${encodeURIComponent(email)}`;
+    const storageRef = firebase.storage().ref(`${code}/gallery`);
+    const result = [];
 
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${idToken}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Server responded with status: ' + response.status);
-        }
-
-        const imageUrls = await response.json();
-        return imageUrls;
-      } catch (error) {
-        console.error('Error fetching images:', error);
-        return [];
+    try {
+      // List all items (files) and prefixes (folders) under this directory.
+      const listResult = await storageRef.listAll();
+      for (const itemRef of listResult.items) {
+        // For each item (file), get its download URL and add it to the result array.
+        const url = await itemRef.getDownloadURL();
+        result.push(url);
       }
+      return result;
+    } catch (error) {
+      console.error('Error fetching gallery images:', error);
+      throw new Error('Could not fetch gallery images');
     }
   };
 
@@ -155,27 +181,29 @@ const GalleryScreen = ({
     },
   });
 
+  // const filePath = `${code}/gallery/${filename}`
+
   const handleUploadMoreImages = useCallback(() => {
     setIsImageUpload(true);
     const options: ImageLibraryOptions = {
       mediaType: 'photo' as MediaType,
     };
 
-    const uploadImageToFbStorage = async (imagePath: string) => {
+    const uploadImageToFbStorage = async (
+      imagePath: string,
+    ): Promise<string | undefined> => {
       if (!imagePath) {
         console.log('No image path provided');
         return;
       }
       if (!user) {
-        throw new Error('User not authenticated');
+        console.error('User not authenticated');
+        return; // Explicitly return undefined for consistency
       }
-
-      const idToken = await user.getIdToken(true);
-      const email = user?.email as string;
 
       const name = imagePath.substring(imagePath.lastIndexOf('/') + 1);
       const fileType = imagePath.substring(imagePath.lastIndexOf('.') + 1);
-      const filename = slugify(name);
+      const filename = slugify(name) + '.' + fileType;
 
       let contentType = '';
       switch (fileType.toLowerCase()) {
@@ -186,60 +214,27 @@ const GalleryScreen = ({
         case 'png':
           contentType = 'image/png';
           break;
+        case 'webp':
+          contentType = 'image/webp';
+          break;
         default:
           console.error('Unsupported file type:', fileType);
-          return;
+          return; // Explicitly return undefined for consistency
       }
 
-      const blob = (await uriToBlobFunction(imagePath)) as Blob;
-      const filePath = __DEV__
-        ? `Test/${code}/gallery/${filename}`
-        : `${code}/gallery/${filename}`;
+      const filePath = `${code}/gallery/${filename}`;
       try {
-        const response = await fetch(
-          `${BACK_END_SERVER_URL}/api/upload/postGallery`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${idToken}`,
-            },
-            body: JSON.stringify({
-              fileName: filename,
-              contentType: contentType,
-              filePath,
-              code,
-              email,
-            }),
-          },
-        );
-
-        if (!response.ok) {
-          const text = await response.text();
-          console.error('Server responded with:', text);
-          throw new Error('Server error');
-        }
-
-        const {signedUrl, publicUrl} = await response.json();
-
-        const uploadResponse = await fetch(signedUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': contentType,
-          },
-          body: blob,
-        });
-
-        if (!uploadResponse.ok) {
-          console.error('Failed to upload file to Firebase Storage');
-          return;
-        }
-        console.log('Upload to Firebase Storage success');
-
-        // publicUrl is the URL of the uploaded image
+        const reference = firebase.storage().ref(filePath);
+        await reference.putFile(imagePath, {contentType}); // putFile is used for direct file paths
+        const publicUrl = await reference.getDownloadURL();
+        console.log('Upload to Firebase Storage success', publicUrl);
         return publicUrl;
       } catch (error) {
-        console.error('There was a problem with the fetch operation:', error);
+        console.error(
+          'There was a problem with the Firebase Storage operation:',
+          error,
+        );
+        return; // Explicitly return undefined in case of error
       }
     };
 
@@ -269,39 +264,32 @@ const GalleryScreen = ({
         }
       }
     });
-  }, [
-    setIsImageUpload,
-    slugify,
-    uriToBlobFunction,
-    BACK_END_SERVER_URL,
-    code,
-    launchImageLibrary,
-  ]);
+  }, [setIsImageUpload, queryClient, code]);
 
-  if (error) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          height: height * 0.5,
+  // if (error) {
+  //   return (
+  //     <View
+  //       style={{
+  //         flex: 1,
+  //         justifyContent: 'center',
+  //         height: height * 0.5,
 
-          alignItems: 'center',
-        }}>
-        <TouchableOpacity
-          style={styles.uploadGalleryButton}
-          onPress={handleUploadMoreImages}>
-          {isImageUpload ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text style={styles.uploadButtonTextGalleryButton}>
-              อัพโหลดภาพตัวอย่างผลงาน
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  //         alignItems: 'center',
+  //       }}>
+  //       <TouchableOpacity
+  //         style={styles.uploadGalleryButton}
+  //         onPress={handleUploadMoreImages}>
+  //         {isImageUpload ? (
+  //           <ActivityIndicator size="small" color="white" />
+  //         ) : (
+  //           <Text style={styles.uploadButtonTextGalleryButton}>
+  //             อัพโหลดภาพตัวอย่างผลงาน
+  //           </Text>
+  //         )}
+  //       </TouchableOpacity>
+  //     </View>
+  //   );
+  // }
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -317,101 +305,114 @@ const GalleryScreen = ({
           <ActivityIndicator color="white" />
         </View>
       ) : (
-        <SafeAreaView style={styles.container}>
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.onCloseButton} onPress={onClose}>
-              <FontAwesomeIcon icon={faClose} size={24} color="gray" />
-            </TouchableOpacity>
+        <>
+          <Appbar.Header
+            mode="center-aligned"
+            elevated
+            style={{
+              backgroundColor: 'white',
+              width: Dimensions.get('window').width,
+            }}>
+            <Appbar.Action icon={'close'} onPress={() => onClose()} />
+            <Appbar.Content
+              title={`เลือกภาพผลงานที่เคยทำ`}
+              titleStyle={{fontSize: 16}}
+            />
             {galleryImages && galleryImages.length > 0 && (
-              <TouchableOpacity
-                style={styles.onPlusButton}
-                onPress={handleUploadMoreImages}>
-                <FontAwesomeIcon icon={faCamera} size={24} color="gray" />
-              </TouchableOpacity>
+              <Appbar.Action icon={'plus'} onPress={handleUploadMoreImages} />
             )}
-          </View>
-          <FlatList
-            data={galleryImages}
-            numColumns={3}
-            ListEmptyComponent={
+          </Appbar.Header>
+          <SafeAreaView style={styles.container}>
+            <FlatList
+              data={galleryImages}
+              numColumns={3}
+              ListEmptyComponent={
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    onPress={handleUploadMoreImages}
+                    style={styles.selectButton}>
+                    <View style={styles.containerButton}>
+                      <FontAwesomeIcon
+                        icon={faCamera}
+                        color="#0073BA"
+                        size={14}
+                      />
+
+                      <Text style={styles.selectButtonText}>
+                        เลือกจากอัลบั้ม
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              }
+              renderItem={({item}) => (
+                <View
+                  style={[
+                    styles.imageContainer,
+                    item.defaultChecked && styles.selected,
+                  ]}>
+                  <Image source={{uri: item.url}} style={styles.image} />
+                  <View style={styles.checkboxContainer}>
+                    <CustomCheckbox
+                      checked={item.defaultChecked}
+                      onPress={() => handleCheckbox(item.id)}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={styles.expandButton}
+                    onPress={() => {
+                      setSelectedImage(item.url);
+                      setModalVisible(true);
+                    }}>
+                    <FontAwesomeIcon
+                      icon={faExpand}
+                      style={{marginVertical: 5}}
+                      color="white"
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+              keyExtractor={item => item?.id?.toString()}
+            />
+            {data && data.length > 0 && (
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
-                  onPress={handleUploadMoreImages}
-                  style={styles.selectButton}>
-                  <View style={styles.containerButton}>
-                    <FontAwesomeIcon
-                      icon={faCamera}
-                      color="#0073BA"
-                      size={14}
-                    />
-
-                    <Text style={styles.selectButtonText}>เลือกจากอัลบั้ม</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            }
-            renderItem={({item}) => (
-              <View
-                style={[
-                  styles.imageContainer,
-                  item.defaultChecked && styles.selected,
-                ]}>
-                <Image source={{uri: item.url}} style={styles.image} />
-                <View style={styles.checkboxContainer}>
-                  <CustomCheckbox
-                    checked={item.defaultChecked}
-                    onPress={() => handleCheckbox(item.id)}
-                  />
-                </View>
-                <TouchableOpacity
-                  style={styles.expandButton}
+                  style={[
+                    styles.uploadButton,
+                    styles.saveButton,
+                    !watch('serviceImages') ||
+                    watch('serviceImages').length === 0
+                      ? styles.disabledButton
+                      : null,
+                  ]}
                   onPress={() => {
-                    setSelectedImage(item.url);
-                    setModalVisible(true);
-                  }}>
-                  <FontAwesomeIcon
-                    icon={faExpand}
-                    style={{marginVertical: 5}}
-                    color="white"
-                  />
+                    if (serviceImages) onClose();
+                  }}
+                  disabled={
+                    !watch('serviceImages') ||
+                    watch('serviceImages').length === 0
+                  }>
+                  <Text style={styles.uploadButtonText}>บันทึก {watch('serviceImages').length} รูป</Text>
                 </TouchableOpacity>
               </View>
             )}
-            keyExtractor={item => item?.id?.toString()}
-          />
-          {data && data.length > 0 && (
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.uploadButton,
-                  styles.saveButton,
-                  !watch('serviceImages') || watch('serviceImages').length === 0
-                    ? styles.disabledButton
-                    : null,
-                ]}
-                onPress={() => {
-                  if (serviceImages) onClose();
-                }}
-                disabled={
-                  !watch('serviceImages') || watch('serviceImages').length === 0
-                }>
-                <Text style={styles.uploadButtonText}>บันทึก</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          <Modal
-            isVisible={modalVisible}
-            onBackdropPress={() => setModalVisible(false)}>
-            <View style={styles.modalContainer}>
-              <Image source={{uri: selectedImage}} style={styles.modalImage} />
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setModalVisible(false)}>
-                <Text>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </Modal>
-        </SafeAreaView>
+            <Modal
+              isVisible={modalVisible}
+              onBackdropPress={() => setModalVisible(false)}>
+              <View style={styles.modalContainer}>
+                <Image
+                  source={{uri: selectedImage}}
+                  style={styles.modalImage}
+                />
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setModalVisible(false)}>
+                  <Text>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </Modal>
+          </SafeAreaView>
+        </>
       )}
     </Modal>
   );

@@ -73,7 +73,6 @@ const EditQuotation = ({navigation, route}: Props) => {
   const thaiDateFormatter = useThaiDateFormatter();
   const [editServicesModal, setEditServicesModal] = useState(false);
   const [workerModal, setWorkerModal] = useState(false);
-  const [pickerVisible, setPickerVisible] = useState(false);
   const [workerPicker, setWorkerpicker] = useState(false);
   const [singatureModal, setSignatureModal] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
@@ -100,7 +99,7 @@ const EditQuotation = ({navigation, route}: Props) => {
     dateEnd: quotation.dateEnd,
     docNumber: quotation.docNumber,
     workers: quotation.workers
-      ? quotation.workers.map((item: any) => item.worker)
+      ? quotation.workers
       : '',
     sellerSignature: quotation.sellerSignature,
   };
@@ -118,6 +117,11 @@ const EditQuotation = ({navigation, route}: Props) => {
   const customer = useWatch({
     control: methods.control,
     name: 'customer',
+  });
+
+  const sellerSignature = useWatch({
+    control: methods.control,
+    name: 'sellerSignature',
   });
 
   console.log('customer', customer);
@@ -140,15 +144,20 @@ const EditQuotation = ({navigation, route}: Props) => {
   }, [customer.name, customer.address]);
 
   const isDisabled = !customer.name || services.length === 0;
+  const [pickerVisible, setPickerVisible] = useState(sellerSignature !== ''? true : false);
 
   const useSignature = () => {
-    if (companyUser?.signature) {
-      setPickerVisible(!pickerVisible);
-      setSignature(companyUser?.signature);
-    } else {
-      setSignatureModal(!singatureModal);
-      setPickerVisible(!pickerVisible);
-    }
+    // Toggle the state of the picker and accordingly set the modal visibility
+    setPickerVisible(prevPickerVisible => {
+      const newPickerVisible = !prevPickerVisible;
+      setSignatureModal(newPickerVisible);
+      if (!newPickerVisible) {
+        methods.setValue('sellerSignature', '', {shouldDirty: true});
+      } else {
+        methods.setValue('sellerSignature', signature, {shouldDirty: true});
+      }
+      return newPickerVisible;
+    });
   };
   const onCloseSignature = () => {
     setPickerVisible(false);
@@ -246,7 +255,7 @@ const EditQuotation = ({navigation, route}: Props) => {
     setVisibleModalIndex(null);
     remove(index);
   };
-  console.log('services', services);
+  console.log('quotation', quotation);
   return (
     <>
       <Appbar.Header
@@ -417,7 +426,7 @@ const EditQuotation = ({navigation, route}: Props) => {
                   thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
                   ios_backgroundColor="#3e3e3e"
                   onValueChange={() => useSignature()}
-                  value={signature ? true : false}
+                  value={pickerVisible ? true : false}
                   style={Platform.select({
                     ios: {
                       transform: [{scaleX: 0.7}, {scaleY: 0.7}],
@@ -458,29 +467,29 @@ const EditQuotation = ({navigation, route}: Props) => {
                 />
               </Modal>
               <Modal
-                isVisible={singatureModal}
-                style={styles.modal}
-                onBackdropPress={onCloseSignature}>
-                <Appbar.Header
-                  mode="center-aligned"
-                  style={{
-                    backgroundColor: 'white',
-                    width: Dimensions.get('window').width,
-                  }}>
-                  <Appbar.Action icon={'close'} onPress={onCloseSignature} />
-                  <Appbar.Content
-                    title="ลายเซ็นผู้เสนอราคา"
-                    titleStyle={{fontSize: 18, fontWeight: 'bold'}}
-                  />
-                </Appbar.Header>
-                <SafeAreaView style={styles.containerModal}>
-                  <SignatureComponent
-                    onClose={() => setSignatureModal(false)}
-                    setSignatureUrl={setSignature}
-                    onSignatureSuccess={handleSignatureSuccess}
-                  />
-                </SafeAreaView>
-              </Modal>
+          isVisible={singatureModal}
+          style={styles.modal}
+          onBackdropPress={onCloseSignature}>
+          <Appbar.Header
+            mode="center-aligned"
+            style={{
+              backgroundColor: 'white',
+              width: Dimensions.get('window').width,
+            }}>
+            <Appbar.Action icon={'close'} onPress={onCloseSignature} />
+            <Appbar.Content
+              title="ลายเซ็นผู้เสนอราคา"
+              titleStyle={{fontSize: 18, fontWeight: 'bold'}}
+            />
+          </Appbar.Header>
+          <SafeAreaView style={styles.containerModal}>
+            <SignatureComponent
+              onClose={() => setSignatureModal(false)}
+              setSignatureUrl={setSignature}
+              onSignatureSuccess={handleSignatureSuccess}
+            />
+          </SafeAreaView>
+        </Modal>
             </View>
           </ScrollView>
           <Modal

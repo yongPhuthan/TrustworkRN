@@ -146,6 +146,10 @@ const AddNewWorker = ({isVisible, onClose}: ExistingModalProps) => {
       }
   
       // Handle successful worker creation here, if necessary
+      if (response.ok) {
+        queryClient.invalidateQueries(['workers', code]);
+
+      }
   
     } catch (err) {
       // Handle errors from image upload or worker creation
@@ -159,7 +163,7 @@ const AddNewWorker = ({isVisible, onClose}: ExistingModalProps) => {
     }
   };
   
-  const uploadImageToFbStorage = async (imagePath: string) => {
+  const uploadImageToFbStorage = async (imagePath: string): Promise<string | undefined> => {
     if (!imagePath) {
       console.log('No image path provided');
       return;
@@ -181,13 +185,14 @@ const AddNewWorker = ({isVisible, onClose}: ExistingModalProps) => {
       case 'png':
         contentType = 'image/png';
         break;
+      case 'webp':
+        contentType = 'image/webp';
+        break;
       default:
         console.error('Unsupported file type:', fileType);
         return;
     }
-    const filePath = __DEV__
-      ? `Test/${code}/workers/${filename}`
-      : `${code}/workers/${filename}`;
+    const filePath =`${code}/workers/${getValues('name')}`
     try {
       const reference = firebase.storage().ref(filePath);
       const task = reference.putFile(imagePath, { contentType });
@@ -216,11 +221,13 @@ const AddNewWorker = ({isVisible, onClose}: ExistingModalProps) => {
           const url = await reference.getDownloadURL();
           console.log('Upload to Firebase Storage success', url);
           resolve(url);
+     
         }
       );
     });
     } catch (error) {
-      console.error('There was a problem with the fetch operation:', error);
+      return Promise.reject('There was a problem with the fetch operation'); // Ensure to return or throw an error
+
     }
   };
   const {mutate, isLoading} = useMutation(createWorker, {

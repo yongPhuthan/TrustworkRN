@@ -1,8 +1,8 @@
-import { BACK_END_SERVER_URL } from '@env';
+import {BACK_END_SERVER_URL} from '@env';
 import messaging from '@react-native-firebase/messaging';
-import { DrawerActions } from '@react-navigation/native';
-import { useQueryClient } from '@tanstack/react-query';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import {DrawerActions} from '@react-navigation/native';
+import {useQueryClient} from '@tanstack/react-query';
+import React, {useContext, useEffect, useMemo, useState} from 'react';
 import {
   Alert,
   Dimensions,
@@ -13,17 +13,17 @@ import {
   View,
 } from 'react-native';
 import Modal from 'react-native-modal';
-import { FilterButton } from '../../components/ui/Dashboard/FilterButton'; // Adjust the import path as necessary
+import {FilterButton} from '../../components/ui/Dashboard/FilterButton'; // Adjust the import path as necessary
 import firebase from '../../firebase';
-import { useActiveFilter } from '../../hooks/dashboard/useActiveFilter';
-import { useFilteredData } from '../../hooks/dashboard/useFilteredData';
-import { useRemoveQuotation } from '../../hooks/quotation/dashboard/useRemoveQuotation';
+import {useActiveFilter} from '../../hooks/dashboard/useActiveFilter';
+import {useFilteredData} from '../../hooks/dashboard/useFilteredData';
+import {useRemoveQuotation} from '../../hooks/quotation/dashboard/useRemoveQuotation';
 import CardDashBoard from '../../components/CardDashBoard';
-import { useUser } from '../../providers/UserContext';
+import {useUser} from '../../providers/UserContext';
 import * as stateAction from '../../redux/actions';
-import { Store } from '../../redux/store';
-import { CompanyUser, Customer, Quotation, Service } from '../../types/docType';
-import { DashboardScreenProps } from '../../types/navigationType';
+import {Store} from '../../redux/store';
+import {CompanyUser, Customer, Quotation, Service} from '../../types/docType';
+import {DashboardScreenProps} from '../../types/navigationType';
 
 import {
   ActivityIndicator,
@@ -35,13 +35,11 @@ import {
   PaperProvider,
   Portal,
 } from 'react-native-paper';
-import {
-  requestNotifications
-} from 'react-native-permissions';
+import {requestNotifications} from 'react-native-permissions';
 import useFetchDashboard from '../../hooks/quotation/dashboard/useFetchDashboard'; // adjust the path as needed
 import {
   QuotationStatus,
-  QuotationStatusKey
+  QuotationStatusKey,
 } from '../../models/QuotationStatus';
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
@@ -49,7 +47,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const user = useUser();
   const email = user?.email;
   const {data, isLoading, isError, error} = useFetchDashboard();
-  const { activeFilter, updateActiveFilter } = useActiveFilter();
+  const {activeFilter, updateActiveFilter} = useActiveFilter();
 
   const {width, height} = Dimensions.get('window');
   const [isLoadingAction, setIsLoadingAction] = useState(false);
@@ -58,12 +56,9 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const [isModalSignContract, setIsModalSignContract] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null) as any;
   const [selectedIndex, setSelectedIndex] = useState(null) as any;
-  const [originalData, setOriginalData] = useState<
-    Quotation[] | null
-  >(null);
+  const [originalData, setOriginalData] = useState<Quotation[] | null>(null);
   const {dispatch}: any = useContext(Store);
   const filteredData = useFilteredData(originalData, activeFilter);
-
 
   const [companyData, setCompanyData] = useState<CompanyUser | null>(null);
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
@@ -137,15 +132,15 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   };
   useEffect(() => {
     if (data) {
-      console.log('customer', data[1][0].services);
-      setCompanyData(data[0]);
-      setQuotationData(data[1]);
-      setOriginalData(data[1]);
-      dispatch(stateAction.code_company(data[0].code));
-      if (user) {
-        if (data[0] === null) {
-          navigation.navigate('CreateCompanyScreen');
-        }
+      // Ensuring data[0] exists and has a property `code` before attempting to access it
+      if (!data[0]) {
+        navigation.navigate('CreateCompanyScreen');
+      } else {
+        // If data[0] exists and has a non-null `code`, proceed with your logic
+        setCompanyData(data[0]);
+        setQuotationData(data[1]);
+        setOriginalData(data[1]);
+        dispatch(stateAction.code_company(data[0].code));
       }
     }
   }, [data]);
@@ -233,7 +228,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     setSelectedIndex(null);
     setShowModal(false);
   };
-
+console.log('company',data[0])
   const editQuotation = async (services: Service[], quotation: Quotation) => {
     setIsLoadingAction(true);
     dispatch(stateAction.get_companyID(data[0].id));
@@ -245,7 +240,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       services,
     });
   };
-
 
   const renderItem = ({item, index}: any) => (
     <>
@@ -454,6 +448,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
               <FAB
                 style={styles.fabStyle}
                 icon="plus"
+                // onPress={()=>testConnection()}
                 onPress={() => createNewQuotation()}
                 color="white"
               />

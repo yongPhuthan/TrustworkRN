@@ -39,8 +39,8 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           backgroundColor: '#ffffff',
           alignItems: 'flex-start',
         }}>
-        <Text style={{fontSize: 18, fontWeight: 'bold', color: '#012b20'}}>
-          TRUSTH
+        <Text style={{fontSize: 20, fontWeight: 'bold', color: '#012b20'}}>
+          Trusthwork
         </Text>
       </View>
       <Divider style={{marginBottom: 20}} />
@@ -62,12 +62,12 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           active={props.state.index === 1}
           onPress={() => props.navigation.navigate('DashboardContract')}
         />
-        <PaperDrawer.Item
+        {/* <PaperDrawer.Item
           label="ส่งงาน"
           icon="clipboard-file-outline"
           active={props.state.index === 2}
           onPress={() => props.navigation.navigate('DashboardSubmit')}
-        />
+        /> */}
       </PaperDrawer.Section>
       <PaperDrawer.Section style={{marginTop: 'auto'}} showDivider={false}>
         <PaperDrawer.Item
@@ -126,7 +126,7 @@ function DashboardDrawer() {
           // ... other common options ...
         }}
       />
-      <Drawer.Screen
+      {/* <Drawer.Screen
         name="DashboardSubmit"
         component={DashboardSubmit}
         options={{
@@ -137,14 +137,13 @@ function DashboardDrawer() {
             <TouchableOpacity
               style={{marginRight: 10}}
               onPress={() => {
-                /* handle press */
+  
               }}>
               <FontAwesomeIcon icon={faBell} color="#1f303cff" size={22} />
             </TouchableOpacity>
           ),
-          // ... other common options ...
         }}
-      />
+      /> */}
 
       {/* ... other screens ... */}
     </Drawer.Navigator>

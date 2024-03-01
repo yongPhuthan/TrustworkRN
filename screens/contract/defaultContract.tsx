@@ -333,7 +333,7 @@ const DefaultContract = ({navigation}: Props) => {
       </View>
     );
   }
-console.log('defaultContractValues',defaultContractValues);
+console.log('quotation',quotation);
 
   const renderWanranty = (
     name: any,

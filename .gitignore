@@ -28,4 +28,8 @@ amplify-gradle-config.json
 amplifytools.xcconfig
 .secret-*
 **.sample
+.env
+android/app/google-services.json
+**/GoogleService-Info.plist
+
 #amplify-do-not-edit-end

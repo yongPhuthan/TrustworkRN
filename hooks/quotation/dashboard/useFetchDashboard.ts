@@ -10,14 +10,12 @@ const useFetchDashboard = () => {
     if (!user) {
       throw new Error('User not authenticated');
     }
-    console.log('BACK_END_SERVER_URL22', BACK_END_SERVER_URL);
 
     const {email} = user;
     if (!email) {
       throw new Error('Email not found');
     }
     const token = await user.getIdToken(true);
-    console.log('url', `${BACK_END_SERVER_URL}/api/dashboard/dashboard?email=${encodeURIComponent(email)}`);
 
     const response = await fetch(
       `${BACK_END_SERVER_URL}/api/dashboard/dashboard?email=${encodeURIComponent(
@@ -31,7 +29,6 @@ const useFetchDashboard = () => {
         },
       },
     );
-    console.log('url33', `${BACK_END_SERVER_URL}/api/dashboard/dashboard?email=${encodeURIComponent(email)}`);
 
     if (!response.ok) {
       throw new Error('Network response was not ok');

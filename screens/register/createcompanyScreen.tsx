@@ -17,7 +17,7 @@ import {
   ProgressBar,
   TextInput,
 } from 'react-native-paper';
-
+import RNFS from 'react-native-fs';
 import React, {useEffect, useState} from 'react';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
@@ -31,7 +31,7 @@ import {
   MediaType,
   launchImageLibrary,
 } from 'react-native-image-picker';
-
+import firebase from '../../firebase';
 import {Controller, useForm, useWatch} from 'react-hook-form';
 
 import {BACK_END_SERVER_URL} from '@env';
@@ -59,7 +59,8 @@ const checkboxStyle = {
   borderColor: 'grey', // Border color
   backgroundColor: 'white', // Background color
 };
-const createCompanySeller = async ({data, token}) => {
+
+const createCompanySeller = async ({data, token} : any) => {
   if (!token) {
     throw new Error('Auth token is not provided.');
   }
@@ -119,6 +120,8 @@ const CreateCompanyScreen = ({navigation}: Props) => {
     },
     resolver: yupResolver(companyValidationSchema),
   });
+
+
   const logo = useWatch({
     control,
     name: 'logo',
@@ -179,6 +182,7 @@ const CreateCompanyScreen = ({navigation}: Props) => {
   // !bizName || !userName || !userLastName || !selectedCategories.length;
   const isNextDisabledPage2 = !address || !mobileTel;
   useEffect(() => {
+
     setCode(Math.floor(100000 + Math.random() * 900000).toString());
     const API_URL = `${BACK_END_SERVER_URL}/api/company/getCategories`;
 
@@ -186,7 +190,7 @@ const CreateCompanyScreen = ({navigation}: Props) => {
       .then(response => response.json())
       .then(data =>
         setCategories(
-          data.map(category => ({
+          data.map((category : any) => ({
             key: category.id.toString(),
             value: category.name,
           })),
@@ -241,74 +245,29 @@ const CreateCompanyScreen = ({navigation}: Props) => {
       }
     });
   };
-
   const uploadImageToServer = async (imageUri: string): Promise<void> => {
     setIsImageUpload(true);
     if (!user || !user.email) {
       console.error('User or user email is not available');
       return;
     }
-    const token = await user.getIdToken(true);
-    if (!token) {
-      // Alert error
-      Alert.alert('Error', 'Unable to get user token');
-
-      return;
-    }
-    // Determine storage path based on development or production mode
-    const storagePath = __DEV__
-      ? `Test/${code}/logo/${imageUri.substring(imageUri.lastIndexOf('/') + 1)}`
-      : `${code}/logo/${imageUri.substring(imageUri.lastIndexOf('/') + 1)}`;
-
+  
+    const storagePath = `${code}/logo/${imageUri.substring(imageUri.lastIndexOf('/') + 1)}`;
+  
     try {
-      // Fetch the signed URL from your backend
-      const signedUrlResponse: Response = await fetch(
-        `${BACK_END_SERVER_URL}/api/upload/getSignedUrl`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-
-            'Content-Type': 'application/json',
-            // Include authentication headers if needed
-          },
-          body: JSON.stringify({
-            filename: storagePath,
-            contentType: 'image/jpeg', // or 'image/png' based on your image type
-          }),
-        },
-      );
-
-      if (!signedUrlResponse.ok) {
-        throw new Error('Unable to get signed URL');
-      }
-
-      const {signedUrl} = await signedUrlResponse.json();
-
-      // Fetch the image and convert to blob
-      const image: Response = await fetch(imageUri);
-      const blob: Blob = await image.blob();
-
-      // Upload the image blob to the signed URL
-      const uploadResponse: Response = await fetch(signedUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'image/jpeg',
-        },
-        body: blob,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload image');
-      }
-
+      // Create a reference to the Firebase Storage location
+      const reference = firebase.storage().ref(storagePath);
+  
+      // Upload the image file directly from the client
+      console.log('Uploading image to Firebase Storage', imageUri);
+      await reference.putFile(imageUri); // For React Native, use putFile with the local file URI
+  
       console.log('Image uploaded successfully');
-
-      // Construct the access URL
-      const accessUrl = `https://firebasestorage.googleapis.com/v0/b/workerfirebase-f1005.appspot.com/o/${encodeURIComponent(
-        storagePath,
-      )}?alt=media`;
-
+  
+      // Get the download URL
+      const accessUrl = await reference.getDownloadURL();
+      console.log('Download URL:', accessUrl);
+  
       setValue('logo', accessUrl);
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -357,7 +316,8 @@ const CreateCompanyScreen = ({navigation}: Props) => {
                     marginHorizontal: 100,
                     padding: 10,
                   }}
-                  onPress={selectImage}>
+                  onPress={selectImage}
+                  >
                   {isImageUpload ? (
                     <ActivityIndicator size="small" color="gray" />
                   ) : value ? (

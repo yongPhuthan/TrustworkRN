@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import FastImage from 'react-native-fast-image';
 import firebase from '../../firebase';
+import {v4 as uuidv4} from 'uuid';
 
 import {
   BACK_END_SERVER_URL
@@ -18,7 +19,15 @@ import {
   useWatch
 } from 'react-hook-form';
 import {
+  Appbar,
+  Button,
+  List,
+  Checkbox,
+  Divider,
   ActivityIndicator,
+} from 'react-native-paper';
+import {
+  
   Alert,
   Image,
   StyleSheet,
@@ -44,11 +53,12 @@ const SignatureComponent = ({
 }: SignaturePadProps) => {
   const ref = useRef<any>();
   const [isImageUpload, setIsImageUpload] = useState(false);
+  const [isSigned, setIsSigned] = useState(false); 
 
   const [createNewSignature, setCreateNewSignature] = useState<boolean>(false);
   const queryClient = useQueryClient();
   const slugify = useSlugify();
-
+const imageId = uuidv4();
   const user = useUser();
   const [isSignatureUpload, setIsSignatureUpload] = useState<boolean>(false);
   const context = useFormContext();
@@ -123,10 +133,7 @@ const SignatureComponent = ({
     name: 'companyUser.signature',
   });
 
-  const companyUser= useWatch({
-    control: control,
-    name: 'companyUser',
-  });
+
 
   const sellerSignature = useWatch({
     control: control,
@@ -149,9 +156,7 @@ const SignatureComponent = ({
     }
   
     const filename = `signature${code}.png`;
-    const storagePath = __DEV__
-      ? `Test/${code}/signature/${filename}`
-      : `${code}/signature/${filename}`;
+    const storagePath = `${code}/signature/${filename}${imageId}`
   
     try {
       const storageRef = firebase.storage().ref(storagePath);
@@ -169,13 +174,11 @@ const SignatureComponent = ({
   
       console.log('Uploaded a base64 string!', snapshot);
   
-      // Construct the download URL manually
-      const bucket = snapshot.metadata.bucket;
-      const path = encodeURIComponent(snapshot.metadata.fullPath);
-      const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${path}?alt=media`;
+      // Use getDownloadURL to get the URL for the uploaded file
+      const downloadUrl = await storageRef.getDownloadURL();
+      console.log('File uploaded successfully. URL:', downloadUrl);
   
-      console.log('File uploaded successfully. URL:', publicUrl);
-      return publicUrl;
+      return downloadUrl;
     } catch (error) {
       console.error('Error uploading file to Firebase:', error);
       return null; 
@@ -217,7 +220,9 @@ const SignatureComponent = ({
     },
     [mutate, setValue, setCreateNewSignature, onClose]
   );
-
+  const handleBegin = () => {
+    setIsSigned(true);
+  };
   const handleSave = (signatureUrl: string) => {
     setValue('sellerSignature', signatureUrl, {shouldDirty: true});
     setCreateNewSignature(false);
@@ -237,6 +242,17 @@ const SignatureComponent = ({
         .catch(error => console.error('Error prefetching image:', error));
     }
   }, [companySignature]);
+  const style = `.m-signature-pad--footer {display: none; margin: 0px;}`;
+  const handleClear = () => {
+    setIsSigned(false);
+
+    ref.current.clearSignature();
+
+  };
+
+  const handleConfirm = () => {
+    ref.current.readSignature();
+  };
   return (
     <>
       {isSignatureUpload || isLoading ? (
@@ -279,13 +295,23 @@ const SignatureComponent = ({
         </>
       ) : (
         <View style={styles.container}>
+          <View>
           <Signature
             penColor="#0000FF"
+            webStyle={style}
+            onBegin={handleBegin}
+            style={{ width: 300}}
             ref={ref}
             onOK={img => handleUploadNewSignatureAndSave(img)}
             onEmpty={() => console.log('Empty')}
             descriptionText="เซ็นเอกสารด้านบน"
           />
+          </View>
+         
+          <View style={styles.row}>
+          <Button mode='outlined' icon="autorenew" onPress={handleClear} >เซ็นใหม่</Button>
+        <Button mode='contained' disabled={!isSigned} icon="check-bold"  onPress={handleConfirm} >บันทึก</Button>
+        </View>
         </View>
       )}
     </>
@@ -309,8 +335,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   container: {
-    flex: 1,
-    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 400,
+    padding: 10,
   },
   underline: {
     height: 1,
@@ -359,6 +387,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  row: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "90%",
+    alignItems: "center",
   },
 });
 

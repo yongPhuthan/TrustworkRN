@@ -1,26 +1,29 @@
-import { BACK_END_SERVER_URL } from '@env';
-import { useRoute } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
-import React, { useContext, useState } from 'react';
+import {BACK_END_SERVER_URL} from '@env';
+import {useRoute} from '@react-navigation/native';
+import {useQuery} from '@tanstack/react-query';
+import React, {useContext, useState} from 'react';
 import {
-  useFormContext,
-  useWatch
-} from 'react-hook-form';
-import {
+  Appbar,
+  Button,
+  ProgressBar,
   ActivityIndicator,
-  Dimensions,
+  
+} from 'react-native-paper';
+import {useFormContext, useWatch} from 'react-hook-form';
+import {
+ Dimensions,
   FlatList,
   Image,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import Modal from 'react-native-modal';
-import { Checkbox } from 'react-native-paper';
-import { useUser } from '../../providers/UserContext';
-import { Store } from '../../redux/store';
-import { Workers } from '../../types/docType';
+import {Checkbox} from 'react-native-paper';
+import {useUser} from '../../providers/UserContext';
+import {Store} from '../../redux/store';
+import {Workers} from '../../types/docType';
 import AddNewWorker from './addNew';
 interface ExistingModalProps {
   isVisible: boolean;
@@ -29,11 +32,7 @@ interface ExistingModalProps {
 
 const {width, height} = Dimensions.get('window');
 const imageContainerWidth = width / 3 - 10;
-const ExistingWorkers = ({
-  isVisible,
-  onClose,
-  
-}: ExistingModalProps) => {
+const ExistingWorkers = ({isVisible, onClose}: ExistingModalProps) => {
   const [workers, setWorkers] = useState<Workers[]>([]);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const context = useFormContext();
@@ -53,7 +52,7 @@ const ExistingWorkers = ({
     dispatch,
   }: any = useContext(Store);
 
-  const fetchExistingMaterials = async () => {
+  const fetchExistingWorkers = async () => {
     if (!user) {
       throw new Error('User not authenticated');
     } else {
@@ -69,7 +68,7 @@ const ExistingWorkers = ({
         },
       });
       const data = await response.json();
-console.log(data)
+      console.log(data);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -78,15 +77,14 @@ console.log(data)
   };
 
   const {data, isLoading, isError} = useQuery(
-    ['workers'],
-    () => fetchExistingMaterials().then(res => res),
+    ['workers', code],
+    () => fetchExistingWorkers().then(res => res),
     {
       onSuccess: data => {
         setWorkers(data.workers);
       },
     },
   );
-  
 
   const currentWorkers = useWatch({
     control,
@@ -94,14 +92,16 @@ console.log(data)
   });
 
   const handleSelectWorker = (workers: Workers) => {
-    const workerIndex = currentWorkers.findIndex((worker:any) => worker.id === workers.id);
+    const workerIndex = currentWorkers.findIndex(
+      (worker: any) => worker.id === workers.id,
+    );
     if (workerIndex !== -1) {
       const updatedWorkers = [...currentWorkers];
       updatedWorkers.splice(workerIndex, 1);
-      setValue('workers', updatedWorkers);
+      setValue('workers', updatedWorkers,{shouldDirty:true});
     } else {
       const updatedWorkers = [...currentWorkers, workers];
-      setValue('workers', updatedWorkers);
+      setValue('workers', updatedWorkers,{shouldDirty:true});
     }
   };
 
@@ -112,7 +112,7 @@ console.log(data)
       </View>
     );
   }
-  if(isError) {
+  if (isError) {
     return (
       <View style={styles.loadingContainer}>
         <Text>เกิดข้อผิดพลาด Worker</Text>
@@ -128,10 +128,28 @@ console.log(data)
     setIsOpenModal(true);
   };
   return (
-    < >
+    <>
+     <Appbar.Header
+              mode="center-aligned"
+              style={{
+                backgroundColor: 'white',
+                width: Dimensions.get('window').width,
+              }}>
+              <Appbar.Action
+                icon={'close'}
+                onPress={() => onClose()
+                }
+              />
+              <Appbar.Content
+                title="เลือกทีมงานติดตั้ง"
+                titleStyle={{fontSize: 18, fontWeight: 'bold'}}
+              />
+               <Appbar.Action
+                icon={'plus'}
+                onPress={handleAddNewProduct}
+                />
+            </Appbar.Header>
       <View style={styles.container}>
-        
-
         <FlatList
           data={workers}
           renderItem={({item, index}) => (
@@ -139,14 +157,17 @@ console.log(data)
               <TouchableOpacity
                 style={[
                   styles.card,
-                  currentWorkers.some((m:any) => m.id === item.id)
+                  currentWorkers.some((m: any) => m.id === item.id)
                     ? styles.cardChecked
                     : null,
                 ]}
                 onPress={() => handleSelectWorker(item)}>
                 <Checkbox.Android
-                  
-                  status={currentWorkers.some( (worker:any) => worker.id === item.id) ? 'checked' : 'unchecked'}
+                  status={
+                    currentWorkers.some((worker: any) => worker.id === item.id)
+                      ? 'checked'
+                      : 'unchecked'
+                  }
                   onPress={() => handleSelectWorker(item)}
                   style={styles.checkboxContainer}
                 />
@@ -185,12 +206,14 @@ console.log(data)
           </TouchableOpacity>
         )}
       </View>
-      <Modal isVisible={isOpenModal} style={styles.modal} onBackdropPress={() => setIsOpenModal(false)}>
-        
-      <AddNewWorker
+      <Modal
         isVisible={isOpenModal}
-        onClose={() => setIsOpenModal(false)}
-      />
+        style={styles.modal}
+        onBackdropPress={() => setIsOpenModal(false)}>
+        <AddNewWorker
+          isVisible={isOpenModal}
+          onClose={() => setIsOpenModal(false)}
+        />
       </Modal>
     </>
   );
@@ -303,8 +326,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 10,
     paddingHorizontal: 20, // Adjusted from 500 to a smaller value
-
-
   },
   closeButton: {
     paddingVertical: 10,
@@ -378,7 +399,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'Sukhumvit Set Bold',
   },
-  
+
   icon: {
     color: '#012b20',
   },

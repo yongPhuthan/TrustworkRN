@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {TextInput} from 'react-native-paper';
+import {TextInput, Button} from 'react-native-paper';
 
 import {Controller, useForm, useWatch} from 'react-hook-form';
 
@@ -18,7 +18,6 @@ import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {Button} from 'react-native-paper';
 import firebase from '../../firebase';
 import {ParamListBase} from '../../types/navigationType';
 
@@ -50,6 +49,29 @@ const RegisterScreen = ({navigation}: Props) => {
   const [error, setError] =
     useState<FirebaseAuthTypes.NativeFirebaseAuthError | null>(null);
 
+
+  const {
+    handleSubmit,
+    control,
+    formState: {isValid, isDirty, errors},
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+      registrationCode: '',
+      confirmPassword: '',
+    },
+    resolver: yupResolver(schema),
+  });
+  const email = useWatch({control, name: 'email'});
+  const password = useWatch({control, name: 'password'});
+  const confirmPassword = useWatch({control, name: 'confirmPassword'});
+  const registrationCode = useWatch({control, name: 'registrationCode'});
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  function isFirebaseAuthError(error: any): error is FirebaseAuthTypes.NativeFirebaseAuthError {
+    return error && typeof error.code === 'string' && typeof error.message === 'string';
+  }
   const signUpEmail = async () => {
     setUserLoading(true);
     await AsyncStorage.setItem('userEmail', email);
@@ -161,113 +183,23 @@ const RegisterScreen = ({navigation}: Props) => {
       }
     } catch (error) {
       let errorMessage = '';
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'อีเมลล์นี้ถูกสมัครสมาชิกไปแล้ว';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'กรอกอีเมลล์ไม่ถูกต้อง';
+      if (isFirebaseAuthError(error)) {
+        // Now TypeScript knows `error` is a FirebaseAuthTypes.NativeFirebaseAuthError
+        if (error.code === 'auth/email-already-in-use') {
+          errorMessage = 'อีเมลล์นี้ถูกสมัครสมาชิกไปแล้ว';
+        } else if (error.code === 'auth/invalid-email') {
+          errorMessage = 'กรอกอีเมลล์ไม่ถูกต้อง';
+        }
+        setError({ ...error, message: errorMessage });
+      } else {
+        // Handle the case where error is not a FirebaseAuthTypes.NativeFirebaseAuthError
+        console.error("Caught an error that's not a FirebaseAuthError", error);
+        // Optionally, set a generic error message
+        setError({ code: 'unknown', message: 'An unknown error occurred' } as any);
       }
-      setError({...error, message: errorMessage});
       setUserLoading(false);
     }
-  };
-  const {
-    handleSubmit,
-    control,
-    formState: {isValid, isDirty, errors},
-  } = useForm({
-    mode: 'onChange',
-    defaultValues: {
-      email: '',
-      password: '',
-      registrationCode: '',
-      confirmPassword: '',
-    },
-    resolver: yupResolver(schema),
-  });
-  const email = useWatch({control, name: 'email'});
-  const password = useWatch({control, name: 'password'});
-  const confirmPassword = useWatch({control, name: 'confirmPassword'});
-  const registrationCode = useWatch({control, name: 'registrationCode'});
-  const [passwordVisible, setPasswordVisible] = useState(false);
-
-  // const signUpEmail = async () => {
-  //   setUserLoading(true);
-  //   await AsyncStorage.setItem('userEmail', email);
-  //   await AsyncStorage.setItem('userPassword', password);
-
-  //   if (password !== confirmPassword) {
-  //     setError({
-  //       code: 'auth/passwords-not-matching',
-  //       message: 'รหัสผ่านไม่ตรงกัน',
-  //       userInfo: {
-  //         authCredential: null,
-  //         resolver: null,
-  //       },
-  //       name: 'FirebaseAuthError',
-  //       namespace: '',
-  //       nativeErrorCode: '',
-  //       nativeErrorMessage: '',
-  //     });
-  //     setUserLoading(false);
-  //     return;
-  //   }
-  //   try {
-  //     const userCredential = await firebase
-  //       .auth()
-  //       .createUserWithEmailAndPassword(email, password);
-  //     const user = userCredential.user;
-  //     if (!user) {
-  //       throw new Error(
-  //         'User creation was successful, but no user data was returned.',
-  //       );
-  //     }
-  //     if (!user || !user.email) {
-  //       return;
-  //     }
-  //     try {
-  //       const token = await user.getIdToken(true);
-
-  //       const response = await fetch(
-  //         `${BACK_END_SERVER_URL}/api/company/createUser`,
-  //         {
-  //           method: 'POST',
-  //           headers: {
-  //             'Content-Type': 'application/json',
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //           body: JSON.stringify({email: user.email, uid: user.uid}),
-  //         },
-  //       );
-  //       if (!response.ok) {
-  //         throw new Error('Failed to create user on the server');
-  //       }
-
-  //       await response.json();
-  //       navigation.navigate('CreateCompanyScreen');
-
-  //       setUserLoading(false);
-  //       // Proceed with additional client-side logic if needed
-  //     } catch (serverError) {
-  //       Alert.alert(
-  //         'เกิดข้อผิดพลาด',
-  //         `Server-side user creation failed:, ${serverError}`,
-  //         [{text: 'OK', onPress: () => setUserLoading(false)}],
-  //         {cancelable: false},
-  //       );
-  //       // Handle server-side error
-  //     }
-  //   } catch (error) {
-  //     let errorMessage = '';
-  //     if (error.code === 'auth/email-already-in-use') {
-  //       errorMessage = 'อีเมลล์นี้ถูกสมัครสมาชิกไปแล้ว';
-  //     } else if (error.code === 'auth/invalid-email') {
-  //       errorMessage = 'กรอกอีเมลล์ไม่ถูกต้อง';
-  //     }
-  //     setError({...error, message: errorMessage});
-  //     setUserLoading(false);
-  //   }
-  // };
-  // console.log('BACK_END_SERVER_URL', BACK_END_SERVER_URL);
+  }
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
@@ -364,18 +296,11 @@ const RegisterScreen = ({navigation}: Props) => {
         />
         <Button
           mode="contained"
-          style={[
-            styles.pressable,
-            styles.getStartedButton,
-            !isValid && styles.disabledButton,
-          ]}
+          loading={userLoading}
+          // onPress={testConnection}
           onPress={signUpEmail}
           disabled={!isValid}>
-          {userLoading ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <Text style={styles.pressableText}>ลงทะเบียน</Text>
-          )}
+          <Text style={styles.pressableText}>ลงทะเบียน</Text>
         </Button>
       </View>
     </SafeAreaView>

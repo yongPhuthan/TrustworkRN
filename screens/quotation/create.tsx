@@ -9,6 +9,7 @@ import {
   Switch,
   Text,
   TouchableOpacity,
+  Alert,
   View,
 } from 'react-native';
 import {
@@ -58,19 +59,15 @@ interface Props {
 const Quotation = ({navigation}: Props) => {
   const {dispatch}: any = useContext(Store);
   // const { data, isLoading } = useQuery('data', fetchData);
-  const [email, setEmail] = useState('');
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const { data, isLoading, isError, error } = useFetchCompanyUser();
 
-  const [total, setTotal] = useState(0);
   const [companyUser, setCompanyUser] = useState<CompanyUser>();
 
   const [addCustomerModal, setAddCustomerModal] = useState(false);
   const { initialDocnumber, initialDateOffer, initialDateEnd } = useSelectedDates();
 
   const thaiDateFormatter = useThaiDateFormatter();
-  const user = useUser();
-  // const {fetchCompanyUser} = useFetchCompanyUser();
 
   const [workerModal, setWorkerModal] = useState(false);
   // const [customerName, setCustomerName] = useState('');
@@ -80,7 +77,6 @@ const Quotation = ({navigation}: Props) => {
 
   const [singatureModal, setSignatureModal] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
-  const [serviceIndex, setServiceIndex] = useState(0);
   const quotationId = uuidv4();
   const [fcmToken, setFtmToken] = useState('');
   const [showEditServiceModal, setShowEditServiceModal] = useState(false);
@@ -274,7 +270,25 @@ const Quotation = ({navigation}: Props) => {
         }}>
         <Appbar.BackAction
           onPress={() => {
-            navigation.goBack();
+            Alert.alert(
+              'ปิดหน้าต่าง',
+              'ยืนยันไม่บันทึกข้อมูลและปิดหน้าต่าง',
+              [
+                // The "No" button
+                // Does nothing but dismiss the dialog when pressed
+                {
+                  text: 'อยู่ต่อ',
+                  style: 'cancel',
+                },
+                // The "Yes" button
+                {
+                  text: 'ปิดหน้าต่าง',
+                  onPress: () => navigation.goBack(),
+                },
+              ],
+              {cancelable: false},
+            );
+
           }}
         />
         <Appbar.Content
@@ -503,24 +517,7 @@ const Quotation = ({navigation}: Props) => {
             isVisible={workerModal}
             onBackdropPress={() => setWorkerModal(false)}
             style={styles.modal}>
-            <Appbar.Header
-              mode="center-aligned"
-              style={{
-                backgroundColor: 'white',
-                width: Dimensions.get('window').width,
-              }}>
-              <Appbar.Action
-                icon={'close'}
-                onPress={() => {
-                  setWorkerpicker(!workerPicker);
-                  setWorkerModal(false);
-                }}
-              />
-              <Appbar.Content
-                title="เลือกทีมงานติดตั้ง"
-                titleStyle={{fontSize: 18, fontWeight: 'bold'}}
-              />
-            </Appbar.Header>
+           
             <ExistingWorkers
               onClose={() => {
                 setWorkerpicker(!workerPicker);

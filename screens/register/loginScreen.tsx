@@ -60,7 +60,6 @@ const LoginScreen = ({navigation}: Props) => {
       );
       const user = userCredential.user;
       const token = await user.getIdToken();
-      console.log('Token after login:', token); // Log the token
       if (token) {
         await AsyncStorage.setItem('userToken', token);
         setIsLoading(false);

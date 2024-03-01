@@ -17,7 +17,7 @@ import {useFormContext} from 'react-hook-form';
 import {Audit, Standard} from '../../types/docType';
 
 import Modal from 'react-native-modal';
-import {Appbar, Button, Checkbox} from 'react-native-paper';
+import {Appbar, Button, List, Checkbox, Divider} from 'react-native-paper';
 import {useUser} from '../../providers/UserContext';
 
 interface AuditModalProps {
@@ -48,10 +48,16 @@ const SelectStandard = ({
     watch,
     formState: {errors},
   } = context as any;
+
   const {
     state: {selectedAudit, companyID, serviceList},
     dispatch,
   }: any = useContext(Store);
+  const [yourExpanded, setYourExpanded] = React.useState(true);
+  const [badExpanded, setBadExpanded] = React.useState(true);
+
+  const handleYourExpandPress = () => setYourExpanded(!yourExpanded);
+  const handleBadExpandPress = () => setBadExpanded(!badExpanded);
   const fetchStandards = async () => {
     if (!user) {
       throw new Error('User not authenticated');
@@ -153,22 +159,6 @@ const SelectStandard = ({
         />
       </Appbar.Header>
       <SafeAreaView style={styles.container}>
-        {/* <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <FontAwesomeIcon icon={faClose} size={24} color="gray" />
-          </TouchableOpacity>
-          <View>
-            <Text style={styles.headerTitle}>
-              มาตรฐานงานติดตั้ง {headerText}
-            </Text>
-          </View>
-
-          <Text></Text>
-        </View>
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.description}>{description}</Text>
-        </View> */}
         <FlatList
           style={{padding: 10}}
           data={standardDatas}
@@ -185,26 +175,23 @@ const SelectStandard = ({
                 ]}
                 // onPress={() => handleSelectAudit(item)}
               >
-                {/* <CheckBox
-                    center
-                    checked={(watch('audits') || []).some(
-                      audit => audit.AuditData.id === item.id,
-                    )}
-                    onPress={() => handleSelectAudit(item)}
-                    containerStyle={styles.checkboxContainer}
-                    checkedColor="#012b20"
-                  /> */}
                 <View
                   style={{
                     flexDirection: 'column',
+                    width: '100%',
                   }}>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      height: 'auto',
+                    }}>
                     <Checkbox.Android
                       onPress={() => handleSelectStandard(item)}
                       color="#012b20"
                       style={{
                         flexDirection: 'row-reverse',
-                        alignItems: 'flex-start',
+                        alignItems: 'center',
                       }}
                       status={
                         (watch('standards') || []).some(
@@ -214,20 +201,88 @@ const SelectStandard = ({
                           : 'unchecked'
                       }
                     />
-                    <Text>{item.standardShowTitle}</Text>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                        color: 'black',
+                      }}>
+                      {item.standardShowTitle}
+                    </Text>
                   </View>
                   <View
                     style={{
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      flex: 1,
+                      justifyContent: 'center', // Center children horizontally
+                      alignItems: 'center', // Center children vertically
+                      paddingVertical: 10,
+                      width: '100%',
                     }}>
-                    <Image
-                      source={{uri: item.badStandardImage}}
-                      style={styles.productImage}
-                    />
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        width: '100%',
+                        paddingHorizontal: 10,
+                        gap: 20,
+                      }}>
+                      <View
+                        style={{
+                          flexDirection: 'column',
+                          marginHorizontal: 5,
+                        }}>
+                        <Image
+                          source={{uri: item.image}}
+                          style={styles.productImage}
+                        />
+                      </View>
 
-                    <Text style={styles.description}>{item.content}</Text>
+                      <View
+                        style={{
+                          flexDirection: 'column',
+                          marginHorizontal: 5, // เพิ่ม margin รอบข้างเล็กน้อยเพื่อแยกรูปภาพ
+                        }}>
+                        <Image
+                          source={{uri: item.badStandardImage}}
+                          style={styles.productImage}
+                        />
+                      </View>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{flexDirection: 'column', paddingHorizontal: 10}}>
+                    <List.Section>
+                      <List.Accordion
+                        title="มาตรฐานของคุณ"
+                        titleStyle={{fontSize: 16}}
+                        left={props => (
+                          <List.Icon
+                            {...props}
+                            icon="check-circle"
+                            color="green"
+                          />
+                        )}
+                        style={{width: '100%'}}>
+<List.Item title={`${item.content}`} titleNumberOfLines={8}/>
+                      </List.Accordion>
+                    </List.Section>
+                    <List.Section>
+                      <List.Accordion
+                        title="ตัวอย่างที่ไม่ได้มาตรฐาน"
+                        titleStyle={{color: 'red'}}
+                        left={props => (
+                          <List.Icon
+                            {...props}
+                            icon="close-circle"
+                            color="red"
+                          />
+                        )}>
+                     <List.Item title={`${item.badStandardEffect}`} titleNumberOfLines={8}/>
+
+                      </List.Accordion>
+                    </List.Section>
                   </View>
                 </View>
               </View>
@@ -247,18 +302,19 @@ const SelectStandard = ({
         />
 
         {watch('standards')?.length > 0 && (
-            <Button
+          <Button
             style={{
               width: '90%',
               height: 40,
               justifyContent: 'center',
               alignItems: 'center',
               alignSelf: 'center',
+              marginBottom: 20,
             }}
             buttonColor="#1b52a7"
             mode="contained"
             onPress={handleDonePress}>
-            {`บันทึก ${watch('standards')?.length} รายการ`}{' '}
+            {`บันทึก ${watch('standards')?.length} มาตรฐาน`}{' '}
           </Button>
         )}
       </SafeAreaView>
@@ -352,8 +408,6 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
     backgroundColor: 'white',
     borderRadius: 8,
     paddingHorizontal: 10,
@@ -384,7 +438,6 @@ const styles = StyleSheet.create({
   cardAuditView: {
     height: 200,
     marginBottom: 20,
-    width: '48%',
     borderRadius: 5,
     backgroundColor: '#ffffff',
     shadowColor: 'black',
@@ -431,6 +484,5 @@ const styles = StyleSheet.create({
     width: 125, // Adjust the size according to your design
     height: 125, // Adjust the size according to your design
     borderRadius: 4, // If you want rounded corners
-    alignItems: 'center',
   },
 });
