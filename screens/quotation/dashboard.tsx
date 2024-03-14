@@ -228,7 +228,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     setSelectedIndex(null);
     setShowModal(false);
   };
-console.log('company',data[0])
   const editQuotation = async (services: Service[], quotation: Quotation) => {
     setIsLoadingAction(true);
     dispatch(stateAction.get_companyID(data[0].id));

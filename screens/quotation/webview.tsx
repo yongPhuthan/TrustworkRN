@@ -69,10 +69,10 @@ const DocViewScreen = ({navigation, route}: Props) => {
   };
   
   const QuotationRoute = () => (
-    <QuotationWebView url={`https://www.trusth.co/preview/${id}?seller=${code}`} />
+    <QuotationWebView url={`https://www.trusthwork.com/preview/${id}?seller=${code}`} />
   );
   const ContractRoute = () => (
-    <ContractWebView url={`https://www.trusth.co/preview/doc/${id}?seller=${code}`} />
+    <ContractWebView url={`https://www.trusthwork.com/preview/doc/${id}?seller=${code}`} />
   );
 const HomeRoute = () => {
   useEffect(() => {

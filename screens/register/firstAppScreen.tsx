@@ -3,7 +3,9 @@ import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import React, { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import {Button, TextInput, ActivityIndicator} from 'react-native-paper';
-
+import {
+  BRAND_NAME
+} from '@env';
 const FirstAppScreen = ({navigation}: any) => {
   const [loadingUser, setLoadingUser] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
@@ -34,7 +36,7 @@ const FirstAppScreen = ({navigation}: any) => {
         alignItems: 'center',
         flexDirection: 'column',
       }}>
-      <Text style={styles.logo}>TRUSTH</Text>
+      <Text style={styles.logo}>{BRAND_NAME}</Text>
       <Image
         style={styles.image}
         source={require('../../assets/images/Buildingpermit-bro.png')}

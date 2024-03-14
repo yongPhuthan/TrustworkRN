@@ -8,6 +8,9 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import React, {useState} from 'react';
 import {Controller, useForm, useWatch} from 'react-hook-form';
 import {
+  BRAND_NAME
+} from '@env';
+import {
   Alert,
   SafeAreaView,
   StyleSheet,
@@ -88,7 +91,7 @@ const LoginScreen = ({navigation}: Props) => {
       </TouchableOpacity>
       <View
         style={{marginTop: 40, paddingHorizontal: 20, alignContent: 'center'}}>
-        <Text style={styles.title}>TRUSTH</Text>
+        <Text style={styles.title}>{BRAND_NAME}</Text>
         <Text style={styles.subtitle}>เข้าสู่ระบบ</Text>
 
         <Controller

@@ -12,7 +12,9 @@ import DashboardContract from '../screens/contract/dashboardContract';
 import Dashboard from '../screens/quotation/dashboard';
 import {ParamListBase} from '../types/navigationType';
 import DashboardSubmit from '../screens/submit/dashboard';
-
+import {
+  BRAND_NAME
+} from '@env';
 const Drawer = createDrawerNavigator<ParamListBase>();
 const commonScreenOptions = {
   headerTitleStyle: {
@@ -40,7 +42,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           alignItems: 'flex-start',
         }}>
         <Text style={{fontSize: 20, fontWeight: 'bold', color: '#012b20'}}>
-          Trusthwork
+          {BRAND_NAME}
         </Text>
       </View>
       <Divider style={{marginBottom: 20}} />

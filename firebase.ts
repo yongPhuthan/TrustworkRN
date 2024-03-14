@@ -11,7 +11,7 @@ import {
   FIREBASE_PROJECT_ID,
   FIREBASE_STORAGE_BUCKET,
 } from '@env';
-import { Platform } from 'react-native';
+import {Platform} from 'react-native';
 const firebaseConfig = {
   apiKey: FIREBASE_API_KEY,
   authDomain: FIREBASE_AUTH_DOMAIN,
@@ -26,7 +26,6 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-
 if (__DEV__) {
   let emulatorHost = 'localhost';
 
@@ -36,7 +35,7 @@ if (__DEV__) {
 
   firebase.auth().useEmulator(`http://${emulatorHost}:9099`);
   firebase.storage().useEmulator(emulatorHost, 9199);
-  firebase.firestore().useEmulator(emulatorHost, 8080)
+  firebase.firestore().useEmulator(emulatorHost, 8080);
 }
 
 console.log('Firebase App name: ', firebase.app().name);
